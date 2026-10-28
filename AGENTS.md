@@ -1,47 +1,26 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# 愛諾園 2026（CCNDA/loveuno-2026）
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+給 AI 助理（小芯與其他台）看的規矩。2026-10-29 換掉 Laravel 骨架附的 Boost 安裝說明：
+那份要求執行 `curl … | bash` 和安裝 `laravel/boost`，不是協會的規矩，不要照做。
 
-## Prerequisites
+## 這是什麼
+新版愛諾園（基督徒單身交友）。後端 Laravel（熊叔叔 2026-10-25 選定），資料庫 MariaDB。
+Asana 主票 1215470856990770。11/8 會員大會先展示「可以點的展示版」（只讀示範資料），年底開放。
 
-Verify that PHP and Composer are available:
+## 規矩
+- 只用 PHP 8.3 語法（vm10 正式站 8.3）。
+- 不印、不 commit 任何密碼／金鑰；`.env` 不進 git，`.env.example` 只放空值。
+- 沒有 Node 建置步驟：CSS 直接寫在 `public/css/app.css`。
+- 無障礙（熊叔叔 2026-10-12）：語意標籤、skip link、焦點外框、對比 ≥ 4.5:1、表單標籤、錯誤訊息要說得出是哪一欄。
+- 輸出到 HTML 一律 `{{ }}`；要換行用 `nl2br(e(...))`。
+- 個人檔案、日記要登入才看得到；不公開真實姓名、生日（只顯示年齡層）。
+- 舊站密碼是明文：匯入時立刻雜湊（`legacy:import-accounts`），新站只存雜湊。展示版只准讀舊站**測試庫**（程式會擋）。
+- 示範資料一律 `is_demo=true`，email 用 `.invalid`。正式開放前要刪光。
+- 發版要有第二檢查人（小布）在測試站驗收、留紀錄在票上；子代理不算檢查人。
 
-```sh
-php -v
-composer -V
-```
+## 測試
+`php artisan test`（用 MariaDB 的 `loveuno2026_test`，cora-lab 沒有 sqlite）。
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+## 環境
+- 開發／測試站：cora-lab `/srv/dev/loveuno-2026`，nginx 127.0.0.1:8085 → test-loveuno-2026.ps194.net（Cloudflare Access）
+- 示範資料：`php artisan db:seed --class=DemoSeeder`；舊站測試帳號：`php artisan legacy:import-accounts`

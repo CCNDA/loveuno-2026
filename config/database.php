@@ -84,6 +84,20 @@ return [
             ]) : [],
         ],
 
+        // 舊站資料庫（唯讀帳號，只給 legacy:import-accounts 用；展示版只准測試庫）
+        'legacy' => [
+            'driver' => 'mariadb',
+            'host' => env('LEGACY_DB_HOST', '127.0.0.1'),
+            'port' => env('LEGACY_DB_PORT', '3306'),
+            'database' => env('LEGACY_DB_DATABASE', ''),
+            'username' => env('LEGACY_DB_USERNAME', ''),
+            'password' => env('LEGACY_DB_PASSWORD', ''),
+            'charset' => 'utf8mb3',
+            'collation' => 'utf8mb3_general_ci',
+            'prefix' => '',
+            'strict' => false,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),

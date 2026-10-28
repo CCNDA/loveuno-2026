@@ -1,0 +1,124 @@
+/* 愛諾園 2026 展示版樣式
+   沒有建置步驟（cora-lab 與 vm10 都沒有 Node），直接手寫。
+   無障礙：字級 18px 起跳、文字對比 ≥ 4.5:1、焦點外框明顯、觸控目標 ≥ 44px。 */
+
+:root {
+    --bg: #fffdf9;
+    --surface: #ffffff;
+    --text: #1f1d1a;
+    --muted: #5b554d;      /* 對 --bg 約 7:1 */
+    --brand: #8a2d3b;      /* 對白底約 8:1 */
+    --brand-dark: #6b1f2c;
+    --line: #e4ddd2;
+    --focus: #1d4ed8;
+    --error: #a1161f;
+    --banner: #fff4d6;
+    --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 112.5%; -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    line-height: 1.75;
+}
+
+.wrap { max-width: 46rem; margin: 0 auto; padding: 0 16px; }
+
+a { color: var(--brand); text-underline-offset: 3px; }
+a:hover { color: var(--brand-dark); }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+main:focus { outline: none; }
+
+.skip-link {
+    position: absolute; left: 8px; top: -60px;
+    background: var(--text); color: #fff; padding: 10px 16px; border-radius: 8px; z-index: 10;
+}
+.skip-link:focus { top: 8px; }
+
+.demo-banner { margin: 0; padding: 8px 16px; background: var(--banner); text-align: center; font-size: .9rem; }
+
+.site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.header-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+.brand { font-size: 1.4rem; font-weight: 700; text-decoration: none; color: var(--brand); }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.nav a, .link-button {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+    border-radius: 8px; text-decoration: none; color: var(--text); font: inherit;
+}
+.nav a[aria-current="page"] { background: #f5e9eb; color: var(--brand-dark); font-weight: 700; }
+.link-button { background: none; border: 0; cursor: pointer; }
+.nav form { margin: 0; }
+
+main { padding-top: 24px; padding-bottom: 48px; }
+
+h1 { font-size: 1.75rem; line-height: 1.35; margin: .5rem 0 1rem; }
+h2 { font-size: 1.3rem; line-height: 1.4; margin: 2rem 0 .75rem; }
+h3 { font-size: 1.1rem; margin: 0 0 .5rem; }
+
+.hero { padding: 24px 0 8px; }
+.lead { font-size: 1.15rem; }
+.hint, .meta { color: var(--muted); font-size: .95rem; }
+
+.button {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
+    padding: 0 24px; border: 0; border-radius: var(--radius);
+    background: var(--brand); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.button:hover { background: var(--brand-dark); color: #fff; }
+
+.cards { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.card p { margin: 0; }
+
+.form { max-width: 26rem; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-weight: 700; margin-bottom: 4px; }
+.field input[type="email"], .field input[type="password"] {
+    width: 100%; min-height: 48px; padding: 8px 12px;
+    font-size: 1rem; /* iPhone 輸入框字小於 16px 會自動放大 */
+    border: 2px solid #8c857b; border-radius: 8px; background: #fff; color: var(--text);
+}
+.field input[aria-invalid="true"] { border-color: var(--error); }
+.field-check { display: flex; align-items: center; gap: 8px; }
+.field-check input { width: 24px; height: 24px; }
+.field-check label { margin: 0; font-weight: 400; }
+.field-error { color: var(--error); margin: 4px 0 0; }
+.error-summary { border: 2px solid var(--error); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; background: #fff5f5; }
+.error-summary h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--error); }
+.error-summary ul { margin: 0; padding-left: 1.2rem; }
+
+.notice { background: #eef6ee; border-left: 4px solid #2f6b35; padding: 8px 12px; border-radius: 4px; }
+
+.diary-list { list-style: none; padding: 0; margin: 0; }
+.diary-item { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.diary-title { font-size: 1.15rem; margin: 0; }
+.diary-title a { text-decoration: none; }
+.diary-title a:hover { text-decoration: underline; }
+.excerpt { margin: 4px 0 0; overflow-wrap: anywhere; }
+.diary-body, .prose { overflow-wrap: anywhere; }
+.meta { margin: 0; }
+.tag { display: inline-block; padding: 0 8px; border-radius: 999px; background: #efe7dc; color: var(--text); font-size: .85rem; }
+
+.profile { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 8px; margin: 0; }
+.profile div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.profile dt { color: var(--muted); font-size: .9rem; }
+.profile dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+.plain-list { padding-left: 1.2rem; }
+
+.pagination ul { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; align-items: center; }
+.pagination a, .pagination span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; }
+.pagination a { border: 1px solid var(--line); border-radius: 8px; text-decoration: none; }
+.pagination [aria-disabled="true"] { color: var(--muted); }
+
+.site-footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; padding: 16px 0 calc(16px + env(safe-area-inset-bottom)); }
+.site-footer p { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
