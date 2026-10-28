@@ -93,6 +93,28 @@ class DemoSiteTest extends TestCase
             ->assertSee('&lt;script&gt;', false);
     }
 
+    // 舊站 chkemail 會擋含「+」的 email（已知 bug），新版要能用
+    public function test_email_with_plus_can_log_in(): void
+    {
+        $user = User::factory()->create(['email' => 'amy+church@example.com', 'password' => 'secret-pass']);
+
+        $this->post('/login', ['email' => 'amy+church@example.com', 'password' => 'secret-pass'])
+            ->assertRedirect('/diaries');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_one_ip_cannot_try_many_emails(): void
+    {
+        RateLimiter::clear('ip|127.0.0.1');
+        for ($i = 0; $i < 20; $i++) {
+            $this->post('/login', ['email' => "u{$i}@example.com", 'password' => 'nope']);
+        }
+        User::factory()->create(['email' => 'real@example.com', 'password' => 'secret-pass']);
+        $this->post('/login', ['email' => 'real@example.com', 'password' => 'secret-pass'])
+            ->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
     public function test_logout(): void
     {
         $user = User::factory()->create();
@@ -115,6 +137,7 @@ class DemoSiteTest extends TestCase
         $this->artisan('legacy:import-accounts')->assertSuccessful();
 
         $user = User::where('legacy_id', 1000010)->firstOrFail();
+        $this->assertTrue($user->is_demo); // 測試帳號在正式開放前要跟示範資料一起刪
         $this->assertSame('old@example.com', $user->email);
         $this->assertSame('舊會員', $user->name);
         $this->assertNotSame('plain1234', $user->getRawOriginal('password'));
@@ -140,10 +163,7 @@ class DemoSiteTest extends TestCase
     // 測試時把 legacy 連線指到測試庫，建最小的 basic／profile
     private function makeLegacyTables(): void
     {
-        config(['database.connections.legacy' => array_merge(
-            config('database.connections.' . config('database.default')),
-            ['database' => config('database.connections.' . config('database.default') . '.database')]
-        )]);
+        config(['database.connections.legacy' => config('database.connections.' . config('database.default'))]);
         \DB::purge('legacy');
         $s = Schema::connection('legacy');
         $s->dropIfExists('basic');

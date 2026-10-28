@@ -21,7 +21,7 @@ class ImportLegacyAccounts extends Command
     {
         $db = (string) config('database.connections.legacy.database');
         if (! preg_match('/(^|_)(dev|test)(_|$)/', $db)) {
-            $this->error('舊站資料庫名稱沒有 _dev_／_test，不像測試庫，停止。展示版不可以讀正式會員資料。');
+            $this->error('舊站資料庫名稱裡沒有獨立的 dev 或 test 一段（例如 loveuno_dev_member），不像測試庫，停止。展示版不可以讀正式會員資料。');
 
             return self::FAILURE;
         }
@@ -64,6 +64,8 @@ class ImportLegacyAccounts extends Command
                 $user->name = trim((string) $row->nickname) !== '' ? trim((string) $row->nickname) : '會員' . $row->id;
                 $user->email = $email;
                 $user->password = $plain; // casts 'hashed'：存進去的是雜湊
+                // 從測試庫來的都是測試帳號，跟示範資料一樣在正式開放前要刪掉
+                $user->is_demo = true;
                 $user->save();
 
                 $year = $row->birthday ? (int) substr((string) $row->birthday, 0, 4) : 0;

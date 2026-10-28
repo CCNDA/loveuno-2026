@@ -12,8 +12,10 @@
         <div class="error-summary" role="alert" aria-labelledby="error-title">
             <h2 id="error-title">登入沒有成功</h2>
             <ul>
-                @foreach ($errors->all() as $message)
-                    <li>{{ $message }}</li>
+                @foreach ($errors->messages() as $field => $messages)
+                    @foreach ($messages as $message)
+                        <li><a href="#{{ $field }}">{{ $message }}</a></li>
+                    @endforeach
                 @endforeach
             </ul>
         </div>

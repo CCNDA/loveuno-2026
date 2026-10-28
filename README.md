@@ -8,7 +8,7 @@
 
 ## 環境鏈
 
-- 測試站：loveuno.ps194.net
+- 測試站：test-loveuno-2026.ps194.net（熊叔叔 10/28 通則：test-<站名>.ps194.net）
 - 公測站：2026.loveuno.com
 - 正式站：loveuno.com（上線後）
 
