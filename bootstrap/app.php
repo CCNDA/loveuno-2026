@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // 選了「简体」就把整頁 HTML 轉成簡體（熊叔叔 10/29「1 3 4 都要」的 3）
+        $middleware->web(append: [\App\Http\Middleware\ConvertScript::class]);
+
         // registration.open：註冊沒開放（config loveuno.registration_open）就 404
         // admin：只有 is_admin 的帳號（審核大頭照）
         $middleware->alias([

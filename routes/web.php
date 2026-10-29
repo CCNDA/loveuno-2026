@@ -19,6 +19,15 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::view('/rules', 'rules')->name('rules');
 
+// 繁／简切換：存在 session；回上一頁只回本站（不跟著外站的 Referer 走）
+Route::get('/script/{script}', function (\Illuminate\Http\Request $request, string $script) {
+    $request->session()->put('script', $script);
+    $back = (string) $request->headers->get('referer');
+    $sameSite = $back !== '' && parse_url($back, PHP_URL_HOST) === $request->getHost();
+
+    return redirect($sameSite ? $back : '/');
+})->whereIn('script', ['hans', 'hant'])->name('script');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->name('login.store');

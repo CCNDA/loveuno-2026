@@ -270,3 +270,6 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 /* 個人化封面（寬：高＝3：1） */
 .cover { display: block; width: 100%; aspect-ratio: 3 / 1; height: auto; object-fit: cover; border-radius: var(--radius); margin: 0 0 12px; }
 .cover-empty { background: linear-gradient(120deg, #e4bba4, #f3d9c9 60%, #fffcf2); }
+
+/* 繁／简切換 */
+.script-toggle { border: 1px solid var(--header-text); }
