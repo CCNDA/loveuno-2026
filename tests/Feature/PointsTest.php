@@ -99,6 +99,7 @@ class PointsTest extends TestCase
             ->assertSee('送禮物給好友')->assertSee('邀請約會見面');
 
         $this->actingAs($u)->get('/center/points?tab=records')->assertOk()
-            ->assertSeeInOrder(['使用紀錄', '完成基本資料建檔', '+20'])->assertSee('每日登入')->assertSee('總計');
+            ->assertSeeInOrder(['使用紀錄', '完成基本資料建檔', '+20'])->assertSee('每日登入')->assertSee('總計')
+            ->assertSee('<td>21</td>', false); // 最新一筆的總計＝目前餘額
     }
 }

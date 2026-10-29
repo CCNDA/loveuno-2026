@@ -28,7 +28,7 @@ class ReportTest extends TestCase
         $me = $this->member('我');
         $bad = $this->member('可疑的人');
         $this->actingAs($me)->get("/members/{$bad->id}")->assertSee(route('reports.create', $bad), false);
-        $this->actingAs($me)->get("/members/{$me->id}")->assertDontSee('檢舉這位會員');
+        $this->actingAs($me)->get("/members/{$me->id}")->assertDontSee(route('reports.create', $me), false);
 
         $this->actingAs($me)->get("/members/{$bad->id}/report")->assertOk()
             ->assertSee('檢舉會員的不當行為')->assertSee('愛諾園是一個屬神的交友空間')

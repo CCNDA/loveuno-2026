@@ -14,6 +14,7 @@
     @php($level = auth()->user()->friendLevelWith($member))
     <p class="relationship">與您關係：<strong>{{ \App\Models\Friendship::LEVELS[$level] }}</strong>
         @if ($level > 0)・<a href="{{ route('friends.confirm', $member) }}">解除關係…</a>@endif
+        ・<a href="{{ route('reports.create', $member) }}">檢舉…</a>
     </p>
 @endif
 @if (\App\Http\Controllers\NoteController::canNote(auth()->user(), $member))
@@ -81,7 +82,6 @@
 @if (! $isMe)
     <ul class="danger-zone danger-links">
         <li><a href="{{ route('blocks.confirm', $member) }}">封鎖這位會員…</a></li>
-        <li><a href="{{ route('reports.create', $member) }}">檢舉這位會員…</a></li>
     </ul>
 @endif
 @endif

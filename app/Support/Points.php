@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -33,18 +34,20 @@ class Points
     // 給點；同一個 type＋ref 已經給過就不再給。回傳這次有沒有給
     public static function award(User $user, string $type, string $ref, int $amount, string $label): bool
     {
-        return DB::transaction(function () use ($user, $type, $ref, $amount, $label) {
-            $inserted = DB::table('point_transactions')->insertOrIgnore([
-                'user_id' => $user->id, 'type' => $type, 'ref' => $ref, 'amount' => $amount, 'label' => $label,
-                'created_at' => now(), 'updated_at' => now(),
-            ]);
-            if ($inserted) {
+        try {
+            DB::transaction(function () use ($user, $type, $ref, $amount, $label) {
+                DB::table('point_transactions')->insert([
+                    'user_id' => $user->id, 'type' => $type, 'ref' => $ref, 'amount' => $amount, 'label' => $label,
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
                 DB::table('users')->where('id', $user->id)->increment('points', $amount);
-                $user->points = (int) DB::table('users')->where('id', $user->id)->value('points');
-            }
+            });
+        } catch (UniqueConstraintViolationException) {
+            return false; // 已經給過了
+        }
+        $user->points = (int) DB::table('users')->where('id', $user->id)->value('points');
 
-            return $inserted > 0;
-        });
+        return true;
     }
 
     public static function daily(User $user, string $type): bool

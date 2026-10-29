@@ -57,7 +57,8 @@ class Friendship extends Model
             }
         }
         if ($f->level < $level) {
-            $f->forceFill(['level' => $level, 'leveled_at' => now()])->save();
+            self::whereKey($f->id)->where('level', '<', $level)->update(['level' => $level, 'leveled_at' => now()]);
+            $f->refresh();
         }
         User::forgetFriendLevels($a, $b);
 

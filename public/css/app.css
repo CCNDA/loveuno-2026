@@ -328,6 +328,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .friend-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .friend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
 .friend-item .member-name { margin: 0; }
+.friend-item .member-name a { display: inline-flex; align-items: center; min-height: 44px; }
 
 /* 愛積點 */
 .points-balance { font-size: 1.15rem; }

@@ -54,14 +54,22 @@ class CenterController extends Controller
         Points::checkTasks($user); // 以前就填好的（例如舊站匯入、示範會員）第一次打開這頁時補給
         $tab = $request->query('tab') === 'records' ? 'records' : 'tasks';
 
+        $user = $user->fresh();
+        $records = $tab === 'records'
+            ? DB::table('point_transactions')->where('user_id', $user->id)->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get()
+            : collect();
+        $running = $user->points;
+        foreach ($records as $r) { // 新的在上面：這一筆之後的餘額＝目前餘額減掉比它新的
+            $r->total = $running;
+            $running -= $r->amount;
+        }
+
         return view('center.points', [
-            'user' => $user->fresh(),
+            'user' => $user,
             'tab' => $tab,
             'status' => Points::taskStatus($user),
             'links' => ['profile' => 'profile.edit', 'preferences' => 'center.preferences', 'intro' => 'profile.edit', 'photo' => 'photo.edit'],
-            'records' => $tab === 'records'
-                ? DB::table('point_transactions')->where('user_id', $user->id)->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get()
-                : collect(),
+            'records' => $records,
         ]);
     }
 

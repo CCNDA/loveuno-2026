@@ -58,17 +58,17 @@
         <p>還沒有紀錄。</p>
     @else
         <table class="points-table" aria-labelledby="records-title">
-            <thead><tr><th scope="col">項目</th><th scope="col">點數</th><th scope="col">日期</th></tr></thead>
+            <thead><tr><th scope="col">項目</th><th scope="col">點數</th><th scope="col">完成日期</th><th scope="col">總計</th></tr></thead>
             <tbody>
                 @foreach ($records as $r)
                     <tr>
                         <th scope="row">{{ $r->label }}</th>
                         <td>{{ $r->amount > 0 ? '+' : '' }}{{ $r->amount }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($r->created_at)->format('Y/n/j') }}</td>
+                        <td>{{ $r->total }}</td>
                     </tr>
                 @endforeach
             </tbody>
-            <tfoot><tr><th scope="row">總計</th><td>{{ $user->points }}</td><td></td></tr></tfoot>
         </table>
         @if ($records->count() >= 100)<p class="hint">只列出最近 100 筆。</p>@endif
     @endif
