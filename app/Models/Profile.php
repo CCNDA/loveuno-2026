@@ -20,6 +20,7 @@ class Profile extends Model
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
             'photo_updated_at' => 'datetime',
+            'cover_updated_at' => 'datetime',
         ];
     }
 
@@ -31,15 +32,28 @@ class Profile extends Model
     // 大頭照誰看得到：通過審核的，登入會員都看得到；審核中的只有本人和管理員
     public function photoVisibleTo(?User $viewer): bool
     {
-        if (! $this->photo_path || ! $viewer) {
+        return $this->imageVisibleTo('photo', $viewer);
+    }
+
+    public function coverVisibleTo(?User $viewer): bool
+    {
+        return $this->imageVisibleTo('cover', $viewer);
+    }
+
+    // $kind：photo（大頭照）或 cover（個人化封面）
+    public function imageVisibleTo(string $kind, ?User $viewer): bool
+    {
+        $path = $this->{$kind . '_path'};
+        $status = $this->{$kind . '_status'};
+        if (! $path || ! $viewer) {
             return false;
         }
         if (! $viewer->is_admin && $viewer->id !== $this->user_id && in_array((int) $this->user_id, $viewer->blockRelatedIds(), true)) {
             return false; // 封鎖（任一方）就看不到照片；管理員審核不受影響
         }
 
-        return $this->photo_status === 'approved'
-            || ($this->photo_status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));
+        return $status === 'approved'
+            || ($status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));
     }
 
     // 畫面上用教會習慣的稱呼

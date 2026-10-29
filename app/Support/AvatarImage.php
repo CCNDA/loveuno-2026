@@ -14,7 +14,8 @@ class AvatarImage
     // 解開成點陣要「寬×高×4」bytes：4000 萬像素約 160MB，再大就可能把 PHP 記憶體吃光（decompression bomb）
     public const MAX_PIXELS = 40_000_000;
 
-    public static function fromUpload(string $path): string
+    // $w×$h：大頭照 600×600、封面 1200×400；照目標比例置中裁切再縮放
+    public static function fromUpload(string $path, int $w = self::SIZE, int $h = self::SIZE): string
     {
         $info = @getimagesize($path);
         if (! $info || ! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
@@ -43,12 +44,18 @@ class AvatarImage
             };
         }
 
-        $w = imagesx($src);
-        $h = imagesy($src);
-        $side = min($w, $h);
-        $dst = imagecreatetruecolor(self::SIZE, self::SIZE);
+        $sw = imagesx($src);
+        $sh = imagesy($src);
+        // 從原圖裡挑出跟目標同比例、最大的置中區塊
+        $cw = $sw;
+        $ch = (int) round($sw * $h / $w);
+        if ($ch > $sh) {
+            $ch = $sh;
+            $cw = (int) round($sh * $w / $h);
+        }
+        $dst = imagecreatetruecolor($w, $h);
         imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // PNG 透明的地方填白
-        imagecopyresampled($dst, $src, 0, 0, intdiv($w - $side, 2), intdiv($h - $side, 2), self::SIZE, self::SIZE, $side, $side);
+        imagecopyresampled($dst, $src, 0, 0, intdiv($sw - $cw, 2), intdiv($sh - $ch, 2), $w, $h, $cw, $ch);
 
         ob_start();
         imagejpeg($dst, null, 85);

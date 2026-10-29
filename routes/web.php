@@ -83,10 +83,15 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::delete('/diaries/{diary}', [DiaryWriteController::class, 'destroy'])->whereNumber('diary')->name('diaries.destroy');
 
     // 大頭照（上傳要審核；檔案經過 PhotoController 檢查權限才送出）
-    Route::get('/me/photo', [PhotoController::class, 'edit'])->name('photo.edit');
-    Route::post('/me/photo', [PhotoController::class, 'update'])->middleware('throttle:10,60,photo-upload')->name('photo.update');
-    Route::delete('/me/photo', [PhotoController::class, 'destroy'])->name('photo.destroy');
-    Route::get('/photos/{user}', [PhotoController::class, 'show'])->name('photos.show');
+    Route::get('/me/photo', [PhotoController::class, 'edit'])->defaults('kind', 'photo')->name('photo.edit');
+    Route::post('/me/photo', [PhotoController::class, 'update'])->defaults('kind', 'photo')->middleware('throttle:10,60,photo-upload')->name('photo.update');
+    Route::delete('/me/photo', [PhotoController::class, 'destroy'])->defaults('kind', 'photo')->name('photo.destroy');
+    Route::get('/photos/{user}', [PhotoController::class, 'show'])->defaults('kind', 'photo')->name('photos.show');
+    // 個人化封面（跟大頭照同一支程式，kind=cover）
+    Route::get('/me/cover', [PhotoController::class, 'edit'])->defaults('kind', 'cover')->name('cover.edit');
+    Route::post('/me/cover', [PhotoController::class, 'update'])->defaults('kind', 'cover')->middleware('throttle:10,60,cover-upload')->name('cover.update');
+    Route::delete('/me/cover', [PhotoController::class, 'destroy'])->defaults('kind', 'cover')->name('cover.destroy');
+    Route::get('/covers/{user}', [PhotoController::class, 'show'])->defaults('kind', 'cover')->name('covers.show');
 
     // 管理員
     Route::middleware('admin')->prefix('admin')->group(function () {
