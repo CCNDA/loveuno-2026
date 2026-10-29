@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -29,8 +30,10 @@ class CenterController extends Controller
         ], ['current_password' => '目前的密碼', 'password' => '新密碼']);
 
         $user = $request->user();
+        // 先存新密碼，再呼叫 logoutOtherDevices：它會先用「傳進去的密碼」核對目前存的雜湊，
+        // 核對過了才重算一次雜湊並讓其他裝置的 session 失效（要配 auth.session）。
+        // 所以這裡看起來雜湊了兩次，但少了第一次存檔，核對會失敗、丟例外（兩面審查 10/29 討論過）。
         $user->forceFill(['password' => Hash::make($request->input('password'))])->save();
-        // 換密碼後，其他裝置上的登入一律失效；這台重新發 session
         Auth::logoutOtherDevices($request->input('password'));
         $request->session()->regenerate();
 
@@ -57,7 +60,8 @@ class CenterController extends Controller
         $data = $request->validate([
             'pref_gender' => ['nullable', 'in:男,女'],
             'pref_age_min' => ['nullable', 'integer', 'between:18,99'],
-            'pref_age_max' => ['nullable', 'integer', 'between:18,99', 'gte:pref_age_min'],
+            // 只有下限有填才比大小（只填「到 40 歲」不能被誤擋）
+            'pref_age_max' => ['nullable', 'integer', 'between:18,99', Rule::when($request->filled('pref_age_min'), 'gte:pref_age_min')],
             'pref_place' => ['nullable', 'string', 'max:20'],
         ], [
             'pref_age_max.gte' => '年齡上限不能比下限小。',

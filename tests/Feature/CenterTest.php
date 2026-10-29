@@ -41,6 +41,11 @@ class CenterTest extends TestCase
         $this->actingAs($u)->put('/center/password', ['current_password' => 'old-password-1', 'password' => 'new-password-22', 'password_confirmation' => 'new-password-22'])
             ->assertRedirect('/center/account')->assertSessionHas('status');
         $this->assertTrue(Hash::check('new-password-22', $u->fresh()->password));
+        // 換完密碼這台還在登入中
+        $this->actingAs($u->fresh())->get('/center/account')->assertOk();
+        // 舊密碼不能再登入
+        auth()->logout();
+        $this->post('/login', ['email' => $u->email, 'password' => 'old-password-1'])->assertSessionHasErrors('email');
     }
 
     public function test_preferences_save_and_validate(): void
@@ -55,6 +60,12 @@ class CenterTest extends TestCase
         $this->actingAs($u)->put('/center/preferences', ['pref_age_min' => 40, 'pref_age_max' => 30])->assertSessionHasErrors('pref_age_max');
         $this->actingAs($u)->put('/center/preferences', ['pref_age_min' => 10])->assertSessionHasErrors('pref_age_min');
         $this->actingAs($u)->put('/center/preferences', ['pref_gender' => 'x'])->assertSessionHasErrors('pref_gender');
+
+        // 只填上限也可以（下限空著不能被誤擋）
+        $this->actingAs($u)->put('/center/preferences', ['pref_age_max' => 40])->assertSessionHasNoErrors();
+        $this->assertSame([null, 40], [$u->profile->fresh()->pref_age_min, (int) $u->profile->fresh()->pref_age_max]);
+        // 居住地太長被擋
+        $this->actingAs($u)->put('/center/preferences', ['pref_place' => str_repeat('地', 21)])->assertSessionHasErrors('pref_place');
 
         // 全部清空＝不限
         $this->actingAs($u)->put('/center/preferences', [])->assertRedirect('/center/preferences');

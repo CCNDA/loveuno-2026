@@ -186,6 +186,8 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
     .bottom-nav a[aria-current="page"] { color: var(--brand-dark); font-weight: 700; background: #fbefe8; }
     .bn-icon { font-size: 1.3rem; line-height: 1; }
     body.has-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+    /* 用 Tab 移到頁面下方時，焦點不要被底部選單蓋住 */
+    html:has(body.has-bottom-nav) { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
     .site-header .nav .nav-dup { display: none; }
 }
 

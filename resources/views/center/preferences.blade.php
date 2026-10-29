@@ -6,7 +6,7 @@
 @include('center.tabs', ['current' => 'preferences'])
 
 <h2>交友條件</h2>
-<p class="hint">「認識朋友」之後會用這裡的條件幫您排推薦。沒填的就是不限。</p>
+<p class="hint">寫下您想認識什麼樣的朋友。沒填的就是不限。</p>
 
 <form method="POST" action="{{ route('center.preferences.update') }}" class="form" novalidate>
     @csrf
