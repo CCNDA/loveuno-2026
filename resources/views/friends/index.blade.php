@@ -4,7 +4,7 @@
 
 @section('content')
 <h1>我的朋友</h1>
-<p class="hint">互送禮物就是「普通好友」；互傳紙條各 {{ \App\Models\Friendship::CHAT_NOTES }} 則以上變成「聊天好友」；一起出席約會變成「真實好友」。</p>
+<p class="hint">互送禮物就是「普通好友」（<a href="{{ route('gifts.index') }}">我的禮物</a>）；互傳紙條各 {{ \App\Models\Friendship::CHAT_NOTES }} 則以上變成「聊天好友」；一起出席約會變成「真實好友」。</p>
 
 @foreach ([3, 2, 1] as $level)
     <section aria-labelledby="friends-{{ $level }}">

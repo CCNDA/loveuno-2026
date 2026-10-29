@@ -12,6 +12,7 @@ use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryInteractionController;
 use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\FriendController;
+use App\Http\Controllers\GiftController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
@@ -92,6 +93,10 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/members/{user}/block', [BlockController::class, 'confirm'])->whereNumber('user')->name('blocks.confirm');
     Route::post('/members/{user}/block', [BlockController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,block')->name('blocks.store');
     Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
+    // 送禮物（一次 3 點、同一位會員一天一份；互送＝普通好友）
+    Route::get('/gifts', [GiftController::class, 'index'])->name('gifts.index');
+    Route::get('/members/{user}/gift', [GiftController::class, 'create'])->whereNumber('user')->name('gifts.create');
+    Route::post('/members/{user}/gift', [GiftController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,gift-send')->name('gifts.store');
     // 好友：我的朋友、解除關係
     Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
     Route::get('/members/{user}/unfriend', [FriendController::class, 'confirmDestroy'])->whereNumber('user')->name('friends.confirm');

@@ -4,6 +4,9 @@
 
 @section('content')
 <h1 class="visually-hidden">日記牆</h1>
+@if ($newGifts > 0)
+    <p class="notice"><a href="{{ route('gifts.index') }}">您收到 {{ $newGifts }} 份新禮物，去看看 →</a></p>
+@endif
 
 <section aria-labelledby="suggest-title">
     <h2 id="suggest-title">好友推薦</h2>
@@ -22,6 +25,8 @@
         </ul>
     @endif
 </section>
+
+@include('partials.welcome-new')
 
 <section aria-labelledby="wall-title">
     <div class="wall-head">
