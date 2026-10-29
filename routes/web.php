@@ -39,6 +39,12 @@ Route::view('/terms', 'pages.terms')->name('terms');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::get('/contact', [\App\Http\Controllers\PageController::class, 'contact'])->name('contact');
 Route::post('/contact', [\App\Http\Controllers\PageController::class, 'storeContact'])->middleware('throttle:5,60,contact')->name('contact.store');
+// 站務公告、愛的見證（不用登入）
+Route::get('/news', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('news.index');
+Route::get('/news/{announcement}', [\App\Http\Controllers\AnnouncementController::class, 'show'])->whereNumber('announcement')->name('news.show');
+Route::get('/love-stories', [\App\Http\Controllers\LoveStoryController::class, 'index'])->name('love-stories.index');
+Route::get('/love-stories/{story}', [\App\Http\Controllers\LoveStoryController::class, 'show'])->whereNumber('story')->name('love-stories.show');
+Route::get('/love-stories/{story}/photo', [\App\Http\Controllers\LoveStoryController::class, 'photo'])->whereNumber('story')->name('love-stories.photo');
 // 職業 Email 認證信的連結（不用登入；確認碼對了才算）
 Route::get('/verify/job/{verification}/{token}', [VerificationController::class, 'showConfirmJob'])
     ->whereNumber('verification')->middleware('throttle:20,60,verify-job-confirm')->name('verify.job.confirm');
@@ -98,6 +104,8 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group(function () {
     Route::get('/me', [MemberController::class, 'me'])->name('me');
+    Route::get('/love-stories/new', [\App\Http\Controllers\LoveStoryController::class, 'create'])->name('love-stories.create');
+    Route::post('/love-stories', [\App\Http\Controllers\LoveStoryController::class, 'store'])->middleware('throttle:5,1440,love-story')->name('love-stories.store');
     Route::get('/me/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 
     // 限流的第三個參數是名稱：沒有名稱時，同一個人所有限流共用同一個計數（Laravel 用 user id 當 key），
@@ -193,6 +201,14 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::get('/verifications/{verification}/photo', [VerificationReviewController::class, 'photo'])->whereNumber('verification')->name('admin.verifications.photo');
         Route::get('/contacts', [\App\Http\Controllers\Admin\ContactReviewController::class, 'index'])->name('admin.contacts');
         Route::post('/contacts/{message}', [\App\Http\Controllers\Admin\ContactReviewController::class, 'handle'])->whereNumber('message')->name('admin.contacts.handle');
+        Route::get('/news', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'index'])->name('admin.news');
+        Route::get('/news/new', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'create'])->name('admin.news.create');
+        Route::post('/news', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'store'])->name('admin.news.store');
+        Route::get('/news/{announcement}/edit', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'edit'])->whereNumber('announcement')->name('admin.news.edit');
+        Route::put('/news/{announcement}', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'update'])->whereNumber('announcement')->name('admin.news.update');
+        Route::delete('/news/{announcement}', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'destroy'])->whereNumber('announcement')->name('admin.news.destroy');
+        Route::get('/love-stories', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'index'])->name('admin.love-stories');
+        Route::post('/love-stories/{story}', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'decide'])->whereNumber('story')->name('admin.love-stories.decide');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

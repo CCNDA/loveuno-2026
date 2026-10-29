@@ -421,3 +421,22 @@ html.fs-large { font-size: 118.75%; }
 .faq-item p { margin: 0 0 12px; }
 .donate { margin-top: 24px; }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* 站務公告、愛的見證 */
+.news-table { width: 100%; border-collapse: collapse; }
+.news-table th, .news-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.news-table td a { display: inline-flex; align-items: center; min-height: 44px; }
+.table-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.story-cards { list-style: none; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.story-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.story-card h3, .story-card p { margin: 8px 16px; }
+.story-card p { margin-bottom: 16px; }
+.story-card h3 a { display: inline-flex; align-items: center; min-height: 44px; }
+.story-img { display: block; width: 100%; height: auto; aspect-ratio: 400 / 260; object-fit: cover; }
+.story-couple { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
+.story-couple li { display: flex; align-items: center; gap: 8px; }
+.story-photo { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin: 16px 0; }
+.inline-form { display: inline; }
+.welcome-banner { display: grid; gap: 16px; align-items: center; }
+.welcome-banner img { width: 100%; height: auto; }
+@media (min-width: 48rem) { .welcome-banner { grid-template-columns: 1fr 1fr; } }

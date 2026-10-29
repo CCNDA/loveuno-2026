@@ -38,6 +38,9 @@
                         @if (auth()->user()->is_admin)
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
                             <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
+                            <li><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
+                            @php($pendingStories = \App\Models\LoveStory::where('status', 'pending')->count())
+                            <li><a href="{{ route('admin.love-stories') }}" @if(request()->routeIs('admin.love-stories')) aria-current="page" @endif>愛的見證@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
                             @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
                             <li><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
                             @php($openReports = \App\Models\Report::where('status', 'open')->count())
@@ -90,12 +93,20 @@
     <footer class="site-footer">
         <nav aria-label="網站資訊" class="footer-links">
             <ul>
+                {{-- 設計稿 MainFooter；下載 APP 兩項不做（新版是網頁，見 #42） --}}
                 <li><a href="{{ route('about') }}">關於愛諾園</a></li>
+                <li><a href="{{ route('news.index') }}">站務公告</a></li>
+                <li><a href="{{ route('love-stories.index') }}">愛的見證</a></li>
                 <li><a href="{{ route('faq') }}">常見問題</a></li>
                 <li><a href="{{ route('contact') }}">聯絡我們</a></li>
                 <li><a href="{{ route('terms') }}">網站服務條款</a></li>
                 <li><a href="{{ route('privacy') }}">隱私權政策</a></li>
                 <li><a href="https://www.ccnda.org/devote/online" rel="noopener">奉獻支持</a></li>
+            </ul>
+            <ul>
+                <li><a href="https://www.ccnda.org" rel="noopener">網路發展協會</a></li>
+                <li><a href="https://church.oursweb.net" rel="noopener">教會名錄</a></li>
+                <li><a href="https://www.taiwanbible.com/web/first.jsp" rel="noopener">台灣聖經網</a></li>
             </ul>
         </nav>
         <div class="wrap">
