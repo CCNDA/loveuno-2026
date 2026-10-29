@@ -47,6 +47,39 @@ class ScriptTest extends TestCase
         $this->withHeader('Referer', 'https://evil.example/')->get('/script/hans')->assertRedirect('/');
     }
 
+    public function test_more_protection_cases(): void
+    {
+        // 私用區字元要用雙引號字串才會變成真的字元
+        $out = ToSimplified::html('<option value=繁體>繁體</option><input value=\'單引號\'><p>內容裡有 ' . "\u{E000}0\u{E001}" . ' 這種字</p><textarea>不要動</textarea>');
+        $this->assertStringContainsString('value=繁體', $out);
+        $this->assertStringContainsString('>繁体</option>', $out);
+        $this->assertStringContainsString("value='單引號'", $out);
+        $this->assertStringContainsString("\u{E000}0\u{E001}", $out); // 內容裡的私用區字元原樣留著，沒被換成別的區塊
+        $this->assertStringContainsString('<textarea>不要動</textarea>', $out);
+    }
+
+    public function test_referer_lookalikes_go_home_and_json_untouched(): void
+    {
+        $host = parse_url(config('app.url'), PHP_URL_HOST) ?: 'localhost';
+        foreach (['//evil.example/x', "https://{$host}.evil.example/", 'javascript:alert(1)'] as $ref) {
+            $this->withHeader('Referer', $ref)->get('/script/hans')->assertRedirect('/');
+        }
+    }
+
+    public function test_middleware_leaves_non_html_alone(): void
+    {
+        $req = \Illuminate\Http\Request::create('/x');
+        $session = $this->app['session']->driver();
+        $session->put('script', 'hans');
+        $req->setLaravelSession($session);
+        $mw = new \App\Http\Middleware\ConvertScript;
+
+        $json = $mw->handle($req, fn () => response()->json(['name' => '繁體']));
+        $this->assertStringContainsString('\u7e41\u9ad4', $json->getContent()); // JSON 原樣（json_encode 會跳脫成 \u）
+        $html = $mw->handle($req, fn () => response('<p>繁體</p>', 200, ['Content-Type' => 'text/html; charset=UTF-8']));
+        $this->assertSame('<p>繁体</p>', $html->getContent());
+    }
+
     public function test_editing_in_simplified_mode_does_not_rewrite_stored_text(): void
     {
         $u = User::factory()->create(['name' => '繁體暱稱']);

@@ -11,20 +11,33 @@ class ToSimplified
 {
     private static ?array $map = null;
 
+    // 對照表編譯成 bootstrap/cache/opencc-t2s.php（var_export 的陣列），之後每個請求直接 require，
+    // 有 opcache 就幾乎不花時間；原始的 txt 比較新就重編一次。
     public static function map(): array
     {
-        if (self::$map === null) {
+        if (self::$map !== null) {
+            return self::$map;
+        }
+        $sources = [resource_path('opencc/TSCharacters.txt'), resource_path('opencc/TSPhrases.txt')]; // 詞放後面，同一個 key 以詞為準
+        $compiled = base_path('bootstrap/cache/opencc-t2s.php');
+        $newest = max(array_map('filemtime', $sources));
+        if (! is_file($compiled) || filemtime($compiled) < $newest) {
             $map = [];
-            foreach (['TSCharacters.txt', 'TSPhrases.txt'] as $file) {   // 詞放後面，同一個 key 以詞為準
-                foreach (file(resource_path('opencc/' . $file), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            foreach ($sources as $file) {
+                foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
                     [$from, $to] = explode("\t", $line, 2);
                     $map[$from] = explode(' ', $to)[0]; // 有多個候選時取第一個
                 }
             }
+            $tmp = $compiled . '.' . getmypid() . '.tmp';
+            file_put_contents($tmp, '<?php return ' . var_export($map, true) . ';' . PHP_EOL);
+            rename($tmp, $compiled); // 換檔是原子的，其他請求不會讀到寫一半的檔
             self::$map = $map;
+
+            return $map;
         }
 
-        return self::$map;
+        return self::$map = require $compiled;
     }
 
     public static function text(string $s): string
@@ -35,17 +48,28 @@ class ToSimplified
     // 整頁 HTML：先把不能動的區塊換成記號，轉完再放回去
     public static function html(string $html): string
     {
+        $original = $html;
         $keep = [];
-        $protect = function (array $m) use (&$keep): string {
-            $key = "\u{E000}" . count($keep) . "\u{E001}"; // 私用區字元，對照表裡不會有
+        // 記號＝私用區字元＋這一次隨機的字串：會員就算在內容裡打出私用區字元，也猜不到這次的記號
+        $nonce = bin2hex(random_bytes(8));
+        $protect = function (array $m) use (&$keep, $nonce): string {
+            $key = "\u{E000}" . $nonce . '-' . count($keep) . "\u{E001}";
             $keep[$key] = $m[0];
 
             return $key;
         };
-        $html = preg_replace_callback('#<(textarea|script|style)\b[^>]*>.*?</\1>#is', $protect, $html);
-        // 標了 data-keep-script 的（例如切換鈕上的「繁體」）不轉
-        $html = preg_replace_callback('#<(a|span)\b[^>]*\bdata-keep-script\b[^>]*>.*?</\1>#is', $protect, $html);
-        $html = preg_replace_callback('#\svalue\s*=\s*("[^"]*"|\'[^\']*\')#i', $protect, $html);
+        foreach ([
+            '#<(textarea|script|style)\b[^>]*>.*?</\1>#is',
+            // 標了 data-keep-script 的（例如切換鈕上的「繁體」）不轉
+            '#<(a|span)\b[^>]*\bdata-keep-script\b[^>]*>.*?</\1>#is',
+            // value="…"、value='…'、value=沒引號
+            '#\svalue\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i',
+        ] as $re) {
+            $html = preg_replace_callback($re, $protect, $html);
+            if ($html === null) {
+                return $original; // 正規式失敗（例如頁面太大）：寧可不轉，也不要 500
+            }
+        }
 
         $html = self::text($html);
 
