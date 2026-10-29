@@ -45,6 +45,8 @@ class Note extends Model
 
     public static function unreadCountFor(User $user): int
     {
-        return static::where('recipient_id', $user->id)->whereNull('read_at')->count();
+        return static::where('recipient_id', $user->id)->whereNull('read_at')
+            ->whereNotIn('sender_id', $user->blockedByIds())
+            ->count();
     }
 }

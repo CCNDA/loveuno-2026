@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -18,7 +20,7 @@ class CenterController extends Controller
     public function account(Request $request): View
     {
         $user = $request->user();
-        $blocked = \App\Models\User::whereIn('id', \DB::table('blocks')->where('blocker_id', $user->id)->pluck('blocked_id'))
+        $blocked = User::whereIn('id', DB::table('blocks')->where('blocker_id', $user->id)->pluck('blocked_id'))
             ->orderBy('name')->get(['id', 'name']);
 
         return view('center.account', ['user' => $user, 'blocked' => $blocked]);

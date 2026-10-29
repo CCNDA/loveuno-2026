@@ -27,14 +27,16 @@ class NoteController extends Controller
     public function show(Request $request, User $user): View
     {
         $me = $request->user();
-        abort_unless(self::canNote($me, $user), 404);
+        // 我封鎖對方：還能唯讀看以前的紙條（被騷擾時要留證據），不能再寄
+        $readOnly = $me->hasBlocked($user) && ! $me->is($user);
+        abort_unless($readOnly || self::canNote($me, $user), 404);
 
         // 打開對話＝對方寄給我的都算讀過
         Note::where('sender_id', $user->id)->where('recipient_id', $me->id)->whereNull('read_at')->update(['read_at' => now()]);
 
         $notes = Note::between($me, $user)->orderBy('created_at')->orderBy('id')->get();
 
-        return view('notes.index', ['threads' => $this->threads($me), 'other' => $user, 'notes' => $notes]);
+        return view('notes.index', ['threads' => $this->threads($me), 'other' => $user, 'notes' => $notes, 'readOnly' => $readOnly]);
     }
 
     public function store(Request $request, User $user): RedirectResponse
@@ -69,8 +71,9 @@ class NoteController extends Controller
             ->limit(100)
             ->get();
 
-        $blocked = $me->blockRelatedIds();
-        $rows = $rows->reject(fn ($r) => in_array((int) $r->other_id, $blocked, true))->values(); // 封鎖的對話不列出來
+        // 封鎖我的人：對話不列出來。我封鎖的人：還列著（可以唯讀看），標「已封鎖」
+        $blockedBy = $me->blockedByIds();
+        $rows = $rows->reject(fn ($r) => in_array((int) $r->other_id, $blockedBy, true))->values();
         $users = User::with('profile')->whereIn('id', $rows->pluck('other_id'))->get()->keyBy('id');
         $last = Note::whereIn('id', $rows->pluck('last_id'))->get()->keyBy('id');
 
@@ -78,6 +81,7 @@ class NoteController extends Controller
             'user' => $users[$r->other_id] ?? null,
             'last' => $last[$r->last_id] ?? null,
             'unread' => (int) $r->unread,
+            'blocked' => isset($users[$r->other_id]) && $me->hasBlocked($users[$r->other_id]),
         ])->filter(fn ($t) => $t->user && $t->last)->values();
     }
 }

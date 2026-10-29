@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'legacy_id', 'is_demo'])]
 #[Hidden(['password', 'remember_token'])]
@@ -49,17 +50,28 @@ class User extends Authenticatable implements MustVerifyEmail
         $key = 'block_ids:' . $this->id;
         $attrs = request()->attributes;
         if (! $attrs->has($key)) {
-            $mine = \DB::table('blocks')->where('blocker_id', $this->id)->pluck('blocked_id');
-            $theirs = \DB::table('blocks')->where('blocked_id', $this->id)->pluck('blocker_id');
-            $attrs->set($key, $mine->merge($theirs)->map(fn ($v) => (int) $v)->unique()->values()->all());
+            $mine = DB::table('blocks')->where('blocker_id', $this->id)->pluck('blocked_id')->map(fn ($v) => (int) $v)->all();
+            $theirs = DB::table('blocks')->where('blocked_id', $this->id)->pluck('blocker_id')->map(fn ($v) => (int) $v)->all();
+            $attrs->set($key, ['mine' => $mine, 'theirs' => $theirs]);
         }
+        $v = $attrs->get($key);
 
-        return $attrs->get($key);
+        return array_values(array_unique(array_merge($v['mine'], $v['theirs'])));
+    }
+
+    // 封鎖我的人（我看不到他們；他們封鎖前寄給我的紙條，我也打不開）
+    public function blockedByIds(): array
+    {
+        $this->blockRelatedIds();
+
+        return request()->attributes->get('block_ids:' . $this->id)['theirs'];
     }
 
     public function hasBlocked(User $other): bool
     {
-        return \DB::table('blocks')->where('blocker_id', $this->id)->where('blocked_id', $other->id)->exists();
+        $this->blockRelatedIds(); // 確保快取有值
+
+        return in_array((int) $other->id, request()->attributes->get('block_ids:' . $this->id)['mine'], true);
     }
 
     public function blockedEitherWay(User $other): bool

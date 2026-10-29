@@ -17,7 +17,7 @@
                         <a href="{{ route('notes.show', $t->user) }}" class="thread-item" @if($other && $other->is($t->user)) aria-current="page" @endif>
                             @include('partials.avatar', ['user' => $t->user])
                             <span class="thread-text">
-                                <span class="thread-name">{{ $t->user->name }}</span>
+                                <span class="thread-name">{{ $t->user->name }}@if($t->blocked) <span class="tag">已封鎖</span>@endif</span>
                                 <span class="thread-last">{{ \Illuminate\Support\Str::limit($t->last->body, 28) }}</span>
                             </span>
                             @if ($t->unread > 0)
@@ -53,6 +53,9 @@
                 </ol>
             @endif
 
+            @if ($readOnly ?? false)
+            <p class="notice" role="status">您已封鎖這位會員，這裡只能看以前的紙條，不能再寄。要檢舉的話，這些紙條可以當作證據。</p>
+            @else
             <form method="POST" action="{{ route('notes.store', $other) }}" class="form note-form" novalidate>
                 @csrf
                 @include('partials.errors', ['title' => '紙條沒有送出'])
@@ -66,6 +69,7 @@
                 </div>
                 <button type="submit" class="button">送出</button>
             </form>
+            @endif
         @endif
     </section>
 </div>
