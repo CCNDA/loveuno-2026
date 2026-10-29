@@ -28,7 +28,7 @@ class WriteTest extends TestCase
         $this->actingAs($u)->put('/me', [
             'name' => '新暱稱', 'live_place' => '台中市', 'job' => '老師', 'church' => '某某教會', 'church_visible' => '1',
             'intro' => "第一行\n第二行", 'hope' => '一起讀經', 'gender' => '男', 'birth_year' => 2000,
-        ])->assertRedirect('/me');
+        ])->assertRedirect("/members/{$u->id}")->assertSessionHas('status', '個人檔案存好了。');
 
         $p = $u->profile->fresh();
         $this->assertSame('新暱稱', $u->fresh()->name);
