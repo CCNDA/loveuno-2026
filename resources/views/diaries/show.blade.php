@@ -32,10 +32,10 @@
         @include('partials.errors', ['title' => '留言還沒送出'])
         <div class="field">
             <label for="body">寫留言</label>
+            <p id="body-hint" class="hint">500 字以內。看得到這篇日記的會員都看得到留言。</p>
             <textarea id="body" name="body" rows="3" maxlength="500" required
                       aria-describedby="body-hint @error('body') body-error @enderror"
                       @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
-            <p id="body-hint" class="hint">500 字以內。看得到這篇日記的會員都看得到留言。</p>
             @error('body')<p id="body-error" class="field-error">{{ $message }}</p>@enderror
         </div>
         <button type="submit" class="button">送出留言</button>
