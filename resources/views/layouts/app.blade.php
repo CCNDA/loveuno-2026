@@ -7,6 +7,11 @@
     <meta name="description" content="愛諾園：基督徒單身交友，用信仰認識彼此。">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $appVersion }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/app/icon-192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="愛諾園">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
     <meta name="theme-color" content="#E5BBA2">

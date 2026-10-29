@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\NewActivity;
 use App\Support\NotEnoughPoints;
 use App\Support\Points;
+use App\Support\WebPush;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,7 @@ class GiftController extends Controller
             throw ValidationException::withMessages(['item' => sprintf('愛諾積點不夠（送禮物要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS['gift'][0])]);
         }
 
+        defer(fn () => WebPush::notify($user)); // 有開推播的裝置
         if ($user->notify_email) { // 帳號設定「Email 通知」（舊站 gift.php「禮物通知」信）
             defer(fn () => $user->notify(new NewActivity('一份新禮物', route('gifts.index'))));
         }

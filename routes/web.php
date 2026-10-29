@@ -23,6 +23,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\VerificationController;
@@ -107,6 +108,10 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     // 帳號設定（設計稿 PageMemberSettings）
     Route::put('/center/settings', [SettingsController::class, 'update'])->middleware('throttle:30,60,settings-save')->name('settings.update');
     Route::get('/center/network', [SettingsController::class, 'network'])->name('settings.network');
+    // Web Push（public/js/push.js、public/sw.js）
+    Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:20,60,push-subscribe')->name('push.subscribe');
+    Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
+    Route::get('/push/summary', [PushController::class, 'summary'])->name('push.summary');
     Route::post('/center/email', [EmailChangeController::class, 'request'])->middleware('throttle:10,60,email-change')->name('email.change');
     Route::get('/email/change/{user}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('user')->middleware('signed')->name('email.change.confirm');
     Route::get('/center/delete', [SettingsController::class, 'confirmDestroy'])->name('settings.delete');

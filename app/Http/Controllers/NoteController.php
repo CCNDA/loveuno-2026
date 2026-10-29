@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Friendship;
 use App\Notifications\NewActivity;
+use App\Support\WebPush;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,7 @@ class NoteController extends Controller
         $note->recipient_id = $user->id;
         $note->save();
         Friendship::raiseByNotes($me, $user); // 互傳紙條夠多：普通好友 → 聊天好友
+        defer(fn () => WebPush::notify($user)); // 有開推播的裝置
         if ($user->notify_email) { // 帳號設定「Email 通知」；回應送出後才寄，不拖慢送出
             defer(fn () => $user->notify(new NewActivity('一張新紙條', route('notes.index'))));
         }

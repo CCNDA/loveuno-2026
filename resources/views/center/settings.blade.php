@@ -39,6 +39,14 @@
         <p id="notify_email-hint" class="hint">有人傳紙條、送禮物給您的時候，寄 email 告訴您。</p>
     </fieldset>
 
+    <fieldset class="field" id="push-box" data-key="{{ config('loveuno.push.public_key') }}">
+        <legend>推播</legend>
+        <p id="push-status" class="hint" role="status">要先開啟 JavaScript 才能設定推播。</p>
+        <p class="hint">推播是一台裝置一台裝置開的。iPhone 請先用 Safari 的「分享 → 加入主畫面」，再從主畫面打開愛諾園，才能開推播（iOS 16.4 以上）。</p>
+        <button type="button" id="push-on" class="button button-light" hidden>在這台裝置開啟推播</button>
+        <button type="button" id="push-off" class="button button-light" hidden>在這台裝置關閉推播</button>
+    </fieldset>
+
     <fieldset class="field">
         <legend>帳號</legend>
         <div class="field-check">
@@ -60,3 +68,4 @@
     <li><a class="button button-light" href="mailto:{{ config('loveuno.contact_email') }}?subject={{ rawurlencode('愛諾園 Bug 回報') }}">Bug 回報<span class="visually-hidden">（寄 email 到 {{ config('loveuno.contact_email') }}）</span></a></li>
     <li><a class="button button-secondary" href="{{ route('settings.delete') }}">註銷帳號…</a></li>
 </ul>
+<script src="{{ asset('js/push.js') }}?v={{ $appVersion }}" defer></script>

@@ -12,6 +12,12 @@ return [
         'twsms_password' => env('TWSMS_PASSWORD'),
     ],
 
+    // Web Push 的 VAPID 金鑰（php artisan push:vapid 產生、寫進 .env；沒有就不送推播）
+    'push' => [
+        'public_key' => env('VAPID_PUBLIC_KEY', ''),
+        'private_key' => env('VAPID_PRIVATE_KEY', ''),
+    ],
+
     // 會員收不到簡訊等問題要寫信來的地方（熊叔叔 10/29「愛諾園有愛諾園的專屬信箱 support@loveuno.com」）
     'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'support@loveuno.com'),
 ];
