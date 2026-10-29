@@ -45,4 +45,28 @@
     </section>
 @endforeach
 
+<section aria-labelledby="review-album">
+    <h2 id="review-album">相簿照片</h2>
+    <p class="meta">待審核 {{ $album->count() }} 張</p>
+    @if ($album->isEmpty())
+        <p>目前沒有要審核的相簿照片。</p>
+    @else
+        <ul class="review-list">
+            @foreach ($album as $ph)
+                <li class="review-item">
+                    <img src="{{ route('album.show', $ph) }}" alt="{{ $ph->user->name }} 的相簿照片" class="review-album" width="200" height="200">
+                    <div>
+                        <p class="member-name"><a href="{{ route('members.show', $ph->user) }}">{{ $ph->user->name }}</a></p>
+                        <p class="meta">上傳時間 {{ $ph->created_at?->format('Y/n/j H:i') }}</p>
+                        <form method="POST" action="{{ route('admin.album.decide', $ph) }}" class="review-actions">
+                            @csrf
+                            <button type="submit" name="decision" value="approve" class="button">通過</button>
+                            <button type="submit" name="decision" value="reject" class="button button-secondary">不通過（刪掉）</button>
+                        </form>
+                    </div>
+                </li>
+            @endforeach
+        </ul>
+    @endif
+</section>
 @endsection

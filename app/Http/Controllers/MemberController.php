@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlbumPhoto;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +51,9 @@ class MemberController extends Controller
         }
         // 四個分頁：個人資料（預設）／自我介紹／心情日記／個人相簿
         $tab = in_array($request->query('tab'), ['intro', 'diary', 'album'], true) ? $request->query('tab') : 'info';
+        $album = $tab === 'album'
+            ? AlbumPhoto::where('user_id', $user->id)->orderBy('id')->get()->filter->visibleTo($viewer)->values()
+            : collect();
         $diaries = $tab === 'diary'
             ? $user->diaries()->visibleTo($viewer)->orderByDesc('published_on')->orderByDesc('id')->paginate(10)->withQueryString()
             : collect();
@@ -57,6 +61,7 @@ class MemberController extends Controller
         return view('members.show', [
             'member' => $user->load('profile'),
             'tab' => $tab,
+            'album' => $album,
             'diaries' => $diaries,
             'isMe' => $viewer->is($user),
             'iBlocked' => false,

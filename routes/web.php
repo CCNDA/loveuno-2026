@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\PhotoReviewController;
+use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -87,6 +88,11 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');
     Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60,preferences-save')->name('center.preferences.update');
     Route::get('/me/intro', [ProfileController::class, 'editIntro'])->name('profile.intro');
+    // 個人相簿（最多 9 張，要審核）
+    Route::get('/me/album', [AlbumController::class, 'edit'])->name('album.edit');
+    Route::post('/me/album', [AlbumController::class, 'store'])->middleware('throttle:20,60,album-upload')->name('album.store');
+    Route::delete('/me/album/{photo}', [AlbumController::class, 'destroy'])->whereNumber('photo')->name('album.destroy');
+    Route::get('/album/{photo}', [AlbumController::class, 'show'])->whereNumber('photo')->name('album.show');
     Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
@@ -137,6 +143,7 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
+        Route::post('/album/{photo}', [PhotoReviewController::class, 'decideAlbum'])->whereNumber('photo')->name('admin.album.decide');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

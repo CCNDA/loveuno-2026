@@ -18,6 +18,7 @@
         <ul>
             <li><a href="{{ route('profile.edit') }}" @if(($sub ?? '') === 'info') aria-current="page" @endif>個人資料</a></li>
             <li><a href="{{ route('profile.intro') }}" @if(($sub ?? '') === 'intro') aria-current="page" @endif>自我介紹</a></li>
+            <li><a href="{{ route('album.edit') }}" @if(($sub ?? '') === 'album') aria-current="page" @endif>個人相簿</a></li>
             <li><a href="{{ route('photo.edit') }}" @if(($sub ?? '') === 'photo') aria-current="page" @endif>大頭照</a></li>
             <li><a href="{{ route('cover.edit') }}" @if(($sub ?? '') === 'cover') aria-current="page" @endif>個人化封面</a></li>
             <li><span class="subtab-soon">身份認證（年底開放前）</span></li>

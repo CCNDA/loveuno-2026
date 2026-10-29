@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PhotoController;
+use App\Models\AlbumPhoto;
 use App\Models\Profile;
 use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,9 @@ class PhotoReviewController extends Controller
                 ->get();
         }
 
-        return view('admin.photos', ['pending' => $pending]);
+        $album = AlbumPhoto::with('user:id,name')->where('status', 'pending')->orderBy('id')->get();
+
+        return view('admin.photos', ['pending' => $pending, 'album' => $album]);
     }
 
     public function decide(Request $request, Profile $profile): RedirectResponse
@@ -58,6 +61,29 @@ class PhotoReviewController extends Controller
             }
             $profile->forceFill([$kind . '_status' => 'rejected', $kind . '_path' => null])->save();
             $msg = sprintf('%s 的%s不通過，檔案已刪除。', $profile->user->name, $label);
+        }
+
+        return redirect()->route('admin.photos')->with('status', $msg);
+    }
+
+    // 相簿照片：通過就給別人看；不通過就刪檔、刪掉這一張
+    public function decideAlbum(Request $request, AlbumPhoto $photo): RedirectResponse
+    {
+        $data = $request->validate([
+            'decision' => ['required', 'in:approve,reject'],
+        ], [
+            'decision.required' => '請按「通過」或「不通過」其中一個按鈕。',
+            'decision.in' => '請按「通過」或「不通過」其中一個按鈕。',
+        ]);
+        abort_unless($photo->status === 'pending', 409);
+        $name = $photo->user->name;
+        if ($data['decision'] === 'approve') {
+            $photo->forceFill(['status' => 'approved'])->save();
+            $msg = sprintf('%s 的相簿照片通過了。', $name);
+        } else {
+            Storage::disk('avatars')->delete($photo->path);
+            $photo->delete();
+            $msg = sprintf('%s 的相簿照片不通過，檔案已刪除。', $name);
         }
 
         return redirect()->route('admin.photos')->with('status', $msg);
