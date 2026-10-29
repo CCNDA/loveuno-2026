@@ -41,10 +41,6 @@
 </form>
 
 @if ($diary->exists)
-    <form method="POST" action="{{ route('diaries.destroy', $diary) }}" class="danger-zone">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="button button-secondary">刪掉這篇日記</button>
-    </form>
+    <p class="danger-zone"><a href="{{ route('diaries.delete', $diary) }}">刪掉這篇日記…</a></p>
 @endif
 @endsection

@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'title', 'body', 'visibility', 'published_on'])]
+// user_id 不在 Fillable：作者只能由程式指定（$user->diaries()->create()），表單帶不進來
+#[Fillable(['title', 'body', 'visibility', 'published_on'])]
 class Diary extends Model
 {
     /** @use HasFactory<DiaryFactory> */
@@ -19,6 +20,7 @@ class Diary extends Model
     {
         return [
             'published_on' => 'date',
+            'user_id' => 'integer',
         ];
     }
 
@@ -37,6 +39,11 @@ class Diary extends Model
 
     public function isVisibleTo(User $viewer): bool
     {
-        return $this->visibility === 'public' || $this->user_id === $viewer->id;
+        return $this->visibility === 'public' || $this->isOwnedBy($viewer);
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return (int) $this->user_id === (int) $user->id;
     }
 }

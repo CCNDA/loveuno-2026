@@ -21,16 +21,18 @@
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>
             @if ($hint)<p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>@endif
+            @php($desc = trim(($hint ? $key . '-hint' : '') . ($errors->has($key) ? ' ' . $key . '-error' : '')))
             <input id="{{ $key }}" name="{{ $key }}" type="{{ $type }}" maxlength="{{ $max }}" value="{{ old($key, $value) }}"
                    @if ($key === 'name') required autocomplete="nickname" @endif
-                   aria-describedby="{{ $hint ? $key . '-hint' : '' }} @error($key) {{ $key }}-error @enderror"
+                   @if ($desc !== '') aria-describedby="{{ $desc }}" @endif
                    @error($key) aria-invalid="true" @enderror>
             @error($key)<p id="{{ $key }}-error" class="field-error">{{ $message }}</p>@enderror
         </div>
     @endforeach
 
     <div class="field field-check">
-        <input id="church_visible" name="church_visible" type="checkbox" value="1" @checked(old('church_visible', $profile->church_visible))>
+        {{-- 送出失敗回來時，沒勾的 checkbox 不會出現在 old()，要用這次送的值，不是資料庫的舊值 --}}
+        <input id="church_visible" name="church_visible" type="checkbox" value="1" @checked($errors->any() ? old('church_visible') : $profile->church_visible)>
         <label for="church_visible">讓其他會員看到我的教會</label>
     </div>
 
@@ -39,7 +41,7 @@
             <label for="{{ $key }}">{{ $label }}</label>
             <p id="{{ $key }}-hint" class="hint">最多 {{ $max }} 字。請不要寫電話、住址等聯絡方式。</p>
             <textarea id="{{ $key }}" name="{{ $key }}" rows="6" maxlength="{{ $max }}"
-                      aria-describedby="{{ $key }}-hint @error($key) {{ $key }}-error @enderror"
+                      aria-describedby="{{ trim($key . '-hint' . ($errors->has($key) ? ' ' . $key . '-error' : '')) }}"
                       @error($key) aria-invalid="true" @enderror>{{ old($key, $value) }}</textarea>
             @error($key)<p id="{{ $key }}-error" class="field-error">{{ $message }}</p>@enderror
         </div>

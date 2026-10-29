@@ -76,8 +76,7 @@ class DemoSeeder extends Seeder
             // 日記分給前幾位會員，日期往前排；最後一篇設成不公開，展示「只有自己看得到」
             $day = now()->startOfDay();
             foreach (self::DIARIES as $i => [$title, $body]) {
-                Diary::create([
-                    'user_id' => $users[$i % count($users)]->id,
+                $users[$i % count($users)]->diaries()->create([
                     'title' => $title,
                     'body' => $body,
                     'visibility' => $i === count(self::DIARIES) - 1 ? 'private' : 'public',

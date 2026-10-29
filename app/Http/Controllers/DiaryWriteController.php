@@ -54,8 +54,16 @@ class DiaryWriteController extends Controller
         ], [], ['title' => '標題', 'body' => '內容', 'visibility' => '誰看得到']);
     }
 
+    // 刪除前先確認一次（大會現場展示時避免誤刪）
+    public function confirmDestroy(Request $request, Diary $diary): View
+    {
+        $this->authorizeOwner($request, $diary);
+
+        return view('diaries.delete', ['diary' => $diary]);
+    }
+
     private function authorizeOwner(Request $request, Diary $diary): void
     {
-        abort_unless($diary->user_id === $request->user()->id, 404);
+        abort_unless($diary->isOwnedBy($request->user()), 404);
     }
 }
