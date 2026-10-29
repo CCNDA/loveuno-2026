@@ -3,16 +3,23 @@
    無障礙：字級 18px 起跳、文字對比 ≥ 4.5:1、焦點外框明顯、觸控目標 ≥ 44px。 */
 
 :root {
-    --bg: #fffdf9;
+    /* 配色照熊叔叔 10/29 給的 loveuno-web 切版：蜜桃頁首、米白底、磚紅主按鈕、紫褐次按鈕。
+       每一組文字／底色都算過對比 ≥ 4.5:1（切版的頁首白字對蜜桃底只有約 1.8，改成深褐字）。 */
+    --bg: #fffcf2;          /* 米白底 */
     --surface: #ffffff;
-    --text: #1f1d1a;
-    --muted: #5b554d;      /* 對 --bg 約 7:1 */
-    --brand: #8a2d3b;      /* 對白底約 8:1 */
-    --brand-dark: #6b1f2c;
-    --line: #e4ddd2;
+    --text: #2b211d;
+    --muted: #5e5049;       /* 對米白約 7:1 */
+    --brand: #8a4a32;       /* 連結：對米白約 6.6:1 */
+    --brand-dark: #6e3a27;
+    --button: #a3644a;      /* 主按鈕：白字約 4.7:1 */
+    --button-dark: #8a4a32;
+    --plum: #644754;        /* 次按鈕：白字約 8.2:1 */
+    --header: #e4bba4;      /* 頁首蜜桃色：深褐字約 7.7:1 */
+    --header-text: #3d2a22;
+    --line: #ead9cc;
     --focus: #1d4ed8;
     --error: #a1161f;
-    --banner: #fff4d6;
+    --banner: #fff1d6;
     --radius: 12px;
 }
 
@@ -44,15 +51,16 @@ main:focus { outline: none; }
 
 .demo-banner { margin: 0; padding: 8px 16px; background: var(--banner); text-align: center; font-size: .9rem; }
 
-.site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.site-header { background: var(--header); color: var(--header-text); }
 .header-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-.brand { font-size: 1.4rem; font-weight: 700; text-decoration: none; color: var(--brand); }
+.brand { font-size: 1.4rem; font-weight: 700; text-decoration: none; color: var(--header-text); letter-spacing: .05em; }
 .nav { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
 .nav a, .link-button {
     display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
-    border-radius: 8px; text-decoration: none; color: var(--text); font: inherit;
+    border-radius: 999px; text-decoration: none; color: var(--header-text); font: inherit;
 }
-.nav a[aria-current="page"] { background: #f5e9eb; color: var(--brand-dark); font-weight: 700; }
+.nav a[aria-current="page"] { background: var(--surface); color: var(--brand-dark); font-weight: 700; }
+.nav a:hover, .link-button:hover { background: rgba(255,255,255,.55); }
 .link-button { background: none; border: 0; cursor: pointer; }
 .nav form { margin: 0; }
 
@@ -69,9 +77,11 @@ h3 { font-size: 1.1rem; margin: 0 0 .5rem; }
 .button {
     display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
     padding: 0 24px; border: 0; border-radius: var(--radius);
-    background: var(--brand); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+    background: var(--button); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
 }
-.button:hover { background: var(--brand-dark); color: #fff; }
+.button:hover { background: var(--button-dark); color: #fff; }
+.button-plum { background: var(--plum); }
+.button-plum:hover { background: #4f3842; }
 
 .cards { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
