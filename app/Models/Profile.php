@@ -18,12 +18,24 @@ class Profile extends Model
         return [
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
+            'photo_updated_at' => 'datetime',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // 大頭照誰看得到：通過審核的，登入會員都看得到；審核中的只有本人和管理員
+    public function photoVisibleTo(?User $viewer): bool
+    {
+        if (! $this->photo_path || ! $viewer) {
+            return false;
+        }
+
+        return $this->photo_status === 'approved'
+            || ($this->photo_status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));
     }
 
     // 畫面上用教會習慣的稱呼

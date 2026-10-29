@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\PhotoReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PhotoController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
@@ -43,4 +45,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');
     Route::get('/diaries', [DiaryController::class, 'index'])->name('diaries.index');
     Route::get('/diaries/{diary}', [DiaryController::class, 'show'])->name('diaries.show');
+
+    // 大頭照（上傳要審核；檔案經過 PhotoController 檢查權限才送出）
+    Route::get('/me/photo', [PhotoController::class, 'edit'])->name('photo.edit');
+    Route::post('/me/photo', [PhotoController::class, 'update'])->middleware('throttle:10,60')->name('photo.update');
+    Route::delete('/me/photo', [PhotoController::class, 'destroy'])->name('photo.destroy');
+    Route::get('/photos/{user}', [PhotoController::class, 'show'])->name('photos.show');
+
+    // 管理員
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
+        Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
+    });
 });

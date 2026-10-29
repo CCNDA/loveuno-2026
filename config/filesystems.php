@@ -38,6 +38,20 @@ return [
             'report' => false,
         ],
 
+        // 大頭照：私有，不放 public/。測試站存本機；正式站可以用 AVATAR_DISK_DRIVER=s3 換成 R2 私有 bucket
+        'avatars' => [
+            'driver' => env('AVATAR_DISK_DRIVER', 'local'),
+            'root' => storage_path('app/private/avatars'),
+            'visibility' => 'private',
+            'key' => env('AVATAR_S3_KEY'),
+            'secret' => env('AVATAR_S3_SECRET'),
+            'region' => env('AVATAR_S3_REGION', 'auto'),
+            'bucket' => env('AVATAR_S3_BUCKET'),
+            'endpoint' => env('AVATAR_S3_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

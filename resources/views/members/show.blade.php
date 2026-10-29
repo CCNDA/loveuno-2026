@@ -7,6 +7,9 @@
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
 </div>
+@if ($isMe)
+    <p><a href="{{ route('photo.edit') }}">換大頭照</a>@if($member->profile?->photo_status === 'pending')（審核中）@endif</p>
+@endif
 
 @php($p = $member->profile)
 @if (! $p)

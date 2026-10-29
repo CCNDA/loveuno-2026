@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'is_demo' => 'boolean',
+            'is_admin' => 'boolean',
         ];
     }
 

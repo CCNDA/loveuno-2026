@@ -140,3 +140,12 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .member-card { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
 .member-name { margin: 0; font-weight: 700; font-size: 1.1rem; overflow-wrap: anywhere; }
 .member-card .meta, .member-card .excerpt { margin: 0; }
+
+/* 大頭照 */
+.avatar-photo { object-fit: cover; background: #efe7dc; }
+.review-list { list-style: none; padding: 0; display: grid; gap: 16px; }
+.review-item { display: flex; gap: 16px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; flex-wrap: wrap; }
+.review-item img { border-radius: 8px; width: 160px; height: 160px; object-fit: cover; }
+.review-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.button-secondary { background: #fff; color: var(--error); border: 2px solid var(--error); }
+.button-secondary:hover { background: #fff5f5; color: var(--error); }

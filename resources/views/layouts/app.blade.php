@@ -22,6 +22,9 @@
                         <li><a href="{{ route('diaries.index') }}" @if(request()->routeIs('diaries.*')) aria-current="page" @endif>心情日記</a></li>
                         <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif>認識朋友</a></li>
                         <li><a href="{{ route('me') }}" @if(request()->routeIs('members.show') && request()->route('user')?->is(auth()->user())) aria-current="page" @endif>我的檔案</a></li>
+                        @if (auth()->user()->is_admin)
+                            <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.*')) aria-current="page" @endif>審核照片</a></li>
+                        @endif
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

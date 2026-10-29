@@ -13,7 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // registration.open：註冊沒開放（config loveuno.registration_open）就 404
+        // admin：只有 is_admin 的帳號（審核大頭照）
         $middleware->alias([
+            'admin' => function ($request, $next) {
+                abort_unless($request->user()?->is_admin, 403);
+
+                return $next($request);
+            },
             'registration.open' => function ($request, $next) {
                 abort_unless(config('loveuno.registration_open'), 404);
 
