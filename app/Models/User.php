@@ -21,6 +21,14 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    // 跟資料庫的預設值一樣：剛 create、還沒重新讀過的物件也有這些值（不然 is_active 會是 null，被當成暫停）
+    protected $attributes = [
+        'is_active' => true,
+        'notify_email' => true,
+        'font_size' => 'medium',
+        'script' => 'hant',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -35,7 +43,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'points' => 'integer',
             'notify_email' => 'boolean',
             'is_active' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
+    }
+
+    // 別人看得到的會員：沒暫停、沒註銷（註銷的 is_active 也是 false）。暫停／註銷要擋的地方都用這個，免得漏掉
+    public function scopeActive(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        return $q->where('is_active', true);
     }
 
     public function verifications(): HasMany

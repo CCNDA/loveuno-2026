@@ -12,7 +12,7 @@ class DiaryController extends Controller
     {
         $diaries = Diary::visibleTo($request->user())
             ->whereNotIn('user_id', $request->user()->blockRelatedIds())
-            ->whereHas('user', fn ($q) => $q->where('is_active', true)->orWhere('id', $request->user()->id))
+            ->whereHas('user', fn ($q) => $q->active()->orWhere('id', $request->user()->id))
             ->with('user:id,name')
             ->withInteractions($request->user())
             ->orderByDesc('published_on')->orderByDesc('id')
@@ -29,7 +29,7 @@ class DiaryController extends Controller
 
         $diary->load('user:id,name')->loadInteractions($me);
         // 留言：舊的在上面（照時間讀下來）；跟我有封鎖關係的人的留言不顯示
-        $comments = $diary->comments()->with('user.profile')
+        $comments = $diary->comments()->with('user.profile')->whereHas('user', fn ($u) => $u->active())
             ->whereNotIn('user_id', $me->blockRelatedIds())
             ->orderBy('created_at')->orderBy('id')->get();
         $comments->each->setRelation('diary', $diary); // deletableBy 要用，不再查一次

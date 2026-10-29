@@ -17,7 +17,7 @@ class FriendController extends Controller
         $rows = Friendship::where(fn ($q) => $q->where('user_id', $me->id)->orWhere('friend_id', $me->id))
             ->orderByDesc('level')->orderByDesc('leveled_at')->get();
         $blocked = $me->blockRelatedIds();
-        $users = User::with('profile')->whereIn('id', $rows->map->otherThan($me))->whereNotIn('id', $blocked)->get()->keyBy('id');
+        $users = User::with('profile')->whereIn('id', $rows->map->otherThan($me))->whereNotIn('id', $blocked)->active()->get()->keyBy('id');
 
         // 真實好友、聊天好友、普通好友，各一組
         $groups = [];

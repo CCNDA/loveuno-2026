@@ -65,10 +65,26 @@ class SettingsTest extends TestCase
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
         $this->actingAs($a)->post("/members/{$b->id}/gift", ['item' => 1]);
         Notification::assertSentToTimes($b, NewActivity::class, 2);
+        Notification::assertSentTo($b, NewActivity::class, fn ($n) => ! str_contains(json_encode($n->toMail($b)->toArray(), JSON_UNESCAPED_UNICODE), '甲')); // 信裡沒有暱稱
 
         $b->forceFill(['notify_email' => false])->save();
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '再一次']);
         Notification::assertSentToTimes($b, NewActivity::class, 2);
+    }
+
+    public function test_paused_member_photos_and_comments_hidden_and_cannot_send(): void
+    {
+        $me = $this->member('暫停的');
+        $me->profile->forceFill(['photo_path' => 'p.jpg', 'photo_status' => 'approved'])->save();
+        $other = $this->member('別人');
+        $d = $other->diaries()->create(['title' => '別人的日記', 'body' => 'b', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
+        $c = new \App\Models\DiaryComment(['body' => '暫停者的留言']);
+        $c->forceFill(['diary_id' => $d->id, 'user_id' => $me->id])->save();
+        $me->forceFill(['is_active' => false])->save();
+
+        $this->actingAs($other)->get("/photos/{$me->id}")->assertNotFound();
+        $this->actingAs($other)->get("/diaries/{$d->id}")->assertDontSee('暫停者的留言');
+        $this->actingAs($me)->post("/notes/{$other->id}", ['body' => 'x'])->assertNotFound(); // 暫停的人也不能主動傳
     }
 
     public function test_network_page(): void
@@ -85,11 +101,26 @@ class SettingsTest extends TestCase
         $path = \App\Models\AlbumPhoto::firstOrFail()->path;
 
         $this->actingAs($u)->get('/center/delete')->assertOk()->assertSee('不能恢復');
-        $this->actingAs($u)->delete('/center/account', ['current_password' => 'wrong', 'confirm' => '1'])->assertSessionHasErrorsIn('delete', 'current_password');
-        $this->actingAs($u)->delete('/center/account', ['current_password' => 'password'])->assertSessionHasErrorsIn('delete', 'confirm');
-        $this->actingAs($u)->delete('/center/account', ['current_password' => 'password', 'confirm' => '1'])->assertRedirect('/');
-        $this->assertNull(User::find($u->id));
-        Storage::disk('avatars')->assertMissing($path);
+        $reason = '找到另一半了，謝謝愛諾園的幫助！';
+        $this->actingAs($u)->delete('/center/account', ['current_password' => 'wrong', 'confirm' => '1', 'reason' => $reason])->assertSessionHasErrorsIn('delete', 'current_password');
+        $this->actingAs($u)->delete('/center/account', ['current_password' => 'password', 'reason' => $reason])->assertSessionHasErrorsIn('delete', 'confirm');
+        $this->actingAs($u)->delete('/center/account', ['current_password' => 'password', 'confirm' => '1', 'reason' => '太短'])->assertSessionHasErrorsIn('delete', 'reason');
+
+        // 別人收到的紙條要留著（證據）
+        $victim = $this->member('收紙條的人');
+        $this->actingAs($u)->post("/notes/{$victim->id}", ['body' => '要留下來的紙條']);
+        \Illuminate\Support\Facades\Notification::fake();
+        $this->actingAs($u)->delete('/center/account', ['current_password' => 'password', 'confirm' => '1', 'reason' => $reason])->assertRedirect('/');
         $this->assertGuest();
+        $gone = User::find($u->id);
+        $this->assertSame(['已註銷會員', false], [$gone->name, $gone->is_active]);
+        $this->assertNotNull($gone->deleted_at);
+        $this->assertStringEndsWith('@deleted.invalid', $gone->email);
+        $this->assertNull($gone->profile()->first());
+        Storage::disk('avatars')->assertMissing($path);
+        $this->assertSame(1, \App\Models\Note::where('sender_id', $u->id)->count());
+        $this->actingAs($victim)->get("/notes/{$u->id}")->assertSee('要留下來的紙條')->assertSee('已註銷會員');
+        $this->actingAs($victim)->get("/members/{$u->id}")->assertNotFound();
+        \Illuminate\Support\Facades\Notification::assertSentOnDemand(\App\Notifications\AccountDeleted::class);
     }
 }

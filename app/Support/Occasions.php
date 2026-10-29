@@ -19,7 +19,7 @@ class Occasions
         if ($rows->isEmpty()) {
             return [];
         }
-        $friends = User::with('profile')->whereIn('id', $rows->map->otherThan($me))
+        $friends = User::with('profile')->active()->whereIn('id', $rows->map->otherThan($me))
             ->whereNotIn('id', $me->blockRelatedIds())->get()->keyBy('id');
         $today = now()->startOfDay();
         $out = [];

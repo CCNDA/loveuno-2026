@@ -84,7 +84,7 @@ class GiftController extends Controller
         }
 
         if ($user->notify_email) { // 帳號設定「Email 通知」（舊站 gift.php「禮物通知」信）
-            defer(fn () => $user->notify(new NewActivity('送了一份禮物給您', $me->name, route('gifts.index'))));
+            defer(fn () => $user->notify(new NewActivity('一份新禮物', route('gifts.index'))));
         }
 
         // 對方也送過我：互送禮物 → 普通好友

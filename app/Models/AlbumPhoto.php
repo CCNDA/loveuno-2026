@@ -33,6 +33,7 @@ class AlbumPhoto extends Model
             return $this->status !== 'rejected' || $this->user_id === (int) $viewer->id;
         }
 
-        return $this->status === 'approved' && ! in_array($this->user_id, $viewer->blockRelatedIds(), true);
+        return $this->status === 'approved' && ! in_array($this->user_id, $viewer->blockRelatedIds(), true)
+            && $this->user->is_active; // 暫停／註銷的帳號，別人看不到相簿
     }
 }

@@ -94,6 +94,9 @@ class Profile extends Model
         if (! $viewer->is_admin && $viewer->id !== $this->user_id && in_array((int) $this->user_id, $viewer->blockRelatedIds(), true)) {
             return false; // 封鎖（任一方）就看不到照片；管理員審核不受影響
         }
+        if (! $viewer->is_admin && $viewer->id !== $this->user_id && ! $this->user->is_active) {
+            return false; // 暫停／註銷的帳號，別人看不到照片
+        }
 
         return $status === 'approved'
             || ($status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));

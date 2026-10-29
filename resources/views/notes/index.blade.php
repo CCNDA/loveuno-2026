@@ -54,7 +54,7 @@
             @endif
 
             @if ($readOnly ?? false)
-            <p class="notice" role="status">您已封鎖這位會員，這裡只能看以前的紙條，不能再寄。要檢舉的話，這些紙條可以當作證據。</p>
+            <p class="notice" role="status">{{ auth()->user()->hasBlocked($other) ? '您已封鎖這位會員' : ($other->deleted_at ? '這位會員已經註銷帳號' : '這位會員暫停了帳號') }}，這裡只能看以前的紙條，不能再寄。要檢舉的話，這些紙條可以當作證據。</p>
             @else
             <form method="POST" action="{{ route('notes.store', $other) }}" class="form note-form" novalidate>
                 @csrf

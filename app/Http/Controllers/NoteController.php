@@ -23,15 +23,16 @@ class NoteController extends Controller
     // 可以傳紙條的對象：不是自己、email 已驗證、有個人檔案（跟「認識朋友」列得出來的人一致）
     public static function canNote(User $me, User $user): bool
     {
-        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $user->is_active
+        // 雙方都要是啟用中的（暫停的人也不能主動傳，不然對方回不了）
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $user->is_active && $me->is_active
             && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 
     public function show(Request $request, User $user): View
     {
         $me = $request->user();
-        // 我封鎖對方：還能唯讀看以前的紙條（被騷擾時要留證據），不能再寄
-        $readOnly = $me->hasBlocked($user) && ! $me->is($user);
+        // 我封鎖對方、或對方暫停／註銷了：還能唯讀看以前的紙條（被騷擾時要留證據），不能再寄
+        $readOnly = ! $me->is($user) && ($me->hasBlocked($user) || (! $user->is_active && Note::between($me, $user)->exists()));
         abort_unless($readOnly || self::canNote($me, $user), 404);
 
         // 打開對話＝對方寄給我的都算讀過
@@ -59,7 +60,7 @@ class NoteController extends Controller
         $note->save();
         Friendship::raiseByNotes($me, $user); // 互傳紙條夠多：普通好友 → 聊天好友
         if ($user->notify_email) { // 帳號設定「Email 通知」；回應送出後才寄，不拖慢送出
-            defer(fn () => $user->notify(new NewActivity('傳了一張紙條給您', $me->name, route('notes.show', $me))));
+            defer(fn () => $user->notify(new NewActivity('一張新紙條', route('notes.index'))));
         }
 
         return redirect()->route('notes.show', $user)->with('status', '紙條送出了。');

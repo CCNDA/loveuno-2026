@@ -59,7 +59,7 @@ class Diary extends Model
 
     private static function interactionCounts(User $viewer): array
     {
-        return ['prayers', 'comments' => fn (Builder $q) => $q->whereNotIn('user_id', $viewer->blockRelatedIds())];
+        return ['prayers', 'comments' => fn (Builder $q) => $q->whereNotIn('user_id', $viewer->blockRelatedIds())->whereHas('user', fn ($u) => $u->active())];
     }
 
     private static function prayedByMe(User $viewer): array

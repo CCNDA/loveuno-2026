@@ -57,6 +57,9 @@ class ImportLegacyExport extends Command
 
             DB::transaction(function () use ($m, $id, $email, $hash, $dir) {
                 $user = User::firstOrNew(['legacy_id' => $id]);
+                if ($user->deleted_at !== null) {
+                    return; // 會員自己註銷了：不要再匯回來
+                }
                 $nick = trim((string) ($m['nickname'] ?? ''));
                 $user->name = $nick !== '' ? mb_substr($nick, 0, 50) : '會員' . $id;
                 $user->email = $email;

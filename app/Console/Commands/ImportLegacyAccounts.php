@@ -61,6 +61,9 @@ class ImportLegacyAccounts extends Command
 
             DB::transaction(function () use ($row, $email, $plain) {
                 $user = User::firstOrNew(['legacy_id' => $row->id]);
+                if ($user->deleted_at !== null) {
+                    return; // 會員自己註銷了：不要再匯回來
+                }
                 $user->name = trim((string) $row->nickname) !== '' ? trim((string) $row->nickname) : '會員' . $row->id;
                 $user->email = $email;
                 $user->password = $plain; // casts 'hashed'：存進去的是雜湊
