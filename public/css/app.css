@@ -345,8 +345,9 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .button-light:hover { background: #fdf3ec; color: var(--brand-dark); }
 .gift-grid { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 8px; }
 .gift-radio { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.gift-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border: 2px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; text-align: center; min-height: 44px; }
-.gift-radio:checked + .gift-card { border-color: var(--brand); background: #fdf3ec; font-weight: 700; }
+/* 要比 .field label { display: block } 權重高 */
+.field .gift-card { display: flex; font-weight: 400; margin: 0; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border: 2px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; text-align: center; min-height: 44px; }
+.field .gift-radio:checked + .gift-card { border-color: var(--brand); background: #fdf3ec; font-weight: 700; }
 .gift-radio:focus-visible + .gift-card { outline: 3px solid var(--focus, #1a5fb4); outline-offset: 2px; }
 .gift-list { list-style: none; padding: 0; margin: 0; }
 .gift-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
