@@ -27,7 +27,7 @@
                            @checked((int) old('item') === $id)
                            @error('item') aria-invalid="true" aria-describedby="item-error" @enderror>
                     <label for="item-{{ $id }}" class="gift-card">
-                        <img src="{{ asset('images/brand/gift.svg') }}" alt="" width="48" height="48">
+                        <img src="{{ \App\Models\Gift::imageUrl($id) }}" alt="" width="96" height="96" loading="lazy">
                         <span>{{ $name }}</span>
                     </label>
                 </li>

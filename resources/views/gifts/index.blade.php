@@ -13,7 +13,7 @@
         <ul class="gift-list">
             @foreach ($received as $g)
                 <li class="gift-item">
-                    <img src="{{ asset('images/brand/gift.svg') }}" alt="" width="40" height="40">
+                    <img src="{{ \App\Models\Gift::imageUrl($g->item) }}" alt="" width="56" height="56" class="gift-thumb" loading="lazy">
                     <div>
                         <p class="gift-title">
                             @if (in_array($g->id, $newIds, true))<span class="tag">新</span> @endif
@@ -38,7 +38,7 @@
         <ul class="gift-list">
             @foreach ($sent as $g)
                 <li class="gift-item">
-                    <img src="{{ asset('images/brand/gift.svg') }}" alt="" width="40" height="40">
+                    <img src="{{ \App\Models\Gift::imageUrl($g->item) }}" alt="" width="56" height="56" class="gift-thumb" loading="lazy">
                     <div>
                         <p class="gift-title">送 <a href="{{ route('members.show', $g->recipient) }}">{{ $g->recipient->name }}</a>「{{ $g->itemName() }}」</p>
                         @if ($g->message !== '')<p class="gift-message">{{ $g->message }}</p>@endif

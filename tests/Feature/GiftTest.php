@@ -38,7 +38,7 @@ class GiftTest extends TestCase
         $this->actingAs($me)->get("/members/{$you->id}")->assertSee(route('gifts.create', $you), false);
         $this->actingAs($me)->get("/members/{$you->id}/gift")->assertOk()
             ->assertSee('送一份禮物給陌生網友是對他(她)表達好感的第一步')
-            ->assertSeeInOrder(['雲彩圍繞', '堅固房角石', '恩雨滋潤', '恩賜葡萄酒', '守護者天使', '聖經的奧秘', '雲上太陽', '聖靈充滿', '五餅二魚', '忠心小驢駒', '主的小羊', '初熟羊肉爐'])
+            ->assertSeeInOrder(['雲彩圍繞', '堅固房角石', '恩雨滋潤', '恩膏葡萄酒', '守護者天使', '聖經的奧秘', '雲上太陽', '聖靈充滿', '五餅二魚', '忠心小驢駒', '主的小羊', '初熟羊肉爐'])
             ->assertSee('20 個中文字以內');
         $this->actingAs($me)->get("/members/{$me->id}/gift")->assertNotFound();
     }

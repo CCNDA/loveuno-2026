@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // 禮物。所有欄位由 GiftController 指定，沒有表單直接寫進來，所以不開 Fillable。
 class Gift extends Model
 {
-    // 設計稿 components/dialog/SendGiftDialog.tsx 的 12 種，照原本的 id 與順序（熊叔叔 10/29「2A」）。
-    // 圖還沒有（設計稿是暫放的圖），先都用 gift.svg，等 Figma 的圖。
+    // 設計稿的 12 種，照 SendGiftDialog.tsx 的 id 與順序（熊叔叔 10/29「2A」）；名字以 Figma 為準（第 4 種 Figma 是
+    // 「恩膏葡萄酒」，前台程式寫「恩賜葡萄酒」）。圖是 Figma 01_UNO_Website「gift」框（330:9182）匯出的，
+    // 放在 public/images/gifts/<id>.png（五餅二魚那一張第一份不完整，用第二份 342:39614）。
     public const ITEMS = [
         1 => '雲彩圍繞',
         2 => '堅固房角石',
         3 => '恩雨滋潤',
-        4 => '恩賜葡萄酒',
+        4 => '恩膏葡萄酒',
         5 => '守護者天使',
         6 => '聖經的奧秘',
         7 => '雲上太陽',
@@ -44,6 +45,11 @@ class Gift extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public static function imageUrl(int $item): string
+    {
+        return asset('images/gifts/' . (isset(self::ITEMS[$item]) ? $item : 1) . '.png');
     }
 
     public function itemName(): string
