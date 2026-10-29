@@ -9,18 +9,7 @@
 <form method="POST" action="{{ route('password.email') }}" class="form" novalidate>
     @csrf
 
-    @if ($errors->any())
-        <div class="error-summary" role="alert" aria-labelledby="error-title">
-            <h2 id="error-title">還沒有寄出</h2>
-            <ul>
-                @foreach ($errors->messages() as $field => $messages)
-                    @foreach ($messages as $message)
-                        <li><a href="#{{ $field }}">{{ $message }}</a></li>
-                    @endforeach
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    @include('partials.errors', ['title' => '還沒有寄出'])
 
     <div class="field">
         <label for="email">電子郵件</label>

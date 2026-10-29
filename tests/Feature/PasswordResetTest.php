@@ -78,6 +78,8 @@ class PasswordResetTest extends TestCase
         ], $over);
 
         $this->post('/reset-password', $form(['token' => 'nope']))->assertSessionHasErrors('email');
+        // 漏了 token：一樣算連結失效，錯誤掛在看得到的欄位上（不是隱藏的 token）
+        $this->post('/reset-password', $form(['token' => null]))->assertSessionHasErrors('email')->assertSessionDoesntHaveErrors('token');
         $this->post('/reset-password', $form(['password' => 'short', 'password_confirmation' => 'short']))->assertSessionHasErrors('password');
         // 拿 A 的連結去改 B 的密碼
         $this->post('/reset-password', $form(['email' => 'other@example.com']))->assertSessionHasErrors('email');

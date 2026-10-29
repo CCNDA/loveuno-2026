@@ -9,18 +9,7 @@
     @csrf
     <input type="hidden" name="token" value="{{ $token }}">
 
-    @if ($errors->any())
-        <div class="error-summary" role="alert" aria-labelledby="error-title">
-            <h2 id="error-title">密碼還沒有換好</h2>
-            <ul>
-                @foreach ($errors->messages() as $field => $messages)
-                    @foreach ($messages as $message)
-                        <li><a href="#{{ $field }}">{{ $message }}</a></li>
-                    @endforeach
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    @include('partials.errors', ['title' => '密碼還沒有換好'])
 
     <div class="field">
         <label for="email">電子郵件</label>
@@ -32,10 +21,10 @@
 
     <div class="field">
         <label for="password">新密碼</label>
+        <p id="password-hint" class="hint">至少 10 個字元。換好之後，其他裝置上的登入會被登出。</p>
         <input id="password" name="password" type="password" autocomplete="new-password" required
                aria-describedby="password-hint @error('password') password-error @enderror"
                @error('password') aria-invalid="true" @enderror>
-        <p id="password-hint" class="hint">至少 10 個字</p>
         @error('password')<p id="password-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
