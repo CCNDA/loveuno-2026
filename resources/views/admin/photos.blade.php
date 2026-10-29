@@ -4,6 +4,16 @@
 
 @section('content')
 <h1>審核大頭照</h1>
+@if ($errors->any())
+    <div class="error-summary" role="alert" aria-labelledby="error-title">
+        <h2 id="error-title">這次沒有審核成功</h2>
+        <ul>
+            @foreach ($errors->all() as $message)
+                <li>{{ $message }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <p class="meta" role="status">待審核 {{ $pending->count() }} 張</p>
 
 @if ($pending->isEmpty())

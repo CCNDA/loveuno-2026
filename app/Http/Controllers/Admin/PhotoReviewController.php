@@ -24,9 +24,14 @@ class PhotoReviewController extends Controller
 
     public function decide(Request $request, Profile $profile): RedirectResponse
     {
+        // 沒帶 decision（不是按按鈕送出）要明說，不能看起來像「通過了」（小布 0.4.0 複測觀察）
         $data = $request->validate([
             'decision' => ['required', 'in:approve,reject'],
             'photo' => ['required', 'string'], // 管理員看到的是哪一張（photo_path）
+        ], [
+            'decision.required' => '請按「通過」或「不通過」其中一個按鈕。',
+            'decision.in' => '請按「通過」或「不通過」其中一個按鈕。',
+            'photo.required' => '找不到要審核的是哪一張，請重新整理頁面再審。',
         ]);
         abort_unless($profile->photo_status === 'pending', 409);
         // 管理員打開頁面之後，會員又換了照片：不能讓「通過」套到沒看過的那張

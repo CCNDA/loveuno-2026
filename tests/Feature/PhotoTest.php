@@ -158,6 +158,21 @@ class PhotoTest extends TestCase
         $this->assertSame(40_000_000, \App\Support\AvatarImage::MAX_PIXELS);
     }
 
+    public function test_review_without_decision_says_so(): void
+    {
+        $owner = $this->member('本人');
+        $admin = $this->member('管理員', true);
+        $this->actingAs($owner)->post('/me/photo', ['photo' => UploadedFile::fake()->image('a.jpg', 400, 400)]);
+        $p = $owner->profile->fresh();
+
+        $this->actingAs($admin)->from('/admin/photos')->post("/admin/photos/{$p->user_id}", ['photo' => $p->photo_path])
+            ->assertRedirect('/admin/photos')->assertSessionHasErrors('decision');
+        $this->actingAs($admin)->followingRedirects()->from('/admin/photos')
+            ->post("/admin/photos/{$p->user_id}", ['photo' => $p->photo_path])
+            ->assertSee('這次沒有審核成功')->assertSee('請按「通過」或「不通過」');
+        $this->assertSame('pending', $p->fresh()->photo_status);
+    }
+
     public function test_set_admin_command(): void
     {
         $u = $this->member();
