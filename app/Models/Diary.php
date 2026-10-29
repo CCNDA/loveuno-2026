@@ -43,11 +43,28 @@ class Diary extends Model
         return $this->hasMany(DiaryComment::class);
     }
 
-    // 列表用：禱告人數、留言數、我有沒有按過「為你禱告」
+    // 列表用：禱告人數、留言數、我有沒有按過「為你禱告」。
+    // 留言數不算跟我有封鎖關係的人（內頁也不顯示），兩邊數字要一樣
     public function scopeWithInteractions(Builder $query, User $viewer): Builder
     {
-        return $query->withCount(['prayers', 'comments'])
-            ->withExists(['prayers as prayed_by_me' => fn (Builder $q) => $q->where('user_id', $viewer->id)]);
+        return $query->withCount(self::interactionCounts($viewer))
+            ->withExists(self::prayedByMe($viewer));
+    }
+
+    // 內頁用：已經拿到這篇了，補上同樣的三個數
+    public function loadInteractions(User $viewer): static
+    {
+        return $this->loadCount(self::interactionCounts($viewer))->loadExists(self::prayedByMe($viewer));
+    }
+
+    private static function interactionCounts(User $viewer): array
+    {
+        return ['prayers', 'comments' => fn (Builder $q) => $q->whereNotIn('user_id', $viewer->blockRelatedIds())];
+    }
+
+    private static function prayedByMe(User $viewer): array
+    {
+        return ['prayers as prayed_by_me' => fn (Builder $q) => $q->where('user_id', $viewer->id)];
     }
 
     // 看得到的日記：公開的，加上自己的（含不公開）

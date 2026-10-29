@@ -40,7 +40,7 @@ class DiaryInteractionController extends Controller
             'body' => ['required', 'string', 'max:500'],
         ], [], ['body' => '留言']);
 
-        $comment = new DiaryComment(['body' => trim($data['body'])]);
+        $comment = new DiaryComment(['body' => $data['body']]);
         $comment->forceFill(['diary_id' => $diary->id, 'user_id' => $request->user()->id])->save();
 
         return redirect()->to(route('diaries.show', $diary) . '#comment-' . $comment->id)->with('status', '留言送出了。');
@@ -80,7 +80,7 @@ class DiaryInteractionController extends Controller
     {
         $page = max(1, (int) $request->input('page', 1));
         $url = match ($request->input('from')) {
-            'wall' => rtrim(route('home'), '/') . '/',
+            'wall' => rtrim(route('home'), '/') . '/', // route('home') 是「https://網域」沒有結尾的 /，補上才是「/#d1」
             'list' => route('diaries.index', $page > 1 ? ['page' => $page] : []),
             default => route('diaries.show', $diary),
         };

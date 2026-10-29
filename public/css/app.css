@@ -276,7 +276,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .script-toggle { border: 1px solid var(--header-text); }
 
 /* 日記：代禱標籤、附圖、為你禱告／留言（設計稿 DiaryWall） */
-.tag-prayer { background: var(--header); color: var(--header-text); font-weight: 700; }
+.tag-prayer { background: #cdeaf3; color: #05678a; font-weight: 700; } /* 設計稿 #0893c1 字對 #cdeaf3 只有 2.8:1，加深到 5.0:1 */
 .diary-image { display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: var(--radius); }
 .diary-image-thumb { max-width: 240px; }
 .review-diary { object-fit: contain; background: #efe7dc; }

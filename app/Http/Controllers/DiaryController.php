@@ -26,7 +26,7 @@ class DiaryController extends Controller
         $me = $request->user();
         abort_unless($diary->isReachableBy($me), 404);
 
-        $diary = Diary::whereKey($diary->id)->with('user:id,name')->withInteractions($me)->firstOrFail();
+        $diary->load('user:id,name')->loadInteractions($me);
         // 留言：舊的在上面（照時間讀下來）；跟我有封鎖關係的人的留言不顯示
         $comments = $diary->comments()->with('user.profile')
             ->whereNotIn('user_id', $me->blockRelatedIds())

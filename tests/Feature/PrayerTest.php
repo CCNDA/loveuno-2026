@@ -125,6 +125,22 @@ class PrayerTest extends TestCase
         $this->assertSame(0, DB::table('diary_prayers')->count() + DiaryComment::count());
     }
 
+    public function test_comment_count_matches_what_viewer_can_see(): void
+    {
+        $author = $this->member('作者');
+        $d = $this->diary($author);
+        $bad = $this->member('被封鎖的人');
+        $v = $this->member('讀者');
+        foreach ([$bad, $author] as $u) {
+            $c = new DiaryComment(['body' => '留言']);
+            $c->forceFill(['diary_id' => $d->id, 'user_id' => $u->id])->save();
+        }
+        $this->block($v, $bad);
+
+        $this->actingAs($v)->get('/')->assertSee('1<span class="visually-hidden"> 則</span>', false);
+        $this->actingAs($v)->get("/diaries/{$d->id}")->assertSee('留言（1）')->assertSee('1<span class="visually-hidden"> 則</span>', false);
+    }
+
     public function test_comments_from_blocked_people_are_hidden(): void
     {
         $author = $this->member('作者');
@@ -217,7 +233,7 @@ class PrayerTest extends TestCase
     public function test_relative_time_in_chinese(): void
     {
         $c = new DiaryComment;
-        foreach ([[30, '剛剛'], [600, '10 分鐘前'], [3600 * 20, '20 小時前'], [86400, '1 天前']] as [$sec, $want]) {
+        foreach ([[30, '剛剛'], [600, '10分鐘前'], [3600 * 20, '20小時前'], [86400, '1天前']] as [$sec, $want]) {
             $c->created_at = now()->subSeconds($sec);
             $this->assertSame($want, $c->ago());
         }

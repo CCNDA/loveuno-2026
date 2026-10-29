@@ -38,9 +38,9 @@ class DiaryComment extends Model
 
         return match (true) {
             $s < 60 => '剛剛',
-            $s < 3600 => intdiv($s, 60) . ' 分鐘前',
-            $s < 86400 => intdiv($s, 3600) . ' 小時前',
-            $s < 86400 * 30 => intdiv($s, 86400) . ' 天前',
+            $s < 3600 => intdiv($s, 60) . '分鐘前',
+            $s < 86400 => intdiv($s, 3600) . '小時前',
+            $s < 86400 * 30 => intdiv($s, 86400) . '天前',
             default => $this->created_at->format('Y-m-d'),
         };
     }
