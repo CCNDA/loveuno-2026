@@ -43,4 +43,5 @@
 
     <button type="submit" class="button">登入</button>
 </form>
+<p><a href="{{ route('password.request') }}">忘記密碼？</a></p>
 @endsection

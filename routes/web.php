@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\PhotoReviewController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BlockController;
@@ -31,6 +32,12 @@ Route::get('/script/{script}', function (\Illuminate\Http\Request $request, stri
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+
+    // 忘記密碼：不放在 registration.open 裡面，註冊關著也要能重設
+    Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:5,10,password-forgot')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:10,10,password-reset')->name('password.update');
 });
 
 // 註冊：config loveuno.registration_open 沒打開就 404，登入與否都一樣（11/8 展示版不開放）
