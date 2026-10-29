@@ -296,3 +296,11 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .comment-body { margin: 4px 0; overflow-wrap: anywhere; }
 .comment-item .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
 .avatar-sm { width: 40px; height: 40px; font-size: 1rem; }
+
+/* 檢舉（管理員） */
+.report-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.report-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.report-item h3 { margin-top: 0; }
+.report-meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0 0 8px; }
+.report-meta dt { font-weight: 700; }
+.report-meta dd { margin: 0; }

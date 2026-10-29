@@ -29,7 +29,9 @@
                         <li class="nav-dup"><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif>傳紙條@if($unreadNotes > 0) <span class="badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
-                            <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.*')) aria-current="page" @endif>審核照片</a></li>
+                            <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
+                            @php($openReports = \App\Models\Report::where('status', 'open')->count())
+                            <li><a href="{{ route('admin.reports') }}" @if(request()->routeIs('admin.reports')) aria-current="page" @endif>檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
                         @endif
                         <li>
                             <form method="POST" action="{{ route('logout') }}">

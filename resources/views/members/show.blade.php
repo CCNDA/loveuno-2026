@@ -28,6 +28,7 @@
         @method('DELETE')
         <button type="submit" class="button">解除封鎖</button>
     </form>
+    <p><a href="{{ route('reports.create', $member) }}">檢舉這位會員…</a></p>
 @else
 @php($p = $member->profile)
 @if (! $p)
@@ -72,7 +73,7 @@
     @endif
 </section>
 @if (! $isMe)
-    <p class="danger-zone"><a href="{{ route('blocks.confirm', $member) }}">封鎖這位會員…</a></p>
+    <p class="danger-zone"><a href="{{ route('blocks.confirm', $member) }}">封鎖這位會員…</a>　<a href="{{ route('reports.create', $member) }}">檢舉這位會員…</a></p>
 @endif
 @endif
 @endsection

@@ -9,7 +9,7 @@
     <li>對方看不到您的個人檔案、日記和大頭照，您也看不到對方的。</li>
     <li>對方不會收到通知。之後可以在「會員中心 → 帳號管理」解除封鎖。</li>
 </ul>
-<p>如果對方有騷擾、詐騙等行為，也請告訴管理員。</p>
+<p>如果對方有騷擾、詐騙等行為，也請<a href="{{ route('reports.create', $member) }}">檢舉這位會員</a>，讓管理員處理。</p>
 
 <form method="POST" action="{{ route('blocks.store', $member) }}" class="review-actions">
     @csrf

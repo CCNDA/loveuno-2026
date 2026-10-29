@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\PhotoReviewController;
+use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // 沒登入：介紹頁；登入後：日記牆（好友推薦＋日記卡片）
@@ -89,6 +91,9 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/members/{user}/block', [BlockController::class, 'confirm'])->whereNumber('user')->name('blocks.confirm');
     Route::post('/members/{user}/block', [BlockController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,block')->name('blocks.store');
     Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
+    // 檢舉（封鎖了也可以檢舉）
+    Route::get('/members/{user}/report', [ReportController::class, 'create'])->whereNumber('user')->name('reports.create');
+    Route::post('/members/{user}/report', [ReportController::class, 'store'])->whereNumber('user')->middleware('throttle:10,1440,report')->name('reports.store');
     Route::get('/diaries', [DiaryController::class, 'index'])->name('diaries.index');
     // 寫日記（create 要排在 {diary} 前面）；改、刪只有作者本人
     Route::get('/diaries/create', [DiaryWriteController::class, 'create'])->name('diaries.create');
@@ -121,5 +126,8 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
         Route::post('/diary-images/{diary}', [PhotoReviewController::class, 'decideDiary'])->whereNumber('diary')->name('admin.diary-images.decide');
+        Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
+        Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
+        Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');
     });
 });
