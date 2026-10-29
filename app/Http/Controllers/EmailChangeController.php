@@ -38,7 +38,7 @@ class EmailChangeController extends Controller
         if (! $taken) {
             $user->forceFill(['email_pending' => $new])->save();
             $url = URL::temporarySignedRoute('email.change.confirm', now()->addMinutes(60), ['user' => $user->id, 'hash' => sha1($new)]);
-            Notification::route('mail', $new)->notify(new VerifyNewEmail($user->name, $url));
+            defer(fn () => Notification::route('mail', $new)->notify(new VerifyNewEmail($user->name, $url))); // 回應後才寄：有沒有人用，花的時間一樣
         }
 
         return redirect()->to(route('center.account') . '#settings-title')

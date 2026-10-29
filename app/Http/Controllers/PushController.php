@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gift;
 use App\Models\Note;
 use App\Models\PushSubscription;
+use App\Support\WebPush;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,9 @@ class PushController extends Controller
             'keys.p256dh' => ['required', 'string', 'max:200'],
             'keys.auth' => ['required', 'string', 'max:100'],
         ]);
+        if (! WebPush::allowedEndpoint($data['endpoint'])) {
+            return response()->json(['ok' => false, 'message' => '這不是認得的推播服務。'], 422);
+        }
         $hash = hash('sha256', $data['endpoint']);
         // 同一個裝置換帳號登入：訂閱換到現在這個人
         PushSubscription::where('endpoint_hash', $hash)->delete();
@@ -30,6 +34,11 @@ class PushController extends Controller
             'auth' => $data['keys']['auth'],
             'user_agent' => substr((string) $request->userAgent(), 0, 200),
         ])->save();
+        // 一個人最多 5 台裝置（不然一則紙條要等很多台一台一台送）：多的刪掉最舊的
+        $ids = PushSubscription::where('user_id', $request->user()->id)->orderByDesc('id')->pluck('id');
+        PushSubscription::whereIn('id', $ids->slice(5))->delete();
+        // 記在這次登入的 session：登出時把這台裝置的訂閱刪掉（換人用同一台，前一個人不會再收到）
+        $request->session()->push('push_subscription_ids', $sub->id);
 
         return response()->json(['ok' => true]);
     }

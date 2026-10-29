@@ -24,6 +24,17 @@ php artisan key:generate
 php artisan migrate
 ```
 
+## 部署（正式站、公測站）
+
+```
+php artisan migrate --force
+php artisan push:vapid   # 第一次部署跑一次：產生推播金鑰寫進 .env（已經有就不動；不要換，換了所有裝置要重開推播）
+php artisan view:clear && php artisan route:clear
+```
+
+.env 還要設：`SMS_DRIVER=twsms`、`TWSMS_USERNAME`、`TWSMS_PASSWORD`（手機認證，熊叔叔設定）、`LOVEUNO_CONTACT_EMAIL=support@loveuno.com`、寄信（MAIL_*）。
+不要跑 `php artisan config:cache`（測試會連到錯的庫，見 tests/TestCase.php）。
+
 ## 設定與機密
 
 所有機密（DB、Cloudflare R2、郵件等）一律放在 `.env`（已於 `.gitignore` 排除），不進版控；範本見 `.env.example`。

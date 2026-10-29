@@ -57,6 +57,11 @@ class LoginController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        // 這台裝置在這次登入開的推播：登出就刪掉
+        $ids = (array) $request->session()->get('push_subscription_ids', []);
+        if ($ids && $request->user()) {
+            \App\Models\PushSubscription::whereIn('id', $ids)->where('user_id', $request->user()->id)->delete();
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

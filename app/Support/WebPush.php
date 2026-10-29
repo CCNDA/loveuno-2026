@@ -14,6 +14,32 @@ use Throwable;
 // 金鑰在 .env：VAPID_PUBLIC_KEY（base64url 的 65 bytes 公鑰）、VAPID_PRIVATE_KEY（PEM，base64 包一層），用 php artisan push:vapid 產生。
 class WebPush
 {
+    // 推播服務的網域（Chrome／Edge／Android＝FCM、Firefox＝Mozilla、Safari／iPhone＝Apple、舊 Edge＝WNS）。
+    // 只收這些：endpoint 是會員的瀏覽器送來的，不擋的話會員可以填內網網址，讓伺服器去打（SSRF，兩面審查 10/29）
+    public const PUSH_HOSTS = ['fcm.googleapis.com', 'android.googleapis.com', 'updates.push.services.mozilla.com',
+        'web.push.apple.com', 'api.push.apple.com'];
+
+    public const PUSH_HOST_SUFFIXES = ['.push.services.mozilla.com', '.push.apple.com', '.notify.windows.com'];
+
+    public static function allowedEndpoint(string $endpoint): bool
+    {
+        $p = parse_url($endpoint);
+        if (($p['scheme'] ?? '') !== 'https' || empty($p['host']) || isset($p['user']) || isset($p['port'])) {
+            return false;
+        }
+        $host = strtolower($p['host']);
+        if (in_array($host, self::PUSH_HOSTS, true)) {
+            return true;
+        }
+        foreach (self::PUSH_HOST_SUFFIXES as $suffix) {
+            if (str_ends_with($host, $suffix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function enabled(): bool
     {
         return (string) config('loveuno.push.public_key') !== '' && (string) config('loveuno.push.private_key') !== '';
@@ -26,8 +52,12 @@ class WebPush
             return;
         }
         foreach (PushSubscription::where('user_id', $user->id)->get() as $sub) {
+            if (! self::allowedEndpoint($sub->endpoint)) {
+                $sub->delete(); // 白名單之前存的、或被改過的：不送
+                continue;
+            }
             try {
-                $res = Http::timeout(10)->withHeaders([
+                $res = Http::timeout(5)->withoutRedirecting()->withHeaders([
                     'TTL' => '86400',
                     'Urgency' => 'normal',
                     'Authorization' => 'vapid t=' . self::jwt($sub->endpoint) . ', k=' . config('loveuno.push.public_key'),
@@ -49,7 +79,7 @@ class WebPush
         $parts = parse_url($endpoint);
         $header = self::b64(json_encode(['typ' => 'JWT', 'alg' => 'ES256']));
         $claims = self::b64(json_encode([
-            'aud' => $parts['scheme'] . '://' . $parts['host'],
+            'aud' => $parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : ''),
             'exp' => time() + 12 * 3600,
             'sub' => 'mailto:' . config('loveuno.contact_email'),
         ]));

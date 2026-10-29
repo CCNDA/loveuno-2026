@@ -53,7 +53,7 @@
     @else
         <ul class="plain-list">
             @foreach ($closed as $r)
-                <li>第 {{ $r->id }} 號 {{ $r->reasonLabel() }}・{{ $r->reported?->name ?? '（帳號已刪除）' }}・{{ $r->handler?->name ?? '?' }} {{ $r->handled_at?->format('Y/n/j') }}：{{ $r->admin_note }}</li>
+                <li>第 {{ $r->id }} 號 {{ $r->reasonLabel() }}・{{ $r->reported?->name ?? '（帳號已刪除）' }}・{{ $r->handler?->name ?? '?' }} {{ $r->handled_at?->shown()->format('Y/n/j') }}：{{ $r->admin_note }}</li>
             @endforeach
         </ul>
     @endif

@@ -18,7 +18,7 @@
                         @include('partials.avatar', ['user' => $row['friend'], 'size' => 'sm'])
                         <div>
                             <p class="member-name"><a href="{{ route('members.show', $row['friend']) }}">{{ $row['friend']->name }}</a></p>
-                            <p class="meta">{{ $row['since']?->format('Y/n/j') }} 成為好友</p>
+                            <p class="meta">{{ $row['since']?->shown()->format('Y/n/j') }} 成為好友</p>
                         </div>
                     </li>
                 @endforeach

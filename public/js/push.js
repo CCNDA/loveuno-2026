@@ -37,7 +37,8 @@
           if (p !== 'granted') { say('沒有開啟：請在瀏覽器或手機設定裡允許愛諾園的通知。'); return; }
           reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) }).then(function (s) {
             return post('/push/subscribe', s.toJSON());
-          }).then(function () {
+          }).then(function (r) {
+            if (r && !r.ok) { throw new Error('rejected'); }
             say('這台裝置已經開啟推播。有人傳紙條、送禮物時會通知您。');
             onBtn.hidden = true; offBtn.hidden = false;
           }).catch(function () { say('開啟推播失敗，請稍後再試。'); });
@@ -51,7 +52,7 @@
         }).then(function () {
           say('這台裝置已經關閉推播。');
           onBtn.hidden = false; offBtn.hidden = true;
-        });
+        }).catch(function () { say('關閉推播失敗，請稍後再試。'); });
       });
     });
   }).catch(function () { say('這個瀏覽器還不能收推播。'); });

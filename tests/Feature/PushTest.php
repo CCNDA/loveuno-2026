@@ -43,10 +43,10 @@ class PushTest extends TestCase
     public function test_subscribe_and_push_on_new_note_with_valid_vapid(): void
     {
         $this->keys();
-        Http::fake(['push.example.com/*' => Http::response('', 201), 'gone.example.com/*' => Http::response('', 410)]);
+        Http::fake(['fcm.googleapis.com/*' => Http::response('', 201), 'updates.push.services.mozilla.com/*' => Http::response('', 410)]);
         $a = $this->member();
         $b = $this->member();
-        foreach (['https://push.example.com/abc', 'https://gone.example.com/xyz'] as $ep) {
+        foreach (['https://fcm.googleapis.com/fcm/send/abc', 'https://updates.push.services.mozilla.com/wpush/v2/xyz'] as $ep) {
             $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => $ep, 'keys' => ['p256dh' => 'p', 'auth' => 'a']])->assertOk();
         }
         $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => 'http://insecure.example.com/x', 'keys' => ['p256dh' => 'p', 'auth' => 'a']])->assertStatus(422);
@@ -54,7 +54,7 @@ class PushTest extends TestCase
 
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
         Http::assertSent(function ($req) {
-            if ($req->url() !== 'https://push.example.com/abc') {
+            if ($req->url() !== 'https://fcm.googleapis.com/fcm/send/abc') {
                 return false;
             }
             // VAPID：Authorization 是 vapid t=<JWT>, k=<公鑰>，JWT 的 aud 是推播服務的網域、簽章是 64 bytes
@@ -63,7 +63,7 @@ class PushTest extends TestCase
             $claims = json_decode(base64_decode(strtr($c, '-_', '+/')), true);
             $raw = base64_decode(strtr($sig, '-_', '+/') . str_repeat('=', (4 - strlen($sig) % 4) % 4));
 
-            return $claims['aud'] === 'https://push.example.com' && strlen($raw) === 64 && $req->header('TTL')[0] === '86400';
+            return $claims['aud'] === 'https://fcm.googleapis.com' && strlen($raw) === 64 && $req->header('TTL')[0] === '86400';
         });
         $this->assertSame(1, PushSubscription::count()); // 410 的訂閱刪掉了
 
@@ -74,7 +74,7 @@ class PushTest extends TestCase
     {
         $this->keys();
         $ref = new \ReflectionMethod(\App\Support\WebPush::class, 'jwt');
-        $jwt = $ref->invoke(null, 'https://push.example.com/abc');
+        $jwt = $ref->invoke(null, 'https://fcm.googleapis.com/fcm/send/abc');
         [$h, $c, $sig] = explode('.', $jwt);
         $raw = base64_decode(strtr($sig, '-_', '+/') . str_repeat('=', (4 - strlen($sig) % 4) % 4));
         // r||s 轉回 DER，用公鑰驗
@@ -93,15 +93,30 @@ class PushTest extends TestCase
         $this->assertSame(1, openssl_verify($h . '.' . $c, $der, $pub, OPENSSL_ALGO_SHA256));
     }
 
+    public function test_only_known_push_services_and_max_five_and_logout_clears(): void
+    {
+        $u = $this->member();
+        foreach (['https://10.0.0.1/x', 'https://evil.example/x', 'https://fcm.googleapis.com.evil.example/x', 'https://fcm.googleapis.com:8443/x'] as $ep) {
+            $this->actingAs($u)->postJson('/push/subscribe', ['endpoint' => $ep, 'keys' => ['p256dh' => 'p', 'auth' => 'a']])->assertStatus(422);
+        }
+        $this->assertSame(0, PushSubscription::count());
+        foreach (range(1, 7) as $i) {
+            $this->actingAs($u)->postJson('/push/subscribe', ['endpoint' => "https://fcm.googleapis.com/fcm/send/{$i}", 'keys' => ['p256dh' => 'p', 'auth' => 'a']])->assertOk();
+        }
+        $this->assertSame(5, PushSubscription::count());
+        $this->actingAs($u)->post('/logout');
+        $this->assertSame(0, PushSubscription::count()); // 這次登入開的都刪掉
+    }
+
     public function test_unsubscribe_and_no_keys_means_no_push(): void
     {
         Http::fake();
         $a = $this->member();
         $b = $this->member();
-        $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => 'https://push.example.com/abc', 'keys' => ['p256dh' => 'p', 'auth' => 'a']]);
+        $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/abc', 'keys' => ['p256dh' => 'p', 'auth' => 'a']]);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']); // 沒有 VAPID 金鑰：不送
         Http::assertNothingSent();
-        $this->actingAs($b)->postJson('/push/unsubscribe', ['endpoint' => 'https://push.example.com/abc'])->assertOk();
+        $this->actingAs($b)->postJson('/push/unsubscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/abc'])->assertOk();
         $this->assertSame(0, PushSubscription::count());
     }
 }

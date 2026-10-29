@@ -27,7 +27,7 @@
                     <td>+{{ $amount }}</td>
                     @if ($status[$type])
                         <td>任務已完成</td>
-                        <td>{{ \Illuminate\Support\Carbon::parse($status[$type])->format('Y/n/j') }}</td>
+                        <td>{{ \Illuminate\Support\Carbon::parse($status[$type])->shown()->format('Y/n/j') }}</td>
                     @else
                         <td><a href="{{ route($links[$type]) }}">立即前往<span class="visually-hidden">（{{ $label }}）</span></a></td>
                         <td>—</td>
@@ -64,7 +64,7 @@
                     <tr>
                         <th scope="row">{{ $r->label }}</th>
                         <td>{{ $r->amount > 0 ? '+' : '' }}{{ $r->amount }}</td>
-                        <td>{{ \Illuminate\Support\Carbon::parse($r->created_at)->format('Y/n/j') }}</td>
+                        <td>{{ \Illuminate\Support\Carbon::parse($r->created_at)->shown()->format('Y/n/j') }}</td>
                         <td>{{ $r->total }}</td>
                     </tr>
                 @endforeach

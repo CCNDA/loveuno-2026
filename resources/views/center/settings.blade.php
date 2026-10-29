@@ -3,7 +3,7 @@
 <h2 id="settings-title">帳號設定</h2>
 <dl class="profile">
     <div><dt>會員編號</dt><dd>{{ $user->id }}</dd></div>
-    <div><dt>註冊日期</dt><dd>{{ $user->created_at?->format('Y/n/j') }}</dd></div>
+    <div><dt>註冊日期</dt><dd>{{ $user->created_at?->shown()->format('Y/n/j') }}</dd></div>
 </dl>
 
 @php($ebag = $errors->getBag('email'))
