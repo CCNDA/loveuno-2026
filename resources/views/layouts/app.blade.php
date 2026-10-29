@@ -6,6 +6,8 @@
     <title>@hasSection('title')@yield('title')｜@endif愛諾園</title>
     <meta name="description" content="愛諾園：基督徒單身交友，用信仰認識彼此。">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $appVersion }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <meta name="theme-color" content="#E5BBA2">
 </head>
 <body @auth class="has-bottom-nav" @endauth>
     @auth @php($unreadNotes = \App\Models\Note::unreadCountFor(auth()->user())) @endauth
@@ -15,7 +17,8 @@
 
     <header class="site-header">
         <div class="wrap header-row">
-            <a class="brand" href="{{ route('home') }}">愛諾園</a>
+            {{-- Logo 取自 loveuno-web 版型（public/images/brand/README.txt）；白色字的 Logo 屬於「標誌」，不受文字對比規定 --}}
+            <a class="brand" href="{{ route('home') }}"><img src="{{ asset('images/brand/logo.svg') }}" alt="愛諾園 首頁" width="115" height="40"></a>
             <nav aria-label="主選單">
                 <ul class="nav">
                     <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首頁</a></li>
@@ -63,11 +66,11 @@
         {{-- 手機底部選單（照 loveuno-web 切版：日記牆／寫日記／認識朋友／傳紙條／我的檔案） --}}
         <nav class="bottom-nav" aria-label="手機快速選單">
             <ul>
-                <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">📖</span>日記牆</a></li>
-                <li><a href="{{ route('diaries.create') }}" @if(request()->routeIs('diaries.create')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">✏️</span>寫日記</a></li>
-                <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">👥</span>認識朋友</a></li>
-                <li><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">💌</span>傳紙條@if($unreadNotes > 0)<span class="badge bn-badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
-                <li><a href="{{ route('me') }}" @if(request()->routeIs('members.show', 'profile.edit', 'photo.edit') && (! request()->route('user') || request()->route('user')->is(auth()->user()))) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">🙂</span>我的檔案</a></li>
+                <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif><img class="bn-icon" src="{{ asset('images/brand/nav-wall.svg') }}" alt="" width="24" height="24">日記牆</a></li>
+                <li><a href="{{ route('diaries.create') }}" @if(request()->routeIs('diaries.create')) aria-current="page" @endif><img class="bn-icon" src="{{ asset('images/brand/nav-write.svg') }}" alt="" width="24" height="24">寫日記</a></li>
+                <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif><img class="bn-icon" src="{{ asset('images/brand/nav-friends.svg') }}" alt="" width="24" height="24">認識朋友</a></li>
+                <li><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif><img class="bn-icon" src="{{ asset('images/brand/nav-notes.svg') }}" alt="" width="24" height="24">傳紙條@if($unreadNotes > 0)<span class="badge bn-badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
+                <li><a href="{{ route('me') }}" @if(request()->routeIs('members.show', 'profile.edit', 'photo.edit') && (! request()->route('user') || request()->route('user')->is(auth()->user()))) aria-current="page" @endif><img class="bn-icon" src="{{ asset('images/brand/nav-me.svg') }}" alt="" width="24" height="24">我的檔案</a></li>
             </ul>
         </nav>
     @endauth

@@ -140,11 +140,11 @@ class WriteTest extends TestCase
         $u = $this->member();
         $html = $this->actingAs($u)->get('/diaries/create')->assertSee('手機快速選單')->getContent();
         // 底部選單裡「寫日記」標成目前頁，「認識朋友」沒有
-        $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">✏️</span>寫日記#u', $html);
-        $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">👥</span>認識朋友#u', $html);
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*><img class="bn-icon" src="[^"]+nav-write\.svg" alt="" width="24" height="24">寫日記#u', $html);
+        $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*><img class="bn-icon" src="[^"]+nav-friends\.svg" alt="" width="24" height="24">認識朋友#u', $html);
         // 日記牆＝首頁
         $home = $this->actingAs($u)->get('/')->getContent();
-        $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">📖</span>日記牆#u', $home);
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*><img class="bn-icon" src="[^"]+nav-wall\.svg" alt="" width="24" height="24">日記牆#u', $home);
     }
 
     public function test_guest_cannot_write(): void

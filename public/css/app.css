@@ -5,7 +5,7 @@
 :root {
     /* 配色照熊叔叔 10/29 給的 loveuno-web 切版：蜜桃頁首、米白底、磚紅主按鈕、紫褐次按鈕。
        每一組文字／底色都算過對比 ≥ 4.5:1（切版的頁首白字對蜜桃底只有約 1.8，改成深褐字）。 */
-    --bg: #fffcf2;          /* 米白底 */
+    --bg: #fffdf4;          /* 米白底（loveuno-web manifest background_color） */
     --surface: #ffffff;
     --text: #2b211d;
     --muted: #5e5049;       /* 對米白約 7:1 */
@@ -14,7 +14,7 @@
     --button: #a3644a;      /* 主按鈕：白字約 4.7:1 */
     --button-dark: #8a4a32;
     --plum: #644754;        /* 次按鈕：白字約 8.2:1 */
-    --header: #e4bba4;      /* 頁首蜜桃色：深褐字約 7.7:1 */
+    --header: #e5bba2;      /* 頁首蜜桃色（manifest theme_color）：深褐字 7.7:1 */
     --header-text: #3d2a22;
     --line: #ead9cc;
     --focus: #1d4ed8;
@@ -53,7 +53,8 @@ main:focus { outline: none; }
 
 .site-header { background: var(--header); color: var(--header-text); }
 .header-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-.brand { font-size: 1.4rem; font-weight: 700; text-decoration: none; color: var(--header-text); letter-spacing: .05em; }
+.brand { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.brand img { height: 40px; width: auto; display: block; }
 .nav { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
 .nav a, .link-button {
     display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
@@ -186,7 +187,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
         min-height: 60px; font-size: .85rem; color: var(--muted); text-decoration: none;
     }
     .bottom-nav a[aria-current="page"] { color: var(--brand-dark); font-weight: 700; background: #fbefe8; }
-    .bn-icon { font-size: 1.3rem; line-height: 1; }
+    .bn-icon { width: 24px; height: 24px; object-fit: contain; }
     body.has-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     /* 用 Tab 移到頁面下方時，焦點不要被底部選單蓋住 */
     html:has(body.has-bottom-nav) { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
