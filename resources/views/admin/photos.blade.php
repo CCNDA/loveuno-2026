@@ -17,7 +17,7 @@
 @foreach (\App\Http\Controllers\PhotoController::KINDS as $kind => $cfg)
     <section aria-labelledby="review-{{ $kind }}">
         <h2 id="review-{{ $kind }}">{{ $cfg['label'] }}</h2>
-        <p class="meta">待審核 {{ $pending[$kind]->count() }} 張</p>
+        <p class="meta" role="status">待審核 {{ $pending[$kind]->count() }} 張</p>
         @if ($pending[$kind]->isEmpty())
             <p>目前沒有要審核的{{ $cfg['label'] }}。</p>
         @else
@@ -25,7 +25,8 @@
                 @foreach ($pending[$kind] as $p)
                     <li class="review-item">
                         <img src="{{ route($kind === 'photo' ? 'photos.show' : 'covers.show', $p->user) }}?v={{ $p->{$kind . '_updated_at'}?->timestamp }}"
-                             alt="{{ $p->user->name }} 上傳的{{ $cfg['label'] }}" class="review-{{ $kind }}">
+                             alt="{{ $p->user->name }} 上傳的{{ $cfg['label'] }}" class="review-{{ $kind }}"
+                             width="{{ $kind === 'photo' ? 160 : 300 }}" height="{{ $kind === 'photo' ? 160 : 100 }}">
                         <div>
                             <p class="member-name"><a href="{{ route('members.show', $p->user) }}">{{ $p->user->name }}</a></p>
                             <p class="meta">上傳時間 {{ $p->{$kind . '_updated_at'}?->format('Y/n/j H:i') }}</p>

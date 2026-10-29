@@ -54,12 +54,43 @@ class CoverTest extends TestCase
     public function test_cover_too_small_rejected_and_delete(): void
     {
         $u = $this->member('本人');
-        $this->actingAs($u)->post('/me/cover', ['photo' => UploadedFile::fake()->image('s.jpg', 500, 300)])->assertSessionHasErrors('photo');
+        $this->actingAs($u)->post('/me/cover', ['photo' => UploadedFile::fake()->image('s.jpg', 800, 300)])->assertSessionHasErrors('photo'); // 寬不到 900
         $this->actingAs($u)->post('/me/cover', ['photo' => UploadedFile::fake()->image('c.jpg', 1200, 400)]);
         $path = $u->profile->fresh()->cover_path;
         $this->actingAs($u)->delete('/me/cover')->assertRedirect('/me/cover');
         Storage::disk('avatars')->assertMissing($path);
         $this->assertNull($u->profile->fresh()->cover_path);
+    }
+
+    public function test_cover_reject_deletes_and_swap_during_review_is_caught(): void
+    {
+        $u = $this->member('本人');
+        $admin = $this->member('管理員', true);
+        $this->actingAs($u)->post('/me/cover', ['photo' => UploadedFile::fake()->image('a.jpg', 1200, 400)]);
+        $seen = $u->profile->fresh()->cover_path;
+        $this->actingAs($u)->post('/me/cover', ['photo' => UploadedFile::fake()->image('b.jpg', 1200, 400)]);
+        // 管理員看到的是舊的那張：不套用
+        $this->actingAs($admin)->post("/admin/photos/{$u->id}", ['decision' => 'approve', 'photo' => $seen, 'kind' => 'cover']);
+        $this->assertSame('pending', $u->profile->fresh()->cover_status);
+        // 對最新的那張按不通過：刪檔
+        $now = $u->profile->fresh()->cover_path;
+        $this->actingAs($admin)->post("/admin/photos/{$u->id}", ['decision' => 'reject', 'photo' => $now, 'kind' => 'cover']);
+        Storage::disk('avatars')->assertMissing($now);
+        $this->assertSame('rejected', $u->profile->fresh()->cover_status);
+        // 亂填 kind 被擋
+        $this->actingAs($admin)->post("/admin/photos/{$u->id}", ['decision' => 'approve', 'photo' => 'x', 'kind' => 'hack'])->assertSessionHasErrors('kind');
+    }
+
+    public function test_cover_guest_and_both_block_directions(): void
+    {
+        $u = $this->member('本人');
+        $b = $this->member('另一位');
+        $u->profile->forceFill(['cover_path' => 'c.jpg', 'cover_status' => 'approved'])->save();
+        Storage::disk('avatars')->put('c.jpg', 'x');
+        $this->get("/covers/{$u->id}")->assertRedirect('/login');
+        // 本人封鎖別人：被封鎖的人看不到本人的封面（另一個測試）；別人封鎖本人：封鎖的人也看不到本人的封面
+        $this->actingAs($b)->post("/members/{$u->id}/block");
+        $this->actingAs($b)->get("/covers/{$u->id}")->assertNotFound();
     }
 
     public function test_photo_review_still_works_with_kind_default(): void

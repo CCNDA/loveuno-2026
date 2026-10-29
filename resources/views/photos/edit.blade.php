@@ -11,7 +11,7 @@
     <h2>我的{{ $cfg['label'] }}</h2>
 </div>
 @if ($kind === 'cover')
-    @include('partials.cover', ['user' => auth()->user()])
+    @include('partials.cover', ['user' => auth()->user(), 'alt' => '我目前的封面'])
 @endif
 
 @if ($profile->{$kind . '_status'} === 'pending')

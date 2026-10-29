@@ -14,7 +14,11 @@
     <p><a class="button" href="{{ route('notes.show', $member) }}">傳紙條給 {{ $member->name }}</a></p>
 @endif
 @if ($isMe)
-    <p><a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>・<a href="{{ route('photo.edit') }}">換大頭照</a>・<a href="{{ route('cover.edit') }}">換封面</a>@if($member->profile?->photo_status === 'pending')（審核中）@endif</p>
+    <p>
+        <a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>
+        ・<a href="{{ route('photo.edit') }}">換大頭照</a>@if ($member->profile?->photo_status === 'pending')（審核中）@endif
+        ・<a href="{{ route('cover.edit') }}">換封面</a>@if ($member->profile?->cover_status === 'pending')（審核中）@endif
+    </p>
 @endif
 
 @if ($iBlocked ?? false)
