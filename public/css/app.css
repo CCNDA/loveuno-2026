@@ -440,3 +440,7 @@ html.fs-large { font-size: 118.75%; }
 .welcome-banner { display: grid; gap: 16px; align-items: center; }
 .welcome-banner img { width: 100%; height: auto; }
 @media (min-width: 48rem) { .welcome-banner { grid-template-columns: 1fr 1fr; } }
+
+/* 約會 */
+.meetup-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.meetup-list a, .notice a { display: inline-flex; align-items: center; min-height: 44px; }

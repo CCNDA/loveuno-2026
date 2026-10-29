@@ -52,7 +52,11 @@ class MeetupController extends Controller
         $me = $request->user();
         abort_unless(NoteController::canNote($me, $user) && $me->profile()->exists(), 404);
         if ($me->friendLevelWith($user) < 2) {
-            throw ValidationException::withMessages(['meet_on' => sprintf('要先跟 %s 成為「聊天好友」才能邀請約會。', $user->name)]);
+            throw ValidationException::withMessages(['meetup' => sprintf('要先跟 %s 成為「聊天好友」才能邀請約會。', $user->name)]);
+        }
+        // 已經有一張還沒結束的邀請（等回覆、準備參加）就不能再送（連按兩次也不會扣兩次點）
+        if ($this->openInvite($me, $user)) {
+            throw ValidationException::withMessages(['meetup' => sprintf('您給 %s 的約會邀請還沒結束，等對方回覆或約會過了再邀請。', $user->name)]);
         }
         $data = $request->validate([
             'meet_on' => ['required', 'date_format:Y-m-d', 'after:today', 'before:' . today()->addYear()->toDateString()],
@@ -60,7 +64,7 @@ class MeetupController extends Controller
             'place' => ['required', 'string', 'max:100'],
             'activity' => ['required', 'in:' . implode(',', array_keys(Meetup::ACTIVITIES))],
             'company' => ['required', 'in:' . implode(',', array_keys(Meetup::COMPANY))],
-            'message' => ['nullable', 'string', 'max:1000'],
+            'message' => ['required', 'string', 'max:1000'], // 舊站、設計稿都不能空白
         ], [
             'meet_on.after' => '約會日期要在今天以後。',
             'meet_on.before' => '約會日期要在一年以內。',
@@ -73,6 +77,10 @@ class MeetupController extends Controller
 
         try {
             $meetup = DB::transaction(function () use ($me, $user, $data) {
+                DB::table('users')->where('id', $me->id)->lockForUpdate()->value('id'); // 同時送兩個請求：第二個等第一個做完再檢查
+                if ($this->openInvite($me, $user)) {
+                    throw ValidationException::withMessages(['meetup' => sprintf('您給 %s 的約會邀請還沒結束，等對方回覆或約會過了再邀請。', $user->name)]);
+                }
                 $m = new Meetup;
                 $m->forceFill(['sender_id' => $me->id, 'recipient_id' => $user->id, 'status' => 'pending'] + $data)->save();
                 Points::spend($me, self::COST_TYPE, 'date:' . $m->id, '邀請 ' . $user->name . ' 約會見面'); // 不夠就整筆不存（舊站這裡的檢查失效，會扣成負的）
@@ -80,7 +88,7 @@ class MeetupController extends Controller
                 return $m;
             });
         } catch (NotEnoughPoints) {
-            throw ValidationException::withMessages(['meet_on' => sprintf('愛諾積點不夠（邀請約會要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS[self::COST_TYPE][0])]);
+            throw ValidationException::withMessages(['meetup' => sprintf('愛諾積點不夠（邀請約會要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS[self::COST_TYPE][0])]);
         }
         $this->notifyOther($user, $meetup, '一個新的約會邀請');
 
@@ -107,8 +115,10 @@ class MeetupController extends Controller
             'reply' => ['required', 'string', 'max:500'],
         ], ['decision.required' => '請按「接受」或「婉拒」其中一個按鈕。', 'decision.in' => '請按「接受」或「婉拒」其中一個按鈕。'], ['reply' => '想對對方說的話']);
         $status = $data['decision'] === 'accept' ? 'accepted' : 'declined';
-        $this->transition($meetup, 'pending', ['status' => $status, 'reply' => $data['reply'], 'responded_at' => now()]);
-        $this->notifyOther($meetup->sender, $meetup, $status === 'accepted' ? '約會邀請被接受了' : '約會邀請的回覆');
+        if (! $this->transition($meetup, 'pending', ['status' => $status, 'reply' => $data['reply'], 'responded_at' => now()])) {
+            return $this->changed($meetup);
+        }
+        $this->notifyOther($meetup->sender, $meetup, '約會邀請的回覆');
 
         return redirect()->route('meetups.show', $meetup)->with('status', $status === 'accepted' ? '您接受了約會邀請，到時候見！' : '您婉拒了這次的約會邀請。');
     }
@@ -119,7 +129,9 @@ class MeetupController extends Controller
         $me = $request->user();
         $this->authorizeParty($me, $meetup);
         $data = $request->validate(['closing_note' => ['required', 'string', 'max:500']], [], ['closing_note' => '取消的原因']);
-        $this->transition($meetup, 'accepted', ['status' => 'cancelled', 'closing_note' => $data['closing_note'], 'closed_by' => $me->id, 'closed_at' => now()]);
+        if (! $this->transition($meetup, 'accepted', ['status' => 'cancelled', 'closing_note' => $data['closing_note'], 'closed_by' => $me->id, 'closed_at' => now()])) {
+            return $this->changed($meetup);
+        }
         $this->notifyOther($meetup->otherThan($me), $meetup, '約會取消的通知');
 
         return redirect()->route('meetups.show', $meetup)->with('status', '約會取消了。');
@@ -137,7 +149,9 @@ class MeetupController extends Controller
         ], ['attended.required' => '請按「已參加」或「沒有參加」其中一個按鈕。', 'attended.in' => '請按「已參加」或「沒有參加」其中一個按鈕。'],
             ['closing_note' => $request->input('attended') === 'yes' ? '約會感言' : '沒有參加的原因']);
         $yes = $data['attended'] === 'yes';
-        $this->transition($meetup, 'past', ['status' => $yes ? 'attended' : 'absent', 'closing_note' => $data['closing_note'], 'closed_by' => $me->id, 'closed_at' => now()]);
+        if (! $this->transition($meetup, 'past', ['status' => $yes ? 'attended' : 'absent', 'closing_note' => $data['closing_note'], 'closed_by' => $me->id, 'closed_at' => now()])) {
+            return $this->changed($meetup);
+        }
         $msg = '謝謝您的回覆。';
         if ($yes && $meetup->sender && $me->friendLevelWith($meetup->sender) === 2) {
             Friendship::raise($me, $meetup->sender, 3);
@@ -165,15 +179,29 @@ class MeetupController extends Controller
         abort_if(in_array($meetup->sender_id === (int) $me->id ? $meetup->recipient_id : $meetup->sender_id, $me->blockRelatedIds(), true), 404);
     }
 
-    // 狀態要是 $from 才改（條件式 UPDATE：兩邊同時按也只會成功一次）；$from 是 state()，'past' 對到資料庫的 accepted＋日期到了
-    private function transition(Meetup $meetup, string $from, array $set): void
+    // 狀態要是 $from 才改（條件式 UPDATE：兩邊同時按也只會成功一次）。$from 是 state()：
+    // pending／accepted 要約會日還沒到，past＝accepted＋約會日到了；日期條件也寫進 UPDATE，過午夜那一刻也不會錯
+    private function transition(Meetup $meetup, string $from, array $set): bool
     {
-        $ok = $meetup->state() === $from
-            && Meetup::whereKey($meetup->id)->where('status', $from === 'past' ? 'accepted' : $from)->update($set + ['updated_at' => now()]) === 1;
-        if (! $ok) {
-            throw ValidationException::withMessages(['meetup' => '這個約會的狀態已經變了，請重新整理頁面看看。']);
+        $q = Meetup::whereKey($meetup->id)->where('status', $from === 'past' ? 'accepted' : $from)
+            ->whereDate('meet_on', $from === 'past' ? '<=' : '>', today());
+        if ($q->update($set + ['updated_at' => now()]) !== 1) {
+            return false;
         }
         $meetup->refresh();
+
+        return true;
+    }
+
+    private function changed(Meetup $meetup): RedirectResponse
+    {
+        return redirect()->route('meetups.show', $meetup)->with('status', '這個約會的狀態已經變了，請看看下面最新的狀態。');
+    }
+
+    private function openInvite(User $me, User $user): bool
+    {
+        return Meetup::where('sender_id', $me->id)->where('recipient_id', $user->id)
+            ->whereIn('status', ['pending', 'accepted'])->whereDate('meet_on', '>', today())->exists();
     }
 
     private function notifyOther(?User $other, Meetup $meetup, string $what): void

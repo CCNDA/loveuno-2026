@@ -57,12 +57,13 @@ class PushController extends Controller
         $me = $request->user();
         $notes = Note::unreadCountFor($me);
         $gifts = Gift::unopenedCountFor($me);
-        $parts = array_filter([$notes ? $notes . ' 封新紙條' : null, $gifts ? $gifts . ' 份新禮物' : null]);
+        $dates = \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->whereDate('meet_on', '>', today())->count();
+        $parts = array_filter([$notes ? $notes . ' 封新紙條' : null, $gifts ? $gifts . ' 份新禮物' : null, $dates ? $dates . ' 個約會邀請等您回覆' : null]);
 
         return response()->json([
             'title' => '愛諾園',
             'body' => $parts ? '您有 ' . implode('、', $parts) . '。' : '您有新的消息。',
-            'url' => $notes ? route('notes.index') : ($gifts ? route('gifts.index') : route('home')),
+            'url' => $notes ? route('notes.index') : ($gifts ? route('gifts.index') : ($dates ? route('meetups.index') : route('home'))),
         ]);
     }
 }

@@ -47,7 +47,7 @@ class MeetupTest extends TestCase
         Notification::fake();
         [$he, $she] = $this->pair(1);
         $this->actingAs($he)->get("/members/{$she->id}/date")->assertOk()->assertSee('要先跟 姊妹 成為「聊天好友」');
-        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form())->assertSessionHasErrors('meet_on');
+        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form())->assertSessionHasErrors('meetup');
         $this->assertSame(0, Meetup::count());
 
         Friendship::raise($he, $she, 2);
@@ -59,6 +59,11 @@ class MeetupTest extends TestCase
         $this->assertSame('pending', $m->status);
         $this->assertSame(20, $he->fresh()->points);
         $this->actingAs($she)->get('/')->assertSee('您有 1 個約會邀請等您回覆');
+        $this->actingAs($she)->getJson('/push/summary')->assertJsonFragment(['body' => '您有 1 個約會邀請等您回覆。']);
+        // 還沒結束的邀請不能再送一張（不會扣兩次）
+        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form())->assertSessionHasErrors('meetup');
+        $this->assertSame(1, Meetup::count());
+        $this->assertSame(20, $he->fresh()->points);
     }
 
     public function test_not_enough_points_sends_nothing(): void
@@ -67,7 +72,7 @@ class MeetupTest extends TestCase
         $poor = $this->member('沒點數', '男');
         Friendship::raise($poor, $she, 2);
         $this->actingAs($poor)->post("/members/{$she->id}/date", $this->form())
-            ->assertSessionHasErrors(['meet_on' => '愛諾積點不夠（邀請約會要 10 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。']);
+            ->assertSessionHasErrors(['meetup' => '愛諾積點不夠（邀請約會要 10 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。']);
         $this->assertSame(0, Meetup::count());
         $this->assertSame(1, $poor->fresh()->points); // 只有每日登入的 1 點，沒有被扣
     }
@@ -87,7 +92,8 @@ class MeetupTest extends TestCase
         $this->actingAs($she)->post("/dates/{$m->id}/respond", ['decision' => 'accept', 'reply' => '好啊！'])->assertRedirect();
         $this->assertSame('accepted', $m->fresh()->status);
         // 約會日還沒到：不能確認出席
-        $this->actingAs($she)->post("/dates/{$m->id}/attend", ['attended' => 'yes', 'closing_note' => '很開心'])->assertSessionHasErrors('meetup');
+        $this->actingAs($she)->post("/dates/{$m->id}/attend", ['attended' => 'yes', 'closing_note' => '很開心'])->assertSessionHas('status', fn ($s) => str_contains($s, '狀態已經變了'));
+        $this->assertSame('accepted', $m->fresh()->status);
 
         $this->travel(8)->days();
         $this->actingAs($he)->get("/dates/{$m->id}")->assertSee('等 姊妹 確認有沒有參加');
@@ -103,24 +109,29 @@ class MeetupTest extends TestCase
         Notification::fake();
         [$he, $she] = $this->pair();
         $this->actingAs($he)->post("/members/{$she->id}/date", $this->form());
-        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form(['meet_on' => today()->addDays(3)->toDateString()]));
-        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form(['meet_on' => today()->addDays(2)->toDateString()]));
-        [$a, $b, $c] = Meetup::orderBy('id')->get()->all();
+        [$a] = Meetup::orderBy('id')->get()->all();
 
         $this->actingAs($she)->post("/dates/{$a->id}/respond", ['decision' => 'decline', 'reply' => '那天有事'])->assertRedirect();
         $this->assertSame('declined', $a->fresh()->status);
-        $this->actingAs($she)->post("/dates/{$a->id}/respond", ['decision' => 'accept', 'reply' => '改變主意'])->assertSessionHasErrors('meetup'); // 只能回一次
+        $this->actingAs($she)->post("/dates/{$a->id}/respond", ['decision' => 'accept', 'reply' => '改變主意'])->assertSessionHas('status', fn ($s) => str_contains($s, '狀態已經變了')); // 只能回一次
+        $this->assertSame('declined', $a->fresh()->status);
+        // 婉拒了就可以再邀請
+        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form(['meet_on' => today()->addDays(3)->toDateString()]))->assertRedirect();
+        $b = Meetup::latest('id')->first();
 
         $this->actingAs($she)->post("/dates/{$b->id}/respond", ['decision' => 'accept', 'reply' => '好'])->assertRedirect();
         $this->actingAs($he)->post("/dates/{$b->id}/cancel", [])->assertSessionHasErrors('closing_note');
         $this->actingAs($he)->post("/dates/{$b->id}/cancel", ['closing_note' => '臨時出差'])->assertRedirect(); // 雙方都可以取消
         $this->assertSame('cancelled', $b->fresh()->status);
+        $this->actingAs($he)->post("/members/{$she->id}/date", $this->form(['meet_on' => today()->addDays(2)->toDateString()]))->assertRedirect();
+        $c = Meetup::latest('id')->first();
         $this->assertSame(0, $he->fresh()->points); // 3 次 × 10 點，不退
 
         // 沒回覆、日期過了
         $this->travel(2)->days();
         $this->assertSame('expired', $c->fresh()->state());
-        $this->actingAs($she)->post("/dates/{$c->id}/respond", ['decision' => 'accept', 'reply' => '好'])->assertSessionHasErrors('meetup');
+        $this->actingAs($she)->post("/dates/{$c->id}/respond", ['decision' => 'accept', 'reply' => '好'])->assertSessionHas('status', fn ($s) => str_contains($s, '狀態已經變了'));
+        $this->assertSame('pending', $c->fresh()->status);
         $this->actingAs($she)->get('/dates')->assertOk()->assertSee('超過約會時間，沒有回覆')->assertSee('婉拒了')->assertSee('取消了');
     }
 

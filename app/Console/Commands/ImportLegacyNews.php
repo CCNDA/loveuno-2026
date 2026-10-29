@@ -45,7 +45,13 @@ class ImportLegacyNews extends Command
                 continue;
             }
             $body = self::toText($html);
-            $at = Carbon::createFromFormat('Y/n/j G:i:s', $ts, config('app.timezone'));
+            try {
+                $at = Carbon::createFromFormat('Y/n/j G:i:s', $ts, config('app.timezone'));
+            } catch (\Throwable) {
+                $this->warn("第 {$id} 則的時間讀不懂（{$ts}），略過");
+
+                continue;
+            }
             if (! $this->option('dry-run')) {
                 $a = new Announcement;
                 $a->forceFill([
@@ -67,7 +73,8 @@ class ImportLegacyNews extends Command
 
     public static function toText(string $html): string
     {
-        $s = preg_replace('#<br\s*/?>#i', "\n", $html);
+        $s = preg_replace('#<(script|style)\b.*?</\1\s*>#is', '', $html); // 這兩種標籤裡面的字也不要
+        $s = preg_replace('#<br\s*/?>#i', "\n", $s);
         $s = preg_replace_callback('#<a\s[^>]*href\s*=\s*["\']?([^"\'\s>]+)["\']?[^>]*>(.*?)</a>#is', function ($m) {
             $text = trim(strip_tags($m[2]));
             $url = html_entity_decode($m[1]);

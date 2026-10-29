@@ -7,7 +7,6 @@
 <p class="meta"><a href="{{ route('meetups.index') }}">我的約會</a></p>
 <h1>{{ $isRecipient ? ($other?->name ?? '已註銷會員') . ' 邀請您約會' : '您邀請 ' . ($other?->name ?? '已註銷會員') . ' 約會' }}</h1>
 <p><span class="tag">{{ $m->stateLabel() }}</span></p>
-@error('meetup')<p class="field-error" role="alert">{{ $message }}</p>@enderror
 <dl class="profile">
     <div><dt>日期</dt><dd>{{ $m->meet_on->format('Y/n/j') }}（{{ ['日', '一', '二', '三', '四', '五', '六'][$m->meet_on->dayOfWeek] }}）</dd></div>
     <div><dt>時間</dt><dd>{{ $m->meet_time }}</dd></div>
@@ -29,7 +28,7 @@
             <textarea id="reply" name="reply" rows="4" maxlength="500" required @error('reply') aria-invalid="true" aria-describedby="reply-error" @enderror>{{ old('reply') }}</textarea>
             @error('reply')<p id="reply-error" class="field-error">{{ $message }}</p>@enderror
         </div>
-        <div class="review-actions">
+        <div id="decision" tabindex="-1" class="review-actions">
             <button type="submit" name="decision" value="accept" class="button">接受</button>
             <button type="submit" name="decision" value="decline" class="button button-secondary">婉拒</button>
         </div>
@@ -54,7 +53,7 @@
             <textarea id="closing_note" name="closing_note" rows="4" maxlength="500" required @error('closing_note') aria-invalid="true" aria-describedby="closing_note-error" @enderror>{{ old('closing_note') }}</textarea>
             @error('closing_note')<p id="closing_note-error" class="field-error">{{ $message }}</p>@enderror
         </div>
-        <div class="review-actions">
+        <div id="attended" tabindex="-1" class="review-actions">
             <button type="submit" name="attended" value="yes" class="button">已參加</button>
             <button type="submit" name="attended" value="no" class="button button-secondary">沒有參加</button>
         </div>
@@ -63,6 +62,6 @@
     <p>約會日過了，等 {{ $other?->name }} 確認有沒有參加。</p>
 @endif
 @if ($other)
-    <p><a href="{{ route('notes.show', $other) }}">傳紙條給 {{ $other->name }}</a></p>
+    <p><a class="button button-light" href="{{ route('notes.show', $other) }}">傳紙條給 {{ $other->name }}</a></p>
 @endif
 @endsection

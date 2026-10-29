@@ -11,7 +11,7 @@
     <p><a class="button" href="{{ route('notes.show', $member) }}">傳紙條給 {{ $member->name }}</a></p>
 @else
     <p>邀請一次 {{ $cost }} 點（您現在有 {{ $balance }} 點），對方婉拒或取消都不會退。為了安全，請約在教會的活動見面，不要隨便喝陌生人給的飲料。</p>
-    <form method="POST" action="{{ route('meetups.store', $member) }}" class="form form-wide" novalidate>
+    <form id="meetup" tabindex="-1" method="POST" action="{{ route('meetups.store', $member) }}" class="form form-wide" novalidate>
         @csrf
         @include('partials.errors', ['title' => '約會邀請還沒送出'])
         <div class="field">
@@ -31,8 +31,8 @@
         @include('partials.select-field', ['name' => 'activity', 'label' => '活動類型', 'options' => \App\Models\Meetup::ACTIVITIES, 'value' => old('activity')])
         @include('partials.select-field', ['name' => 'company', 'label' => '邀請對象', 'options' => \App\Models\Meetup::COMPANY, 'value' => old('company')])
         <div class="field">
-            <label for="message">除了以上制式的約會邀請，您還可以為這次約會多寫幾句話（可以不寫）</label>
-            <textarea id="message" name="message" rows="6" maxlength="1000"
+            <label for="message">除了以上制式的約會邀請，您還可以為這次約會多寫幾句話</label>
+            <textarea id="message" name="message" rows="6" maxlength="1000" required
                       @error('message') aria-invalid="true" aria-describedby="message-error" @enderror>{{ old('message') }}</textarea>
             @error('message')<p id="message-error" class="field-error">{{ $message }}</p>@enderror
         </div>
