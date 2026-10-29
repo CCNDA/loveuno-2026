@@ -304,3 +304,5 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .report-meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0 0 8px; }
 .report-meta dt { font-weight: 700; }
 .report-meta dd { margin: 0; }
+.danger-links { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 8px 32px; }
+.danger-links a { display: inline-flex; align-items: center; min-height: 44px; }

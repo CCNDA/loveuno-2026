@@ -4,11 +4,10 @@
 
 @section('content')
 <h1>檢舉</h1>
-@include('partials.errors', ['title' => '這次沒有處理成功'])
 
 <section aria-labelledby="open-title">
     <h2 id="open-title">還沒處理</h2>
-    <p class="meta" role="status">{{ $open->count() }} 件</p>
+    <p class="meta">{{ $open->count() }} 件</p>
     @if ($open->isEmpty())
         <p>目前沒有要處理的檢舉。</p>
     @else
@@ -29,11 +28,14 @@
                         @if ($r->screenshot_path)
                             <p><a href="{{ route('admin.reports.screenshot', $r) }}" target="_blank" rel="noopener">看附的圖片<span class="visually-hidden">（第 {{ $r->id }} 號，開新視窗）</span></a></p>
                         @endif
+                        @php($bag = $errors->getBag('report' . $r->id))
                         <form method="POST" action="{{ route('admin.reports.close', $r) }}" class="form" novalidate>
                             @csrf
                             <div class="field">
-                                <label for="admin_note-{{ $r->id }}">處理方式</label>
-                                <textarea id="admin_note-{{ $r->id }}" name="admin_note" rows="2" maxlength="500" required></textarea>
+                                <label for="admin_note-{{ $r->id }}">處理方式<span class="visually-hidden">（第 {{ $r->id }} 號）</span></label>
+                                <textarea id="admin_note-{{ $r->id }}" name="admin_note" rows="2" maxlength="500" required
+                                          @if ($bag->has('admin_note')) aria-invalid="true" aria-describedby="admin_note-{{ $r->id }}-error" @endif>{{ $bag->any() ? old('admin_note') : '' }}</textarea>
+                                @if ($bag->has('admin_note'))<p id="admin_note-{{ $r->id }}-error" class="field-error" role="alert">{{ $bag->first('admin_note') }}</p>@endif
                             </div>
                             <button type="submit" class="button">標成已處理<span class="visually-hidden">（第 {{ $r->id }} 號）</span></button>
                         </form>

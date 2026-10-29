@@ -14,7 +14,7 @@ return new class extends Migration
             // 檢舉人或被檢舉人刪帳號時，檢舉紀錄留著（管理員還要看），所以是 nullOnDelete
             $table->foreignId('reporter_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('reported_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('reason', 20);            // fraud／ad／violence／hate／other
+            $table->string('reason', 20);            // violence／fraud／ad／hate／other（Report::REASONS）
             $table->string('description', 500);
             $table->string('screenshot_path', 100)->nullable(); // 在 avatars 磁碟（私有）裡的路徑
             $table->string('status', 10)->default('open');      // open／closed

@@ -12,9 +12,9 @@ class Report extends Model
 {
     // 設計稿 PageReport 的選項，照原本順序
     public const REASONS = [
+        'violence' => '暴力',
         'fraud' => '詐騙',
         'ad' => '廣告',
-        'violence' => '暴力',
         'hate' => '仇恨言論',
         'other' => '其他',
     ];

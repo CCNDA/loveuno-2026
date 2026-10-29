@@ -7,6 +7,7 @@ use App\Models\Report;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,12 +25,19 @@ class ReportReviewController extends Controller
 
     public function close(Request $request, Report $report): RedirectResponse
     {
-        $data = $request->validate([
+        abort_unless($report->status === 'open', 409); // 先擋已處理的，再驗證
+        // 一頁有好幾件：錯誤放在這一件自己的 error bag，畫面才知道是第幾號沒寫。
+        // 失敗時一律回檢舉頁的這一件，不用「上一頁」：管理員在新分頁開過截圖，上一頁會變成截圖網址
+        $v = Validator::make($request->all(), [
             'admin_note' => ['required', 'string', 'max:500'],
         ], [
             'admin_note.required' => '請寫一下怎麼處理的（例如：已警告、已停權、查無不當）。',
         ], ['admin_note' => '處理方式']);
-        abort_unless($report->status === 'open', 409);
+        if ($v->fails()) {
+            return redirect()->to(route('admin.reports') . '#report-' . $report->id)
+                ->withErrors($v, 'report' . $report->id)->withInput();
+        }
+        $data = $v->validated();
 
         $report->forceFill([
             'status' => 'closed',

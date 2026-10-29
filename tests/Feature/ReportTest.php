@@ -32,7 +32,7 @@ class ReportTest extends TestCase
 
         $this->actingAs($me)->get("/members/{$bad->id}/report")->assertOk()
             ->assertSee('檢舉會員的不當行為')->assertSee('愛諾園是一個屬神的交友空間')
-            ->assertSeeInOrder(['請選擇檢舉原因', '詐騙', '廣告', '暴力', '仇恨言論', '其他']);
+            ->assertSeeInOrder(['內容描述', '檢舉原因', '請選擇檢舉原因', '暴力', '詐騙', '廣告', '仇恨言論', '其他', '圖片上傳']);
         $this->actingAs($me)->get("/members/{$me->id}/report")->assertNotFound();
     }
 
@@ -57,7 +57,7 @@ class ReportTest extends TestCase
         $me = $this->member('我');
         $bad = $this->member('可疑的人');
         $this->actingAs($me)->post("/members/{$bad->id}/report", ['reason' => '', 'description' => ''])
-            ->assertSessionHasErrors(['reason' => '請選擇檢舉原因。', 'description']);
+            ->assertSessionHasErrors(['reason' => '請選擇檢舉原因。', 'description' => '請填寫內容描述。']); // 沒有自訂的訊息也要是中文（lang/zh_TW）
         $this->actingAs($me)->post("/members/{$bad->id}/report", ['reason' => 'hack', 'description' => str_repeat('字', 501)])
             ->assertSessionHasErrors(['reason', 'description' => '內容描述不能超過 500 字。']);
         $this->actingAs($me)->post("/members/{$bad->id}/report", ['reason' => 'ad', 'description' => 'x', 'screenshot' => UploadedFile::fake()->create('a.webp', 10, 'image/webp')])
@@ -99,12 +99,27 @@ class ReportTest extends TestCase
             ->assertSee('&lt;script&gt;x&lt;/script&gt;賣保健食品', false);
         $this->actingAs($admin)->get("/admin/reports/{$r->id}/screenshot")->assertOk()->assertHeader('Content-Type', 'image/jpeg');
 
-        $this->actingAs($admin)->post("/admin/reports/{$r->id}/close", ['admin_note' => ''])->assertSessionHasErrors('admin_note');
+        $this->actingAs($admin)->post("/admin/reports/{$r->id}/close", ['admin_note' => ''])->assertRedirect('/admin/reports#report-' . $r->id)->assertSessionHasErrorsIn('report' . $r->id, 'admin_note');
         $this->actingAs($admin)->post("/admin/reports/{$r->id}/close", ['admin_note' => '已警告'])->assertRedirect('/admin/reports');
         $r->refresh();
         $this->assertSame(['closed', '已警告', $admin->id], [$r->status, $r->admin_note, $r->handled_by]);
         $this->actingAs($admin)->post("/admin/reports/{$r->id}/close", ['admin_note' => '再一次'])->assertStatus(409);
         $this->actingAs($admin)->get('/admin/reports')->assertSee('已警告');
+    }
+
+    // 只用一個帳號：同一個測試裡換好幾個人登入，auth.session 會清掉 session，錯誤訊息就跟著不見
+    public function test_close_error_shows_on_that_report(): void
+    {
+        $admin = $this->member('管理員', ['is_admin' => true]);
+        $other = User::factory()->create();
+        $r = new Report(['reason' => 'ad', 'description' => 'd']);
+        $r->forceFill(['reporter_id' => $other->id, 'reported_id' => $other->id])->save();
+
+        $this->actingAs($admin)->get("/admin/reports/{$r->id}/screenshot"); // 先開過截圖（上一頁變成截圖網址）
+        $this->actingAs($admin)->post("/admin/reports/{$r->id}/close", ['admin_note' => ''])->assertRedirect('/admin/reports#report-' . $r->id);
+        $this->actingAs($admin)->get('/admin/reports')
+            ->assertSee('id="admin_note-' . $r->id . '-error"', false)->assertSee('aria-invalid="true"', false)
+            ->assertSee('請寫一下怎麼處理的');
     }
 
     public function test_report_survives_account_deletion(): void
