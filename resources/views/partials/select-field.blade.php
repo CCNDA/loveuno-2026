@@ -7,7 +7,7 @@
 <div class="field">
     <label for="{{ $name }}">{{ $label }}</label>
     @if (isset($hint) && $hint)<p id="{{ $name }}-hint" class="hint">{{ $hint }}</p>@endif
-    <select id="{{ $name }}" name="{{ $name }}" @if ($desc !== '') aria-describedby="{{ $desc }}" @endif @error($name) aria-invalid="true" @enderror>
+    <select id="{{ $name }}" name="{{ $name }}" @if (! empty($required)) required @endif @if ($desc !== '') aria-describedby="{{ $desc }}" @endif @error($name) aria-invalid="true" @enderror>
         <option value="">請選擇</option>
         @foreach ($opts as $v => $text)
             <option value="{{ $v }}" @selected($current === (string) $v)>{{ $text }}</option>

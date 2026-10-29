@@ -28,12 +28,12 @@ class OccasionTest extends TestCase
         $u = $this->member('我');
         $form = ['name' => '我', 'live_place' => '', 'job' => ''];
         $this->actingAs($u)->get('/me/edit')->assertSee('生日（月、日，可以不填）')->assertSee('不會顯示日期');
-        $this->actingAs($u)->put('/me', $form + ['birth_month' => 3, 'birth_day' => 15])->assertRedirect();
+        $this->actingAs($u)->put('/me', $this->profileForm($form + ['birth_month' => 3, 'birth_day' => 15]))->assertRedirect();
         $this->assertSame([3, 15], [(int) $u->profile->fresh()->birth_month, (int) $u->profile->fresh()->birth_day]);
 
-        $this->actingAs($u)->put('/me', $form + ['birth_month' => 2, 'birth_day' => 30])->assertSessionHasErrors(['birth_day' => '2 月沒有 30 日。']);
-        $this->actingAs($u)->put('/me', $form + ['birth_month' => 4])->assertSessionHasErrors('birth_day');
-        $this->actingAs($u)->put('/me', $form + ['birth_month' => 2, 'birth_day' => 29])->assertRedirect(); // 閏年生日可以
+        $this->actingAs($u)->put('/me', $this->profileForm($form + ['birth_month' => 2, 'birth_day' => 30]))->assertSessionHasErrors(['birth_day' => '2 月沒有 30 日。']);
+        $this->actingAs($u)->put('/me', $this->profileForm($form + ['birth_month' => 4]))->assertSessionHasErrors('birth_day');
+        $this->actingAs($u)->put('/me', $this->profileForm($form + ['birth_month' => 2, 'birth_day' => 29]))->assertRedirect(); // 閏年生日可以
 
         // 生日日期不會出現在檔案頁
         $other = $this->member('別人');

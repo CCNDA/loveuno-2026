@@ -32,15 +32,15 @@ class ProfileController extends Controller
             // 生日（月、日）：只用來提醒好友，要嘛兩個都填、要嘛都不填
             'birth_month' => ['nullable', 'integer', 'between:1,12', 'required_with:birth_day'],
             'birth_day' => ['nullable', 'integer', 'between:1,31', 'required_with:birth_month'],
-            'faith' => ['nullable', $in(Opt::FAITH)],
-            'marital' => ['nullable', $in(Opt::MARITAL)],
-            'children' => ['nullable', $in(array_map('strval', array_keys(Opt::CHILDREN)))],
-            'education' => ['nullable', $in(Opt::EDUCATION)],
-            'blood_type' => ['nullable', $in(Opt::BLOOD)],
+            'faith' => ['required', $in(Opt::FAITH)],
+            'marital' => ['required', $in(Opt::MARITAL)],
+            'children' => ['required', $in(Opt::CHILDREN)],
+            'education' => ['required', $in(Opt::EDUCATION)],
+            'blood_type' => ['required', $in(Opt::BLOOD)],
             'height' => ['nullable', 'integer', 'between:120,230'],
             'weight' => ['nullable', 'integer', 'between:30,200'],
-            'smoking' => ['nullable', $in(Opt::SMOKING)],
-            'drinking' => ['nullable', $in(Opt::DRINKING)],
+            'smoking' => ['required', $in(Opt::SMOKING)],
+            'drinking' => ['required', $in(Opt::DRINKING)],
             'family_planning' => ['nullable', $in(Opt::FAMILY_PLANNING)],
         ], [
             'birth_month.required_with' => '生日的月和日要一起選（或都不選）。',
@@ -59,13 +59,13 @@ class ProfileController extends Controller
 
         $user = $request->user();
         $user->forceFill(['name' => trim($data['name'])])->save();
-        $text = fn (string $k) => trim((string) ($data[$k] ?? ''));
+        $text = fn (string $k) => self::trimmed($data, $k);
         $num = fn (string $k) => isset($data[$k]) && $data[$k] !== '' ? (int) $data[$k] : null;
         Profile::updateOrCreate(['user_id' => $user->id], [
             'real_name' => $text('real_name'), 'home_phone' => $text('home_phone'),
             'live_place' => $text('live_place'), 'job' => $text('job'),
             'birth_month' => $num('birth_month'), 'birth_day' => $num('birth_day'),
-            'faith' => $text('faith'), 'marital' => $text('marital'), 'children' => $num('children'),
+            'faith' => $text('faith'), 'marital' => $text('marital'), 'children' => $text('children'),
             'education' => $text('education'), 'blood_type' => $text('blood_type'),
             'height' => $num('height'), 'weight' => $num('weight'),
             'smoking' => $text('smoking'), 'drinking' => $text('drinking'), 'family_planning' => $text('family_planning'),
@@ -83,34 +83,37 @@ class ProfileController extends Controller
 
     public function updateIntro(Request $request): RedirectResponse
     {
-        $picks = ['nullable', 'array', 'max:' . Opt::MAX_PICKS]; // 「請選擇1-3種」
+        $picks = ['array', 'max:' . Opt::MAX_PICKS]; // 「請選擇1-3種」
         $data = $request->validate([
-            'headline' => ['nullable', 'string', 'max:30'],
+            'headline' => ['required', 'string', 'max:50'],
             'church' => ['nullable', 'string', 'max:100'],
             'church_visible' => ['nullable', 'boolean'],
-            'verse_book' => ['nullable', Rule::in(Opt::BIBLE_BOOKS)],
+            'verse_book' => ['nullable', Rule::in(Opt::BIBLE_BOOKS), 'required_with:verse_text'],
             'verse_chapter' => ['nullable', 'integer', 'between:1,150', 'required_with:verse_book'],
             'verse_verse' => ['nullable', 'integer', 'between:1,176'],
             'verse_text' => ['nullable', 'string', 'max:300'],
-            'languages' => $picks, 'languages.*' => [Rule::in(Opt::LANGUAGES)],
-            'hobbies' => $picks, 'hobbies.*' => [Rule::in(Opt::HOBBIES)],
-            'sports' => $picks, 'sports.*' => [Rule::in(Opt::SPORTS)],
-            // 設計稿「請簡短的寫一篇30字以上的自我介紹」：有寫就要 30 字以上（可以先不寫）
-            'intro' => ['nullable', 'string', 'min:30', 'max:2000'],
+            'languages' => ['required', ...$picks], 'languages.*' => [Rule::in(Opt::LANGUAGES)],
+            'hobbies' => ['required', ...$picks], 'hobbies.*' => [Rule::in(Opt::HOBBIES)],
+            'sports' => ['nullable', ...$picks], 'sports.*' => [Rule::in(Opt::SPORTS)],
+            // 設計稿「請簡短的寫一篇30字以上的自我介紹」
+            'intro' => ['required', 'string', 'min:30', 'max:2000'],
             'hope' => ['nullable', 'string', 'max:1000'],
         ], [
             'languages.max' => '慣用語言最多選 3 種。',
             'hobbies.max' => '興趣最多選 3 種。',
             'sports.max' => '喜愛的運動最多選 3 種。',
-            'intro.min' => '自我介紹請寫 30 個字以上（也可以先不寫）。',
+            'intro.min' => '自我介紹請寫 30 個字以上。',
+            'languages.required' => '請選擇 1～3 種慣用語言。',
+            'hobbies.required' => '請選擇 1～3 種興趣。',
             'verse_chapter.required_with' => '選了書卷，請一起填「章」。',
+            'verse_book.required_with' => '寫了經文，請一起選是哪一卷。',
         ], [
             'headline' => '個人標題', 'church' => '教會名稱', 'verse_book' => '聖經書卷', 'verse_chapter' => '章', 'verse_verse' => '節',
             'verse_text' => '經文', 'languages' => '慣用語言', 'hobbies' => '興趣', 'sports' => '喜愛的運動', 'intro' => '自我介紹', 'hope' => '期待認識的人',
         ]);
 
         $user = $request->user();
-        $text = fn (string $k) => trim((string) ($data[$k] ?? ''));
+        $text = fn (string $k) => self::trimmed($data, $k);
         Profile::updateOrCreate(['user_id' => $user->id], [
             'headline' => $text('headline'),
             'church' => $text('church'), 'church_visible' => $request->boolean('church_visible'),
@@ -126,6 +129,11 @@ class ProfileController extends Controller
         Points::checkTasks($user);
 
         return redirect()->route('members.show', ['user' => $user, 'tab' => 'intro'])->with('status', '自我介紹存好了。');
+    }
+
+    private static function trimmed(array $data, string $key): string
+    {
+        return trim((string) ($data[$key] ?? ''));
     }
 
     private function viewData(Request $request): array

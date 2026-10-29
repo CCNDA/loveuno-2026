@@ -10,6 +10,9 @@
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <div>
         <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+        @if (! ($iBlocked ?? false) && ($member->profile?->headline ?? '') !== '')
+            <p class="headline">{{ $member->profile->headline }}</p>
+        @endif
         @if (! ($iBlocked ?? false))
             <p class="meta">
                 最近登入：{{ $member->last_login_at ? \App\Support\Ago::days($member->last_login_at) : '—' }}
@@ -48,10 +51,8 @@
     </form>
     <ul class="danger-links"><li><a href="{{ route('reports.create', $member) }}">檢舉這位會員…</a></li></ul>
 @else
-@php($p = $member->profile)
-@if (! $p)
-    <p>這位會員還沒有填個人檔案。</p>
-@else
+@php($p = $member->profile ?? new \App\Models\Profile(['user_id' => $member->id]))
+@if (true)
     @include('members.partials.tabs')
     @if (auth()->user()->is_admin && ($p->real_name !== '' || $p->home_phone !== ''))
         <aside class="notice admin-only" aria-label="只有管理員看得到">

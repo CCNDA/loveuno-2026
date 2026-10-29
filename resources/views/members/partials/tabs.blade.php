@@ -1,7 +1,7 @@
 {{-- 會員檔案的四個分頁（設計稿 PagePersonal PersonalTabNav：個人資料／自我介紹／心情日記／個人相簿）。$tab、$member、$p、$diaries --}}
 <nav class="center-subtabs member-tabs" aria-label="{{ $member->name }} 的檔案">
     <ul>
-        @foreach (['info' => '個人資料', 'intro' => '自我介紹', 'diary' => '心情日記', 'album' => '個人相簿'] as $key => $label)
+        @foreach (['info' => '個人資料', 'intro' => '自我介紹', 'album' => '個人相簿', 'diary' => '心情日記'] as $key => $label)
             <li><a href="{{ route('members.show', $key === 'info' ? $member : ['user' => $member, 'tab' => $key]) }}" @if($tab === $key) aria-current="page" @endif>{{ $label }}</a></li>
         @endforeach
     </ul>
@@ -9,26 +9,7 @@
 
 @if ($tab === 'info')
     <h2 class="visually-hidden">個人資料</h2>
-    @php
-        $children = $p->children !== null ? (\App\Support\ProfileOptions::CHILDREN[$p->children] ?? null) : null;
-        $rows = array_filter([
-            '性別' => $p->gender !== '' ? $p->genderLabel() : null,
-            '年齡' => $p->ageGroup(),
-            '居住地' => $p->live_place,
-            '信仰' => $p->faith,
-            '婚姻狀況' => $p->marital,
-            '子女人數' => $children,
-            '教育程度' => $p->education,
-            '職業' => $p->job,
-            '是否喝酒' => $p->drinking,
-            '是否抽菸' => $p->smoking,
-            '血型' => $p->blood_type,
-            '計劃生育' => $p->family_planning,
-            '身高' => $p->height ? $p->height . ' cm' : null,
-            '體重' => $p->weight ? $p->weight . ' kg' : null,
-            '教會' => $p->church_visible ? $p->church : null,
-        ], fn ($v) => $v !== null && $v !== '');
-    @endphp
+    @php($rows = $p->detailRows())
     @if (empty($rows))
         <p>這位會員還沒有填個人資料。</p>
     @else
@@ -40,7 +21,6 @@
     @endif
 @elseif ($tab === 'intro')
     <h2 class="visually-hidden">自我介紹</h2>
-    @if ($p->headline !== '')<p class="headline">{{ $p->headline }}</p>@endif
     @if ($p->intro)
         <section aria-labelledby="intro-title">
             <h3 id="intro-title">簡介</h3>
@@ -70,7 +50,7 @@
             <p class="prose">{!! nl2br(e($p->hope)) !!}</p>
         </section>
     @endif
-    @if ($p->headline === '' && ! $p->intro && $p->verse_book === '' && empty($p->hobbies) && empty($p->sports) && empty($p->languages) && ! $p->hope)
+    @if (! $p->hasIntroduction())
         <p>這位會員還沒有寫自我介紹。</p>
     @endif
 @elseif ($tab === 'diary')

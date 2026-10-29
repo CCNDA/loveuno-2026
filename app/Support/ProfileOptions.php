@@ -3,32 +3,31 @@
 namespace App\Support;
 
 // 個人資料、自我介紹的選項（設計稿 PageMemberProfile ProfileForm／IntroductionForm、PagePersonalProfile／Introduction）。
-// 設計稿只寫了幾個例子（創世記、籃球、足球…），完整的清單是小芯補的，記在 docs/design-deviations.md #36。
+// 清單照舊站 website/data/*.txt（religion、marriage、kids、education、blood、smoke、drink、language、hobby、sports），
+// 舊站資料匯入時才對得上；設計稿只寫了幾個例子。計劃生育舊站沒有，照設計稿。記在 docs/design-deviations.md #36。
 class ProfileOptions
 {
-    public const FAITH = ['基督徒', '慕道友', '其他'];
+    public const FAITH = ['基督徒', '慕道友'];
 
-    // 設計稿選項有「已婚」，交友網站不放；畫面上的「單身」寫成「未婚」（PagePersonalProfile 顯示「未婚」）
     public const MARITAL = ['未婚', '離婚', '喪偶'];
 
-    public const CHILDREN = ['0' => '沒有', '1' => '1 位', '2' => '2 位', '3' => '3 位以上'];
+    public const CHILDREN = ['0', '1', '2', '3', '4', '超過4個', '保留'];
 
-    public const EDUCATION = ['高中', '專科', '大學', '碩士', '博士', '其他'];
+    public const EDUCATION = ['小學', '中學', '高中', '高職', '五專', '二專', '大學', '碩士', '博士', '保留'];
 
-    public const BLOOD = ['A', 'B', 'O', 'AB', '不知道'];
+    public const BLOOD = ['A', 'AB', 'B', 'O', '不確定'];
 
-    // 設計稿 PagePersonalIntroduction 顯示的寫法（從來不抽、有需要才喝）
-    public const SMOKING = ['從來不抽', '偶爾', '會抽'];
+    public const SMOKING = ['從來不抽', '偶爾', '煙癮很大', '保留'];
 
-    public const DRINKING = ['從來不喝', '有需要才喝', '常喝'];
+    public const DRINKING = ['從來不喝', '淺嚐', '有需要才喝', '酒癮很大', '保留'];
 
     public const FAMILY_PLANNING = ['有', '沒有', '不確定'];
 
-    public const LANGUAGES = ['中文/普通話', '台語/閩南話', '客家話', '粵語', '英文', '日文', '韓文', '其他'];
+    public const LANGUAGES = ['中文/普通話', '廣東話', '台語/閩南話', '客家話', '英文', '日文', '韓文', '馬來文', '法文', '西班牙文', '德文', '其他'];
 
-    public const HOBBIES = ['旅遊', '閱讀', '音樂欣賞', '電影', '美食', '烹飪', '攝影', '繪畫', '手作', '園藝', '寵物', '志工服務', '詩歌敬拜', '樂器', '其他'];
+    public const HOBBIES = ['音樂欣賞', '戶外活動', '電視電影', '泡茶聊天', '逛街採購', '電腦網路', '各類蒐集', '藝文活動', '球類運動', '唱歌跳舞', '吃吃喝喝', '打牌賭博', '睡覺打盹', '看書寫作', '各地旅遊', '露營烤肉', '攝影繪畫', '電玩對戰', '讀經靈修', '其他'];
 
-    public const SPORTS = ['籃球', '足球', '棒球', '羽球', '桌球', '網球', '游泳', '跑步', '登山', '自行車', '瑜伽', '健身', '其他'];
+    public const SPORTS = ['籃球', '棒球', '網球', '高爾夫球', '羽毛球', '足球', '美式足球', '板球', '慢跑', '自行車', '划船', '登山', '釣魚', '乒乓球', '游泳', '體操/健身', '太極拳', '賽車', '撞球', '其他'];
 
     // 「請選擇1-3種」
     public const MAX_PICKS = 3;

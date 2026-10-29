@@ -82,7 +82,8 @@ class Points
             return;
         }
         $done = [
-            'profile' => trim((string) $p->live_place) !== '' && trim((string) $p->job) !== '',
+            'profile' => trim((string) $p->live_place) !== '' && trim((string) $p->job) !== ''
+                && collect(['faith', 'marital', 'children', 'education', 'blood_type', 'smoking', 'drinking'])->every(fn ($k) => (string) $p->{$k} !== ''),
             'preferences' => $p->pref_gender !== '' || $p->pref_age_min !== null || $p->pref_age_max !== null || $p->pref_place !== '',
             'intro' => trim((string) $p->intro) !== '',
             'photo' => $p->photo_status === 'approved',

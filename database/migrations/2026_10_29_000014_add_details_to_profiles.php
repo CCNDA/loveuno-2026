@@ -16,7 +16,7 @@ return new class extends Migration
             // 個人資料
             $table->string('faith', 10)->default('')->after('job');
             $table->string('marital', 10)->default('')->after('faith');
-            $table->unsignedTinyInteger('children')->nullable()->after('marital'); // 0～3（3＝3 位以上）
+            $table->string('children', 10)->default('')->after('marital'); // 舊站 kids.txt：0～4、超過4個、保留
             $table->string('education', 10)->default('')->after('children');
             $table->string('blood_type', 10)->default('')->after('education');
             $table->unsignedSmallInteger('height')->nullable()->after('blood_type'); // cm
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('drinking', 10)->default('')->after('smoking');
             $table->string('family_planning', 10)->default('')->after('drinking');
             // 自我介紹
-            $table->string('headline', 30)->default('')->after('family_planning'); // 個人標題
+            $table->string('headline', 50)->default('')->after('family_planning'); // 個人標題（設計稿 maxLength 50）
             $table->string('verse_book', 20)->default('')->after('headline');      // 最愛經文
             $table->unsignedSmallInteger('verse_chapter')->nullable()->after('verse_book');
             $table->unsignedSmallInteger('verse_verse')->nullable()->after('verse_chapter');

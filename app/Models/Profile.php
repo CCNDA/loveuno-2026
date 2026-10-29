@@ -24,7 +24,6 @@ class Profile extends Model
         return [
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
-            'children' => 'integer',
             'height' => 'integer',
             'weight' => 'integer',
             'verse_chapter' => 'integer',
@@ -35,6 +34,36 @@ class Profile extends Model
             'photo_updated_at' => 'datetime',
             'cover_updated_at' => 'datetime',
         ];
+    }
+
+    // 會員檔案「個人資料」分頁要列的欄位（空的不列）
+    public function detailRows(): array
+    {
+
+        return array_filter([
+            '性別' => $this->gender !== '' ? $this->genderLabel() : null,
+            '年齡' => $this->ageGroup(),
+            '居住地' => $this->live_place,
+            '信仰' => $this->faith,
+            '婚姻狀況' => $this->marital,
+            '子女人數' => $this->children,
+            '教育程度' => $this->education,
+            '職業' => $this->job,
+            '是否喝酒' => $this->drinking,
+            '是否抽菸' => $this->smoking,
+            '血型' => $this->blood_type,
+            '計劃生育' => $this->family_planning,
+            '身高' => $this->height ? $this->height . ' cm' : null,
+            '體重' => $this->weight ? $this->weight . ' kg' : null,
+            '教會' => $this->church_visible ? $this->church : null,
+        ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    // 「自我介紹」分頁有沒有東西可以看
+    public function hasIntroduction(): bool
+    {
+        return ($this->headline ?? '') !== '' || $this->intro || ($this->verse_book ?? '') !== ''
+            || ! empty($this->hobbies) || ! empty($this->sports) || ! empty($this->languages) || $this->hope;
     }
 
     public function user(): BelongsTo

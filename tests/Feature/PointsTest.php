@@ -43,9 +43,9 @@ class PointsTest extends TestCase
     public function test_profile_tasks_award_once(): void
     {
         $u = $this->member();
-        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台北市', 'job' => '老師'])->assertRedirect();
-        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台中市', 'job' => '老師'])->assertRedirect();
-        $this->actingAs($u)->put('/me/intro', ['intro' => '我喜歡讀經，' . str_repeat('也喜歡爬山', 6)])->assertRedirect();
+        $this->actingAs($u)->put('/me', $this->profileForm(['name' => '新朋友', 'live_place' => '台北市', 'job' => '老師']))->assertRedirect();
+        $this->actingAs($u)->put('/me', $this->profileForm(['name' => '新朋友', 'live_place' => '台中市', 'job' => '老師']))->assertRedirect();
+        $this->actingAs($u)->put('/me/intro', $this->introForm(['intro' => '我喜歡讀經，' . str_repeat('也喜歡爬山', 6)]))->assertRedirect();
         $this->actingAs($u)->put('/center/preferences', ['pref_gender' => '男'])->assertRedirect();
 
         $types = DB::table('point_transactions')->where('user_id', $u->id)->pluck('amount', 'type')->all();
@@ -93,7 +93,8 @@ class PointsTest extends TestCase
     public function test_points_page_shows_tasks_backfills_and_records(): void
     {
         // 以前就填好的人（舊站匯入、示範會員）：第一次打開這頁時補給
-        $u = $this->member(['live_place' => '台北市', 'job' => '工程師']);
+        $u = $this->member(['live_place' => '台北市', 'job' => '工程師', 'faith' => '基督徒', 'marital' => '未婚', 'children' => '0',
+            'education' => '大學', 'blood_type' => 'O', 'smoking' => '從來不抽', 'drinking' => '從來不喝']);
         $this->actingAs($u)->get('/center/points')->assertOk()
             ->assertSee('我目前的愛諾積點')->assertSee('<strong>21</strong>', false)
             ->assertSeeInOrder(['完成基本資料建檔', '+20', '任務已完成', '完成希望對象建檔', '+10', '立即前往'])
