@@ -7,7 +7,7 @@
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
 </div>
-@if (! $isMe)
+@if (\App\Http\Controllers\NoteController::canNote(auth()->user(), $member))
     <p><a class="button" href="{{ route('notes.show', $member) }}">傳紙條給 {{ $member->name }}</a></p>
 @endif
 @if ($isMe)

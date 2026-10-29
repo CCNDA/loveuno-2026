@@ -18,10 +18,16 @@ class NoteController extends Controller
         return view('notes.index', ['threads' => $this->threads($request->user()), 'other' => null, 'notes' => collect()]);
     }
 
+    // 可以傳紙條的對象：不是自己、email 已驗證、有個人檔案（跟「認識朋友」列得出來的人一致）
+    public static function canNote(User $me, User $user): bool
+    {
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->profile()->exists();
+    }
+
     public function show(Request $request, User $user): View
     {
         $me = $request->user();
-        abort_if($me->is($user) || ! $user->hasVerifiedEmail(), 404);
+        abort_unless(self::canNote($me, $user), 404);
 
         // 打開對話＝對方寄給我的都算讀過
         Note::where('sender_id', $user->id)->where('recipient_id', $me->id)->whereNull('read_at')->update(['read_at' => now()]);
@@ -34,7 +40,7 @@ class NoteController extends Controller
     public function store(Request $request, User $user): RedirectResponse
     {
         $me = $request->user();
-        abort_if($me->is($user) || ! $user->hasVerifiedEmail(), 404);
+        abort_unless(self::canNote($me, $user), 404);
 
         $data = $request->validate(
             ['body' => ['required', 'string', 'max:1000']],

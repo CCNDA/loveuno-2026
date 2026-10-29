@@ -21,7 +21,7 @@
                                 <span class="thread-last">{{ \Illuminate\Support\Str::limit($t->last->body, 28) }}</span>
                             </span>
                             @if ($t->unread > 0)
-                                <span class="badge">{{ $t->unread }}<span class="visually-hidden"> 則未讀</span></span>
+                                <span class="badge" aria-hidden="true">{{ $t->unread }}</span><span class="visually-hidden">，{{ $t->unread }} 則未讀</span>
                             @endif
                         </a>
                     </li>
