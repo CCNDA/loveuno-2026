@@ -8,6 +8,7 @@ use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,11 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/me', [MemberController::class, 'me'])->name('me');
     Route::get('/me/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+
+    // 傳紙條（一對一；同一人 10 分鐘最多寄 30 張）
+    Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');
+    Route::get('/notes/{user}', [NoteController::class, 'show'])->whereNumber('user')->name('notes.show');
+    Route::post('/notes/{user}', [NoteController::class, 'store'])->whereNumber('user')->middleware('throttle:30,10')->name('notes.store');
 
     // 會員中心（帳號管理／個人檔案／愛積點／交友條件）
     Route::redirect('/center', '/center/account');

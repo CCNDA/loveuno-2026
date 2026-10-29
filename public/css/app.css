@@ -178,7 +178,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
         background: var(--surface); border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
     }
-    .bottom-nav ul { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; margin: 0; padding: 0; }
+    .bottom-nav ul { display: grid; grid-template-columns: repeat(5, 1fr); list-style: none; margin: 0; padding: 0; }
     .bottom-nav a {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
         min-height: 60px; font-size: .85rem; color: var(--muted); text-decoration: none;
@@ -211,3 +211,36 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .age-range input { width: 6rem; min-height: 48px; padding: 8px; font-size: 1rem; border: 2px solid #8c857b; border-radius: 8px; }
 .age-range label { font-weight: 400; margin: 0; }
 @media (max-width: 400px) { .center-tabs a { width: 76px; height: 76px; font-size: .9rem; } }
+
+/* 螢幕閱讀器才念的文字 */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* 未讀數：白字對 #a1161f 約 7:1 */
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em; padding: 0 .4em; border-radius: 999px; background: var(--error); color: #fff; font-size: .8rem; font-weight: 700; }
+.bottom-nav a { position: relative; }
+.bn-badge { position: absolute; top: 4px; right: calc(50% - 26px); }
+
+/* 傳紙條：電腦左清單右對話；手機一次只顯示一邊 */
+.notes-layout { display: grid; grid-template-columns: 16rem 1fr; gap: 16px; align-items: start; }
+.thread-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.thread-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-decoration: none; color: var(--text); border-bottom: 1px solid var(--line); min-height: 64px; }
+.thread-list li:last-child .thread-item { border-bottom: 0; }
+.thread-item[aria-current="page"] { background: #fbefe8; }
+.thread-item .avatar-md { width: 44px; height: 44px; font-size: 1.1rem; }
+.thread-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.thread-name { font-weight: 700; }
+.thread-last { color: var(--muted); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notes-back { display: none; }
+.note-list { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.note { max-width: 85%; padding: 10px 14px; border-radius: 14px; }
+.note-theirs { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); }
+.note-mine { align-self: flex-end; background: #fbefe8; }
+.note-body { overflow-wrap: anywhere; }
+.note-time { margin: 4px 0 0; font-size: .8rem; color: var(--muted); }
+.note-form { max-width: none; }
+@media (max-width: 640px) {
+    .notes-layout { grid-template-columns: 1fr; }
+    .notes-layout.has-thread .notes-threads { display: none; }
+    .notes-layout:not(.has-thread) .notes-thread { display: none; }
+    .notes-back { display: block; }
+}

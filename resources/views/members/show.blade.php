@@ -7,6 +7,9 @@
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
 </div>
+@if (! $isMe)
+    <p><a class="button" href="{{ route('notes.show', $member) }}">傳紙條給 {{ $member->name }}</a></p>
+@endif
 @if ($isMe)
     <p><a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>・<a href="{{ route('photo.edit') }}">換大頭照</a>@if($member->profile?->photo_status === 'pending')（審核中）@endif</p>
 @endif
