@@ -115,6 +115,14 @@ class DemoSiteTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_redirect_keeps_https_behind_local_proxy(): void
+    {
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+            ->withHeaders(['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'test-loveuno-2026.ps194.net', 'X-Forwarded-Port' => '443'])
+            ->get('/diaries')
+            ->assertRedirect('https://test-loveuno-2026.ps194.net/login');
+    }
+
     public function test_logout(): void
     {
         $user = User::factory()->create();
