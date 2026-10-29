@@ -15,6 +15,12 @@ class AlbumPhoto extends Model
         return ['user_id' => 'integer'];
     }
 
+    // 算進 9 張的（不通過的那一格只是告訴會員結果，不佔名額）
+    public static function countedFor(int $userId): int
+    {
+        return self::where('user_id', $userId)->where('status', '!=', 'rejected')->count();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -24,7 +30,7 @@ class AlbumPhoto extends Model
     public function visibleTo(User $viewer): bool
     {
         if ($viewer->is_admin || $this->user_id === (int) $viewer->id) {
-            return true;
+            return $this->status !== 'rejected' || $this->user_id === (int) $viewer->id;
         }
 
         return $this->status === 'approved' && ! in_array($this->user_id, $viewer->blockRelatedIds(), true);

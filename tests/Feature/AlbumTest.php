@@ -31,7 +31,7 @@ class AlbumTest extends TestCase
         $admin = $this->member('管理員', ['is_admin' => true]);
 
         $this->actingAs($me)->get('/me/album')->assertOk()->assertSee('相簿照片上限為 9 張');
-        $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->image('a.jpg', 2000, 1500)])
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 2000, 1500)]])
             ->assertRedirect('/me/album')->assertSessionHas('status', fn ($s) => str_contains($s, '審核'));
         $ph = AlbumPhoto::firstOrFail();
         $this->assertSame('pending', $ph->status);
@@ -59,12 +59,12 @@ class AlbumTest extends TestCase
         Storage::fake('avatars');
         $me = $this->member('我');
         for ($i = 0; $i < AlbumPhoto::MAX; $i++) {
-            $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->image("p{$i}.png", 400, 400)])->assertRedirect();
+            $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image("p{$i}.png", 400, 400)]])->assertRedirect();
         }
         $this->assertSame(9, AlbumPhoto::count());
         $this->actingAs($me)->get('/me/album')->assertSee('相簿滿了');
-        $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->image('x.png', 400, 400)])
-            ->assertSessionHasErrors(['photo' => '相簿最多 9 張，請先刪掉一張再放。']);
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('x.png', 400, 400)]])
+            ->assertSessionHasErrors(['photos' => '相簿最多 9 張，請先刪掉一張再放。']);
         $this->assertSame(9, AlbumPhoto::count());
 
         $ph = AlbumPhoto::first();
@@ -80,14 +80,30 @@ class AlbumTest extends TestCase
         Storage::fake('avatars');
         $me = $this->member('我');
         $admin = $this->member('管理員', ['is_admin' => true]);
-        $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->create('a.gif', 10, 'image/gif')])->assertSessionHasErrors('photo');
-        $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->image('a.jpg', 100, 100)])->assertSessionHasErrors('photo'); // 太小
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->create('a.gif', 10, 'image/gif')]])->assertSessionHasErrors('photos.0');
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 100, 100)]])->assertSessionHasErrors('photos.0'); // 太小
 
-        $this->actingAs($me)->post('/me/album', ['photo' => UploadedFile::fake()->image('a.jpg', 800, 800)]);
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 800, 800)]]);
         $ph = AlbumPhoto::firstOrFail();
         $this->actingAs($me)->post("/admin/album/{$ph->id}", ['decision' => 'approve'])->assertForbidden();
         $this->actingAs($admin)->post("/admin/album/{$ph->id}", ['decision' => 'reject'])->assertRedirect('/admin/photos');
         Storage::disk('avatars')->assertMissing($ph->path);
+        // 留一格「沒有通過」給會員看，不佔名額；會員可以刪掉
+        $this->assertSame('rejected', $ph->fresh()->status);
+        $this->actingAs($me)->get('/me/album')->assertSee('這張沒有通過管理員審核');
+        $this->assertSame(0, AlbumPhoto::countedFor($me->id));
+        $this->actingAs($me)->delete("/me/album/{$ph->id}")->assertRedirect();
         $this->assertSame(0, AlbumPhoto::count());
+    }
+
+    public function test_upload_several_at_once_within_limit(): void
+    {
+        Storage::fake('avatars');
+        $me = $this->member('我');
+        $files = fn (int $n) => array_map(fn ($i) => UploadedFile::fake()->image("m{$i}.jpg", 400, 400), range(1, $n));
+        $this->actingAs($me)->post('/me/album', ['photos' => $files(7)])->assertSessionHas('status', fn ($s) => str_contains($s, '7 張'));
+        $this->actingAs($me)->post('/me/album', ['photos' => $files(3)])->assertSessionHasErrors(['photos' => '相簿還可以放 2 張，這次選太多了。']);
+        $this->assertSame(7, AlbumPhoto::count());
+        $this->assertCount(7, Storage::disk('avatars')->allFiles('album')); // 失敗的那批沒有留下檔案
     }
 }

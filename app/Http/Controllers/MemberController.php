@@ -52,7 +52,7 @@ class MemberController extends Controller
         // 四個分頁：個人資料（預設）／自我介紹／心情日記／個人相簿
         $tab = in_array($request->query('tab'), ['intro', 'diary', 'album'], true) ? $request->query('tab') : 'info';
         $album = $tab === 'album'
-            ? AlbumPhoto::where('user_id', $user->id)->orderBy('id')->get()->filter->visibleTo($viewer)->values()
+            ? AlbumPhoto::where('user_id', $user->id)->where('status', '!=', 'rejected')->orderBy('id')->get()->filter->visibleTo($viewer)->values()
             : collect();
         $diaries = $tab === 'diary'
             ? $user->diaries()->visibleTo($viewer)->orderByDesc('published_on')->orderByDesc('id')->paginate(10)->withQueryString()

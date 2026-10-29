@@ -81,8 +81,9 @@ class PhotoReviewController extends Controller
             $photo->forceFill(['status' => 'approved'])->save();
             $msg = sprintf('%s 的相簿照片通過了。', $name);
         } else {
-            Storage::disk('avatars')->delete($photo->path);
-            $photo->delete();
+            $path = $photo->path;
+            $photo->forceFill(['status' => 'rejected', 'path' => ''])->save();
+            Storage::disk('avatars')->delete($path);
             $msg = sprintf('%s 的相簿照片不通過，檔案已刪除。', $name);
         }
 
