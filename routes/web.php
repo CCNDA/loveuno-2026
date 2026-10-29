@@ -5,6 +5,7 @@ use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\PhoneVerifyController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BlockController;
@@ -70,7 +71,15 @@ Route::middleware('auth')->group(function () {
 
 // 個人檔案與日記都要登入、email 已驗證才能看（舊站 2026-10-28 起也是要登入）
 // auth.session：換密碼後其他裝置的 session 會失效（logoutOtherDevices 要配這個才有用）
+// 手機認證：電郵驗證好了、手機還沒驗證的人來這裡
 Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
+    Route::get('/phone/verify', [PhoneVerifyController::class, 'show'])->name('phone.notice');
+    Route::post('/phone/send', [PhoneVerifyController::class, 'send'])->middleware('throttle:10,60,phone-send')->name('phone.send');
+    Route::post('/phone/verify', [PhoneVerifyController::class, 'verify'])->middleware('throttle:20,60,phone-verify')->name('phone.verify');
+    Route::post('/phone/reset', [PhoneVerifyController::class, 'reset'])->name('phone.reset');
+});
+
+Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group(function () {
     Route::get('/me', [MemberController::class, 'me'])->name('me');
     Route::get('/me/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 

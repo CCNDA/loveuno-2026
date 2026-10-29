@@ -13,11 +13,14 @@ use Illuminate\View\View;
 // 首頁：沒登入是介紹頁；登入後是日記牆（照 loveuno-web 版型：上面好友推薦、下面日記卡片）
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         $me = $request->user();
         if (! $me || ! $me->hasVerifiedEmail()) {
             return view('home');
+        }
+        if ($me->phone_verified_at === null) {
+            return redirect()->route('phone.notice'); // 電郵驗證好了，接著驗證手機（熊叔叔 10/29）
         }
 
         $blocked = $me->blockRelatedIds();

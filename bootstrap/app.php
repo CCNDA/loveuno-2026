@@ -26,6 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return $next($request);
             },
+            // phone.verified：電郵驗證後還要手機認證才能用會員功能（熊叔叔 10/29「1A」）
+            'phone.verified' => function ($request, $next) {
+                if ($request->user() && $request->user()->phone_verified_at === null) {
+                    return redirect()->route('phone.notice');
+                }
+
+                return $next($request);
+            },
             'registration.open' => function ($request, $next) {
                 abort_unless(config('loveuno.registration_open'), 404);
 

@@ -63,7 +63,7 @@ class DemoSeeder extends Seeder
                     'password' => Str::random(48),
                     'is_demo' => true,
                 ]);
-                $user->forceFill(['email_verified_at' => now()])->save();
+                $user->forceFill(['email_verified_at' => now(), 'phone_verified_at' => now()])->save(); // 示範會員不用真的收簡訊
                 Profile::create([
                     'user_id' => $user->id,
                     'gender' => $gender,

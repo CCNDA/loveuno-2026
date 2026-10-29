@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'legacy_id', 'is_demo'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'phone', 'phone_pending', 'phone_code_hash'])]
 // MustVerifyEmail：新註冊的會員要先驗證 email 才能看會員頁（verified middleware）
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -26,6 +26,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'phone_code_expires_at' => 'datetime',
+            'phone_code_attempts' => 'integer',
             'password' => 'hashed',
             'is_demo' => 'boolean',
             'is_admin' => 'boolean',

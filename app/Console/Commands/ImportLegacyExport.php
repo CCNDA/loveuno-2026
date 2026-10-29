@@ -66,7 +66,7 @@ class ImportLegacyExport extends Command
                 }
                 $user->save();
                 // 直接寫雜湊（不經過 hashed cast，避免被再雜湊一次）
-                DB::table('users')->where('id', $user->id)->update(['password' => $hash, 'email_verified_at' => $user->email_verified_at ?? now()]);
+                DB::table('users')->where('id', $user->id)->update(['password' => $hash, 'email_verified_at' => $user->email_verified_at ?? now(), 'phone_verified_at' => $user->phone_verified_at ?? now()]);
 
                 $profile = Profile::updateOrCreate(['user_id' => $user->id], [
                     'gender' => in_array($m['gender'] ?? '', ['男', '女'], true) ? $m['gender'] : '',

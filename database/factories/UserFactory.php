@@ -28,6 +28,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'phone_verified_at' => now(), // 測試預設手機也驗證過；要測手機認證用 phoneUnverified()
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
@@ -41,5 +42,11 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    // 手機還沒認證
+    public function phoneUnverified(): static
+    {
+        return $this->state(fn (array $attributes) => ['phone_verified_at' => null]);
     }
 }
