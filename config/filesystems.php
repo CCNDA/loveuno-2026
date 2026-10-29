@@ -49,7 +49,7 @@ return [
             'bucket' => env('AVATAR_S3_BUCKET'),
             'endpoint' => env('AVATAR_S3_ENDPOINT'),
             'use_path_style_endpoint' => true,
-            'throw' => false,
+            'throw' => true, // 存檔失敗要報錯，不然資料庫會指到不存在的檔
         ],
 
         'public' => [

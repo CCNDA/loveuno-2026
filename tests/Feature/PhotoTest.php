@@ -47,8 +47,8 @@ class PhotoTest extends TestCase
         Storage::disk('avatars')->assertExists($p->photo_path);
         $info = getimagesizefromstring(Storage::disk('avatars')->get($p->photo_path));
         $this->assertSame([600, 600, IMAGETYPE_JPEG], [$info[0], $info[1], $info[2]]); // 一律重做成 600×600 JPEG
-        $this->assertStringEndsWith('.jpg', $p->photo_path);
-        $this->assertStringNotContainsString('me', $p->photo_path); // 檔名是亂數，不沿用原檔名
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}\.jpg$/', $p->photo_path); // 亂數檔名，不沿用原檔名
+        $this->assertStringNotContainsString('Exif', substr(Storage::disk('avatars')->get($p->photo_path), 0, 200)); // 重做的 JPEG 沒有 EXIF 區段
     }
 
     public function test_fake_image_and_small_image_are_rejected(): void
@@ -86,10 +86,12 @@ class PhotoTest extends TestCase
         $p = $owner->profile->fresh();
 
         $this->actingAs($other)->get('/admin/photos')->assertForbidden();
-        $this->actingAs($other)->post("/admin/photos/{$p->user_id}", ['decision' => 'approve'])->assertForbidden();
+        $this->actingAs($other)->post("/admin/photos/{$p->user_id}", ['decision' => 'approve', 'photo' => $p->photo_path])->assertForbidden();
+        auth()->logout();
+        $this->get('/admin/photos')->assertRedirect('/login');
 
         $this->actingAs($admin)->get('/admin/photos')->assertOk()->assertSee('本人');
-        $this->actingAs($admin)->post("/admin/photos/{$p->user_id}", ['decision' => 'approve'])->assertRedirect('/admin/photos');
+        $this->actingAs($admin)->post("/admin/photos/{$p->user_id}", ['decision' => 'approve', 'photo' => $p->photo_path])->assertRedirect('/admin/photos');
 
         $this->assertSame('approved', $p->fresh()->photo_status);
         $this->actingAs($other)->get("/photos/{$owner->id}")->assertOk();
@@ -103,7 +105,7 @@ class PhotoTest extends TestCase
         $this->actingAs($owner)->post('/me/photo', ['photo' => UploadedFile::fake()->image('a.jpg', 400, 400)]);
         $path = $owner->profile->fresh()->photo_path;
 
-        $this->actingAs($admin)->post("/admin/photos/{$owner->id}", ['decision' => 'reject']);
+        $this->actingAs($admin)->post("/admin/photos/{$owner->id}", ['decision' => 'reject', 'photo' => $path]);
 
         Storage::disk('avatars')->assertMissing($path);
         $this->assertSame('rejected', $owner->profile->fresh()->photo_status);
@@ -125,6 +127,35 @@ class PhotoTest extends TestCase
         $this->actingAs($u)->delete('/me/photo')->assertRedirect('/me/photo');
         Storage::disk('avatars')->assertMissing($second);
         $this->assertNull($u->profile->fresh()->photo_path);
+    }
+
+    public function test_approve_does_not_apply_to_a_photo_the_admin_did_not_see(): void
+    {
+        $owner = $this->member('本人');
+        $admin = $this->member('管理員', true);
+        $this->actingAs($owner)->post('/me/photo', ['photo' => UploadedFile::fake()->image('a.jpg', 400, 400)]);
+        $seen = $owner->profile->fresh()->photo_path;           // 管理員打開頁面時看到的
+        $this->actingAs($owner)->post('/me/photo', ['photo' => UploadedFile::fake()->image('b.jpg', 400, 400)]); // 會員又換了一張
+
+        $this->actingAs($admin)->post("/admin/photos/{$owner->id}", ['decision' => 'approve', 'photo' => $seen])
+            ->assertRedirect('/admin/photos')->assertSessionHas('status');
+        $this->assertSame('pending', $owner->profile->fresh()->photo_status);
+    }
+
+    public function test_webp_is_accepted_and_huge_images_are_rejected(): void
+    {
+        $u = $this->member();
+        $img = imagecreatetruecolor(300, 300);
+        ob_start(); imagewebp($img); $webp = ob_get_clean();
+        $this->actingAs($u)->post('/me/photo', ['photo' => UploadedFile::fake()->createWithContent('a.webp', $webp)])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('pending', $u->profile->fresh()->photo_status);
+
+        // 寬或高超過 6000 被驗證擋下（不會真的解開）
+        $huge = UploadedFile::fake()->image('huge.png', 6100, 200);
+        $this->actingAs($u)->post('/me/photo', ['photo' => $huge])->assertSessionHasErrors('photo');
+        // 像素總數上限在 AvatarImage 裡也有一道
+        $this->assertSame(40_000_000, \App\Support\AvatarImage::MAX_PIXELS);
     }
 
     public function test_set_admin_command(): void

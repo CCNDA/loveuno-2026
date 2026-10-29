@@ -18,6 +18,7 @@
                     <p class="meta">上傳時間 {{ $p->photo_updated_at?->format('Y/n/j H:i') }}</p>
                     <form method="POST" action="{{ route('admin.photos.decide', $p) }}" class="review-actions">
                         @csrf
+                        <input type="hidden" name="photo" value="{{ $p->photo_path }}">
                         <button type="submit" name="decision" value="approve" class="button">通過</button>
                         <button type="submit" name="decision" value="reject" class="button button-secondary">不通過（刪掉）</button>
                     </form>

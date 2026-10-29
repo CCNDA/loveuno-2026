@@ -24,8 +24,15 @@ class PhotoReviewController extends Controller
 
     public function decide(Request $request, Profile $profile): RedirectResponse
     {
-        $data = $request->validate(['decision' => ['required', 'in:approve,reject']]);
+        $data = $request->validate([
+            'decision' => ['required', 'in:approve,reject'],
+            'photo' => ['required', 'string'], // 管理員看到的是哪一張（photo_path）
+        ]);
         abort_unless($profile->photo_status === 'pending', 409);
+        // 管理員打開頁面之後，會員又換了照片：不能讓「通過」套到沒看過的那張
+        if (! hash_equals((string) $profile->photo_path, $data['photo'])) {
+            return redirect()->route('admin.photos')->with('status', sprintf('%s 剛剛換了照片，請重新看過再決定。', $profile->user->name));
+        }
 
         if ($data['decision'] === 'approve') {
             $profile->forceFill(['photo_status' => 'approved'])->save();

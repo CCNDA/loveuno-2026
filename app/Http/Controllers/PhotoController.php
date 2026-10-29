@@ -26,11 +26,11 @@ class PhotoController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
+            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200,max_width=6000,max_height=6000'],
         ], [
             'photo.mimes' => '請選 JPG、PNG 或 WebP 的照片。',
             'photo.max' => '照片太大了，請選 5MB 以下的。',
-            'photo.dimensions' => '照片太小了，寬和高至少要 200 像素。',
+            'photo.dimensions' => '照片的寬和高要在 200～6000 像素之間。',
         ], ['photo' => '照片']);
 
         try {
