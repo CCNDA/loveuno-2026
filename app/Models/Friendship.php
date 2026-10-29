@@ -65,10 +65,15 @@ class Friendship extends Model
         return $f;
     }
 
+    // 解除關係（封鎖也會呼叫）：雙方互送的禮物紀錄一起刪掉（舊站 manage_friend_list.php 也是這樣），
+    // 不然對方再送一份，就會因為「以前送過」自動又變好友
     public static function remove(User $a, User $b): void
     {
         [$low, $high] = self::pair($a, $b);
         self::where('user_id', $low)->where('friend_id', $high)->delete();
+        Gift::where(fn ($q) => $q->where('sender_id', $a->id)->where('recipient_id', $b->id))
+            ->orWhere(fn ($q) => $q->where('sender_id', $b->id)->where('recipient_id', $a->id))
+            ->delete();
         User::forgetFriendLevels($a, $b);
     }
 

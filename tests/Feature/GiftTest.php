@@ -111,6 +111,51 @@ class GiftTest extends TestCase
         $this->actingAs($b)->get('/gifts')->assertDontSee(route('members.show', $a), false);
     }
 
+    public function test_cannot_send_to_unverified_or_profileless_or_without_own_profile(): void
+    {
+        $me = $this->member('我');
+        $unverified = $this->member('沒驗證');
+        $unverified->forceFill(['email_verified_at' => null])->save();
+        $noProfile = User::factory()->create(['name' => '沒檔案']);
+        foreach ([$unverified, $noProfile] as $u) {
+            $this->actingAs($me)->get("/members/{$u->id}/gift")->assertNotFound();
+            $this->actingAs($me)->post("/members/{$u->id}/gift", ['item' => 1])->assertNotFound();
+        }
+        $you = $this->member('你');
+        $this->actingAs($noProfile)->get("/members/{$you->id}/gift")->assertNotFound(); // 自己沒有檔案
+        $this->assertSame(0, Gift::count());
+    }
+
+    public function test_opening_gifts_page_marks_received_as_opened(): void
+    {
+        $a = $this->member('甲');
+        $b = $this->member('乙');
+        $this->actingAs($a)->post("/members/{$b->id}/gift", ['item' => 1]);
+        $this->assertNull(Gift::first()->opened_at);
+        $this->actingAs($a)->get('/gifts'); // 送的人看：不算
+        $this->assertNull(Gift::first()->opened_at);
+        $this->actingAs($b)->get('/gifts')->assertSee('<span class="tag">新</span>', false);
+        $this->assertNotNull(Gift::first()->opened_at);
+        $this->actingAs($a)->get('/gifts')->assertDontSee('對方看過了'); // 沒有讀取回條
+    }
+
+    public function test_after_unfriend_both_must_send_again(): void
+    {
+        $a = $this->member('甲');
+        $b = $this->member('乙');
+        $this->actingAs($a)->post("/members/{$b->id}/gift", ['item' => 1]);
+        $this->actingAs($b)->post("/members/{$a->id}/gift", ['item' => 1]);
+        $this->assertNotNull(Friendship::between($a, $b));
+
+        $this->actingAs($a)->delete("/members/{$b->id}/friend");
+        $this->assertSame(0, Gift::count());
+        $this->travel(1)->days();
+        $this->actingAs($b)->post("/members/{$a->id}/gift", ['item' => 2]); // 只有乙送：還不是好友
+        $this->assertNull(Friendship::between($a, $b));
+        $this->actingAs($a)->post("/members/{$b->id}/gift", ['item' => 3]);
+        $this->assertNotNull(Friendship::between($a, $b));
+    }
+
     public function test_welcome_new_friends_on_wall(): void
     {
         $me = $this->member('我');

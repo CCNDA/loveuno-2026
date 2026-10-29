@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Friendship;
 use App\Models\Gift;
 use App\Models\User;
+use App\Support\NotEnoughPoints;
 use App\Support\Points;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -12,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use RuntimeException;
 
 // 送禮物（設計稿 SendGiftDialog；舊站 member/gift.php）：
 // 一次 3 點、同一位會員一天一份、簡訊 20 字內；對方也送過我禮物，就成為「普通好友」（熊叔叔 10/29「1A」）。
@@ -22,9 +22,9 @@ class GiftController extends Controller
     {
         $me = $request->user();
         $blocked = $me->blockRelatedIds();
-        $received = Gift::with('sender.profile')->where('recipient_id', $me->id)->whereNotIn('sender_id', $blocked)
+        $received = Gift::with('sender')->where('recipient_id', $me->id)->whereNotIn('sender_id', $blocked)
             ->orderByDesc('created_at')->limit(50)->get();
-        $sent = Gift::with('recipient.profile')->where('sender_id', $me->id)->whereNotIn('recipient_id', $blocked)
+        $sent = Gift::with('recipient')->where('sender_id', $me->id)->whereNotIn('recipient_id', $blocked)
             ->orderByDesc('created_at')->limit(50)->get();
         $unopened = $received->whereNull('opened_at')->pluck('id');
 
@@ -78,7 +78,7 @@ class GiftController extends Controller
             });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['item' => '今天已經送過禮物給 ' . $user->name . ' 了，明天再送吧。']);
-        } catch (RuntimeException) {
+        } catch (NotEnoughPoints) {
             throw ValidationException::withMessages(['item' => sprintf('愛諾積點不夠（送禮物要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS['gift'][0])]);
         }
 
@@ -93,10 +93,11 @@ class GiftController extends Controller
         return redirect()->route('members.show', $user)->with('status', $msg);
     }
 
-    // 不能送給自己、有封鎖關係的、還沒驗證或沒有檔案的人（跟傳紙條同一套）
+    // 不能送給自己、有封鎖關係的、還沒驗證或沒有檔案的人（跟傳紙條同一套）；送的人自己也要有檔案（舊站 gift.php 要先建檔）
     private function authorizeRecipient(User $me, User $user): void
     {
         abort_unless(NoteController::canNote($me, $user), 404);
+        abort_unless($me->profile()->exists(), 404);
     }
 
     private function sentToday(User $me, User $user): bool

@@ -21,7 +21,7 @@
                         </p>
                         @if ($g->message !== '')<p class="gift-message">{{ $g->message }}</p>@endif
                         <p class="meta"><time datetime="{{ $g->created_at->toIso8601String() }}">{{ $g->created_at->format('Y/n/j H:i') }}</time>
-                            @if (auth()->user()->friendLevelWith($g->sender) === 0)・<a href="{{ route('gifts.create', $g->sender) }}">回送禮物，成為好友</a>@endif
+                            @if (auth()->user()->friendLevelWith($g->sender) === 0 && \App\Http\Controllers\NoteController::canNote(auth()->user(), $g->sender))・<a href="{{ route('gifts.create', $g->sender) }}">回送禮物，成為好友</a>@endif
                         </p>
                     </div>
                 </li>
@@ -42,7 +42,7 @@
                     <div>
                         <p class="gift-title">送 <a href="{{ route('members.show', $g->recipient) }}">{{ $g->recipient->name }}</a>「{{ $g->itemName() }}」</p>
                         @if ($g->message !== '')<p class="gift-message">{{ $g->message }}</p>@endif
-                        <p class="meta"><time datetime="{{ $g->created_at->toIso8601String() }}">{{ $g->created_at->format('Y/n/j H:i') }}</time>・{{ $g->opened_at ? '對方看過了' : '對方還沒看' }}</p>
+                        <p class="meta"><time datetime="{{ $g->created_at->toIso8601String() }}">{{ $g->created_at->format('Y/n/j H:i') }}</time></p>
                     </div>
                 </li>
             @endforeach

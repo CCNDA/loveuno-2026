@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Support\Points;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
+use App\Support\NotEnoughPoints;
 use Tests\TestCase;
 
 class PointsTest extends TestCase
@@ -82,7 +82,7 @@ class PointsTest extends TestCase
         try {
             Points::spend($u, 'gift', 'g2');
             $this->fail('應該要丟例外');
-        } catch (RuntimeException) {
+        } catch (NotEnoughPoints) {
         }
         $this->assertSame(2, $this->balance($u));
         $this->assertSame(-3, (int) DB::table('point_transactions')->where('ref', 'g1')->value('amount'));

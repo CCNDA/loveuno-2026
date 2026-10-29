@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 // 愛諾積點：給點、花點都走這裡，一筆紀錄（point_transactions）配一次餘額（users.points）更新，放在同一個交易裡。
 // 點數照設計稿 PageMemberPoints/PointAward.tsx；設計稿沒有的（寫日記）照舊站 member/write_diary.php。
@@ -57,14 +56,14 @@ class Points
         return self::award($user, $type, now()->toDateString(), $amount, $label);
     }
 
-    // 花點；不夠就丟 RuntimeException（不扣）。$ref 要每次不一樣（例如禮物編號）
+    // 花點；不夠就丟 NotEnoughPoints（不扣）。$ref 要每次不一樣（例如禮物編號）
     public static function spend(User $user, string $type, string $ref, ?string $label = null): void
     {
         [$amount, $default] = self::COSTS[$type];
         DB::transaction(function () use ($user, $type, $ref, $amount, $label, $default) {
             $balance = (int) DB::table('users')->where('id', $user->id)->lockForUpdate()->value('points');
             if ($balance < $amount) {
-                throw new RuntimeException('積點不夠');
+                throw new NotEnoughPoints('積點不夠');
             }
             DB::table('point_transactions')->insert([
                 'user_id' => $user->id, 'type' => $type, 'ref' => $ref, 'amount' => -$amount, 'label' => $label ?? $default,

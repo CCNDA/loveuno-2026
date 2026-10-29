@@ -10,7 +10,7 @@ class Gift extends Model
 {
     // 設計稿的 12 種，照 SendGiftDialog.tsx 的 id 與順序（熊叔叔 10/29「2A」）；名字以 Figma 為準（第 4 種 Figma 是
     // 「恩膏葡萄酒」，前台程式寫「恩賜葡萄酒」）。圖是 Figma 01_UNO_Website「gift」框（330:9182）匯出的，
-    // 放在 public/images/gifts/<id>.png（五餅二魚那一張第一份不完整，用第二份 342:39614）。
+    // 縮成 192px 的 WebP 放在 public/images/gifts/<id>.webp（五餅二魚那一張第一份不完整，用第二份 342:39614）。
     public const ITEMS = [
         1 => '雲彩圍繞',
         2 => '堅固房角石',
@@ -49,7 +49,7 @@ class Gift extends Model
 
     public static function imageUrl(int $item): string
     {
-        return asset('images/gifts/' . (isset(self::ITEMS[$item]) ? $item : 1) . '.png');
+        return asset('images/gifts/' . (isset(self::ITEMS[$item]) ? $item : 1) . '.webp');
     }
 
     public function itemName(): string
