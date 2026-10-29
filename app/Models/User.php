@@ -36,6 +36,17 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(Verification::class);
+    }
+
+    // 通過的身份認證（職業、身分證明、教會週報）：[kind => Verification]
+    public function approvedVerifications(): \Illuminate\Support\Collection
+    {
+        return $this->verifications->where('status', 'approved')->keyBy('kind');
+    }
+
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);

@@ -30,6 +30,8 @@
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
+                            @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
+                            <li><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
                             @php($openReports = \App\Models\Report::where('status', 'open')->count())
                             <li><a href="{{ route('admin.reports') }}" @if(request()->routeIs('admin.reports')) aria-current="page" @endif>檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
                         @endif

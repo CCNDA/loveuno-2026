@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\PhotoReviewController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\Admin\ReportReviewController;
+use App\Http\Controllers\Admin\VerificationReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\PhoneVerifyController;
@@ -22,11 +23,15 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 // 沒登入：介紹頁；登入後：日記牆（好友推薦＋日記卡片）
 Route::get('/', HomeController::class)->name('home');
 Route::view('/rules', 'rules')->name('rules');
+// 職業 Email 認證信的連結（不用登入；確認碼對了才算）
+Route::get('/verify/job/{verification}/{token}', [\App\Http\Controllers\VerificationController::class, 'confirmJob'])
+    ->whereNumber('verification')->middleware('throttle:20,60,verify-job-confirm')->name('verify.job.confirm');
 
 // 繁／简切換：存在 session；回上一頁只回本站（不跟著外站的 Referer 走）
 Route::get('/script/{script}', function (\Illuminate\Http\Request $request, string $script) {
@@ -99,6 +104,11 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60,preferences-save')->name('center.preferences.update');
     Route::get('/me/intro', [ProfileController::class, 'editIntro'])->name('profile.intro');
     Route::get('/me/love', [LoveHistoryController::class, 'edit'])->name('profile.love');
+    // 身份認證（職業 Email、身分證明文件、教會週報；手機在 PhoneVerifyController）
+    Route::get('/me/verify', [VerificationController::class, 'index'])->name('verify.index');
+    Route::post('/me/verify/job', [VerificationController::class, 'storeJob'])->middleware('throttle:5,60,verify-job')->name('verify.job');
+    Route::post('/me/verify/id', [VerificationController::class, 'storeId'])->middleware('throttle:10,60,verify-upload')->name('verify.id');
+    Route::post('/me/verify/church', [VerificationController::class, 'storeChurch'])->middleware('throttle:10,60,verify-upload')->name('verify.church');
     Route::put('/me/love', [LoveHistoryController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.love.update');
     // 個人相簿（最多 9 張，要審核）
     Route::get('/me/album', [AlbumController::class, 'edit'])->name('album.edit');
@@ -156,6 +166,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
         Route::post('/album/{photo}', [PhotoReviewController::class, 'decideAlbum'])->whereNumber('photo')->name('admin.album.decide');
+        Route::get('/verifications', [VerificationReviewController::class, 'index'])->name('admin.verifications');
+        Route::post('/verifications/{verification}', [VerificationReviewController::class, 'decide'])->whereNumber('verification')->name('admin.verifications.decide');
+        Route::get('/verifications/{verification}/photo', [VerificationReviewController::class, 'photo'])->whereNumber('verification')->name('admin.verifications.photo');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

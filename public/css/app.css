@@ -398,3 +398,9 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 /* 手機認證 */
 .phone-reset { margin-top: 12px; }
 .phone-reset .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
+
+/* 身份認證 */
+.verify-card { margin: 16px 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.verify-card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+.verify-status { font-weight: 700; }
+.verified-badge { vertical-align: middle; }

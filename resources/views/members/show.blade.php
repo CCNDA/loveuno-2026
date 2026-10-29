@@ -9,7 +9,8 @@
 <div class="member-head">
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <div>
-        <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+        @php($approved = ($iBlocked ?? false) ? collect() : $member->approvedVerifications())
+        <h1>{{ $member->name }}@if ($approved->isNotEmpty()) <img src="{{ asset('images/brand/verified-badge.svg') }}" alt="已認證" width="20" height="20" class="verified-badge">@endif @if($isMe) <span class="tag">我</span>@endif</h1>
         @if (! ($iBlocked ?? false) && ($member->profile?->headline ?? '') !== '')
             <p class="headline">{{ $member->profile->headline }}</p>
         @endif

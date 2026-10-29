@@ -10,6 +10,11 @@
 @if ($tab === 'info')
     <h2 class="visually-hidden">個人資料</h2>
     @php($rows = $p->detailRows())
+    @php($approved = $member->approvedVerifications())
+    @if ($approved->isNotEmpty())
+        @php($rows['身份認證'] = collect(['job' => '職業' . ($approved->get('job') ? '（' . $approved->get('job')->company . '）' : ''), 'id' => '身分證明', 'church' => '教會週報'])
+            ->filter(fn ($t, $k) => $approved->has($k))->implode('、') . ' 已通過')
+    @endif
     @if (empty($rows))
         <p>這位會員還沒有填個人資料。</p>
     @else

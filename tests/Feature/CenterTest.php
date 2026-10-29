@@ -28,7 +28,7 @@ class CenterTest extends TestCase
         $this->assertMatchesRegularExpression('#aria-current="page"\s*>帳號管理#u', $html);
         $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee(route('profile.intro'), false);
         $this->actingAs($u)->get('/me/intro')->assertOk()->assertSee('最愛經文');
-        $this->actingAs($u)->get('/me/photo')->assertOk()->assertSee('身份認證（年底開放前）');
+        $this->actingAs($u)->get('/me/photo')->assertOk()->assertSee(route('verify.index'), false);
         $this->actingAs($u)->get('/center/points')->assertOk()->assertSee('我目前的愛諾積點');
     }
 

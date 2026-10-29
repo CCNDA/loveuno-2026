@@ -26,7 +26,7 @@ class PhoneVerifyController extends Controller
     {
         $user = $request->user();
         if ($user->phone_verified_at && ! $this->pendingOf($user)) {
-            return redirect()->route('center.account');
+            return redirect()->route('verify.index');
         }
 
         return view('auth.verify-phone', [
@@ -123,7 +123,7 @@ class PhoneVerifyController extends Controller
         }
 
         return $changing
-            ? redirect()->route('center.account')->with('status', '手機號碼換好了。')
+            ? redirect()->route('verify.index')->with('status', '手機號碼換好了。')
             : redirect()->route('diaries.index')->with('status', '手機認證好了，歡迎來到愛諾園！');
     }
 
@@ -133,7 +133,7 @@ class PhoneVerifyController extends Controller
         $user = $request->user();
         $user->forceFill(['phone_pending' => null, 'phone_code_hash' => null, 'phone_code_expires_at' => null, 'phone_code_attempts' => 0])->save();
 
-        return redirect()->route($user->phone_verified_at ? 'center.account' : 'phone.notice');
+        return redirect()->route($user->phone_verified_at ? 'verify.index' : 'phone.notice');
     }
 
     // 有寄出、還沒過期的待驗證號碼

@@ -112,7 +112,7 @@ class PhoneVerifyTest extends TestCase
     {
         $u = User::factory()->create(['phone' => '0911111111']);
         Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990]);
-        $this->actingAs($u)->get('/phone/verify')->assertRedirect('/center/account');
+        $this->actingAs($u)->get('/phone/verify')->assertRedirect('/me/verify');
         $this->actingAs($u)->get('/center/account')->assertSee('0911***111');
         $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222'])->assertSessionHasErrors('current_password');
         $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222', 'current_password' => 'wrong'])->assertSessionHasErrors('current_password');
@@ -126,7 +126,7 @@ class PhoneVerifyTest extends TestCase
         $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222', 'current_password' => 'password'])->assertRedirect('/phone/verify');
         $this->actingAs($u)->get('/phone/verify')->assertSee('更換手機號碼');
         $this->actingAs($u)->get('/diaries')->assertOk(); // 換號碼中，原本的認證還在
-        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/center/account');
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/me/verify');
         $this->assertSame('0922222222', $u->fresh()->phone);
     }
 
