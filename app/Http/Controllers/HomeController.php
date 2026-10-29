@@ -7,13 +7,14 @@ use App\Models\Gift;
 use App\Models\User;
 use App\Support\Occasions;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 // 首頁：沒登入是介紹頁；登入後是日記牆（照 loveuno-web 版型：上面好友推薦、下面日記卡片）
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): View|\Illuminate\Http\RedirectResponse
+    public function __invoke(Request $request): View|RedirectResponse
     {
         $me = $request->user();
         if (! $me || ! $me->hasVerifiedEmail()) {
@@ -50,6 +51,7 @@ class HomeController extends Controller
             ->whereKeyNot($me->id)
             ->whereNotIn('id', $blocked)
             ->where('email_verified_at', '>=', now()->subDays(30))
+            ->whereNotNull('phone_verified_at')
             ->whereHas('profile', $this->matchesPreferences($me))
             ->with('profile')
             ->orderByDesc('email_verified_at')->orderByDesc('id')
@@ -84,6 +86,7 @@ class HomeController extends Controller
         return User::query()
             ->whereKeyNot($me->id)
             ->whereNotNull('email_verified_at')
+            ->whereNotNull('phone_verified_at')
             ->whereNotIn('id', $blocked)
             ->whereHas('profile', $this->matchesPreferences($me))
             ->with('profile')

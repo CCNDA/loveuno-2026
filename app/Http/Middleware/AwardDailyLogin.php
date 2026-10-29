@@ -16,7 +16,7 @@ class AwardDailyLogin
     {
         $user = $request->user();
         $today = now()->toDateString();
-        if ($user && $user->hasVerifiedEmail() && $request->hasSession() && $request->session()->get('points_daily') !== $today) {
+        if ($user && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $request->hasSession() && $request->session()->get('points_daily') !== $today) {
             try {
                 Points::daily($user, 'daily_login');
                 $request->session()->put('points_daily', $today);

@@ -3,8 +3,10 @@
 @section('title', '手機認證')
 
 @section('content')
-<h1>手機認證</h1>
-<p>電子郵件驗證好了！最後一步：請驗證您的手機，驗證好就可以開始使用愛諾園。</p>
+<h1>{{ $changing ? '更換手機號碼' : '手機認證' }}</h1>
+@unless ($changing)
+    <p>電子郵件驗證好了！最後一步：請驗證您的手機，驗證好就可以開始使用愛諾園。</p>
+@endunless
 <p class="hint">收不到簡訊的話，請寫信到 <a href="mailto:{{ $contact }}">{{ $contact }}</a> 跟我們聯繫，信裡寫您註冊用的電子郵件。</p>
 
 @if ($pending)
@@ -23,7 +25,7 @@
     </form>
     <form method="POST" action="{{ route('phone.reset') }}" class="phone-reset">
         @csrf
-        <button type="submit" class="link-button">號碼打錯了，或要重寄認證碼</button>
+        <button type="submit" class="link-button">{{ $changing ? '不換了（原本的號碼還是認證過的）' : '號碼打錯了，或要重寄認證碼' }}</button>
     </form>
 @else
     <form method="POST" action="{{ route('phone.send') }}" class="form" novalidate>
@@ -40,8 +42,10 @@
     </form>
 @endif
 
-<form method="POST" action="{{ route('logout') }}" class="phone-reset">
-    @csrf
-    <button type="submit" class="link-button">先登出，等一下再來</button>
-</form>
+@unless ($changing)
+    <form method="POST" action="{{ route('logout') }}" class="phone-reset">
+        @csrf
+        <button type="submit" class="link-button">先登出，等一下再來</button>
+    </form>
+@endunless
 @endsection

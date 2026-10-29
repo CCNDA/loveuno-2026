@@ -108,10 +108,62 @@ class PhoneVerifyTest extends TestCase
             && $req['mobile'] === '0912345678' && str_contains($req['message'], 'CCNDA簡訊：愛諾園手機認證碼') && (int) $req['expirytime'] === 600);
     }
 
-    public function test_verified_members_skip_the_page(): void
+    public function test_verified_member_changes_number_with_password(): void
     {
-        $u = User::factory()->create();
-        $this->actingAs($u)->get('/phone/verify')->assertRedirect('/diaries');
-        $this->actingAs($u)->post('/phone/send', ['phone' => '0912345678'])->assertNotFound();
+        $u = User::factory()->create(['phone' => '0911111111']);
+        Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990]);
+        $this->actingAs($u)->get('/phone/verify')->assertRedirect('/center/account');
+        $this->actingAs($u)->get('/center/account')->assertSee('0911***111');
+        $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222'])->assertSessionHasErrors('current_password');
+        $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222', 'current_password' => 'wrong'])->assertSessionHasErrors('current_password');
+
+        $code = null;
+        Log::listen(function ($e) use (&$code) {
+            if (preg_match('/認證碼 (\d{6})/u', (string) ($e->context['text'] ?? ''), $m)) {
+                $code = $m[1];
+            }
+        });
+        $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222', 'current_password' => 'password'])->assertRedirect('/phone/verify');
+        $this->actingAs($u)->get('/phone/verify')->assertSee('更換手機號碼');
+        $this->actingAs($u)->get('/diaries')->assertOk(); // 換號碼中，原本的認證還在
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/center/account');
+        $this->assertSame('0922222222', $u->fresh()->phone);
+    }
+
+    public function test_unverified_phone_members_are_hidden_from_others(): void
+    {
+        $hidden = $this->newMember();
+        $me = User::factory()->create();
+        Profile::create(['user_id' => $me->id, 'gender' => '男', 'birth_year' => 1990]);
+        $this->actingAs($me)->get('/members')->assertDontSee(route('members.show', $hidden), false);
+        $this->actingAs($me)->get("/notes/{$hidden->id}")->assertNotFound();
+    }
+
+    public function test_per_number_limit_and_masked_log(): void
+    {
+        config(['loveuno.sms.driver' => 'twsms', 'loveuno.sms.twsms_username' => 'u', 'loveuno.sms.twsms_password' => 'p']);
+        Http::fake(['api.twsms.com/*' => Http::response(['code' => '00031'])]);
+        $logged = [];
+        Log::listen(function ($e) use (&$logged) {
+            $logged[] = json_encode($e->context, JSON_UNESCAPED_UNICODE);
+        });
+        foreach (range(1, 3) as $i) {
+            $u = $this->newMember();
+            $this->actingAs($u)->post('/phone/send', ['phone' => '0933333333']);
+        }
+        $u = $this->newMember();
+        $this->actingAs($u)->post('/phone/send', ['phone' => '0933333333'])->assertSessionHasErrors('phone');
+        $this->assertStringContainsString('寄太多次', session('errors')->first('phone'));
+        Http::assertSentCount(3);
+        $this->assertStringNotContainsString('0933333333', implode(' ', $logged));
+    }
+
+    public function test_production_refuses_log_driver(): void
+    {
+        // 直接測 Sms（整個請求切到 production 時，測試的 CSRF 豁免也會失效）
+        $this->app['env'] = 'production';
+        $r = \App\Support\Sms::send('0912345678', 'x', 600);
+        $this->assertFalse($r['ok']);
+        $this->assertSame('簡訊服務還沒設定好，請寫信跟我們聯繫。', $r['message']);
     }
 }

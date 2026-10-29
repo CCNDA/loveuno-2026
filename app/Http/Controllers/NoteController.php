@@ -22,7 +22,8 @@ class NoteController extends Controller
     // 可以傳紙條的對象：不是自己、email 已驗證、有個人檔案（跟「認識朋友」列得出來的人一致）
     public static function canNote(User $me, User $user): bool
     {
-        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->profile()->exists() && ! $me->blockedEitherWay($user);
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null
+            && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 
     public function show(Request $request, User $user): View

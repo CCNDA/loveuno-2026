@@ -21,7 +21,8 @@ class MemberController extends Controller
 
         $members = User::query()
             ->whereHas('profile')
-            ->whereNotNull('email_verified_at') // 還沒驗證 email 的新註冊會員不列出來
+            ->whereNotNull('email_verified_at') // 還沒驗證 email、手機的新註冊會員不列出來（10/29「1A」）
+            ->whereNotNull('phone_verified_at')
             ->whereNotIn('id', $request->user()->blockRelatedIds()) // 封鎖（任一方）就不列出來
             ->with('profile')
             ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))

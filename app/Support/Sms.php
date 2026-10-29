@@ -16,6 +16,11 @@ class Sms
     public static function send(string $mobile, string $text, int $expirySeconds): array
     {
         $driver = (string) config('loveuno.sms.driver', 'log');
+        if ($driver !== 'twsms' && app()->isProduction()) {
+            Log::critical('Sms: 正式站的 SMS_DRIVER 不是 twsms，沒有寄出（log 模式會把認證碼寫進記錄檔）');
+
+            return ['ok' => false, 'message' => '簡訊服務還沒設定好，請寫信跟我們聯繫。'];
+        }
         if ($driver !== 'twsms') {
             Log::info('簡訊（SMS_DRIVER=log，沒有真的寄出）', ['mobile' => $mobile, 'text' => $text]);
 
@@ -46,9 +51,15 @@ class Sms
         if ($code === '00000') {
             return ['ok' => true, 'message' => ''];
         }
-        Log::warning('Sms: TwSMS 回錯誤碼', ['code' => $code, 'mobile' => $mobile]);
+        Log::warning('Sms: TwSMS 回錯誤碼', ['code' => $code, 'mobile' => self::mask($mobile)]);
 
         return ['ok' => false, 'message' => self::userMessage($code)];
+    }
+
+    // 記錄檔裡的手機只留前 4 碼和後 3 碼
+    public static function mask(string $mobile): string
+    {
+        return strlen($mobile) >= 7 ? substr($mobile, 0, 4) . '***' . substr($mobile, -3) : '***';
     }
 
     // 錯誤碼對給會員看的話（照舊站 twsms_user_message）

@@ -11,6 +11,25 @@
     <div><dt>暱稱</dt><dd>{{ $user->name }}</dd></div>
 </dl>
 
+<h2 id="phone-title">手機號碼</h2>
+<p>@if (auth()->user()->phone)已認證：{{ \App\Support\Sms::mask(auth()->user()->phone) }}@else已認證（舊站帶過來的帳號，新版還沒有存號碼）@endif</p>
+<form method="POST" action="{{ route('phone.send') }}" class="form" aria-labelledby="phone-title" novalidate>
+    @csrf
+    <div class="field">
+        <label for="phone">新的手機號碼</label>
+        <p id="phone-hint" class="hint">換號碼要先輸入密碼；新號碼收到認證碼、輸入正確後才會換掉。</p>
+        <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="12" value="{{ old('phone') }}"
+               aria-describedby="phone-hint @error('phone') phone-error @enderror" @error('phone') aria-invalid="true" @enderror>
+        @error('phone')<p id="phone-error" class="field-error">{{ $message }}</p>@enderror
+    </div>
+    <div class="field">
+        <label for="phone_current_password">目前的密碼</label>
+        <input id="phone_current_password" name="current_password" type="password" autocomplete="current-password"
+               @error('current_password') aria-invalid="true" @enderror>
+    </div>
+    <button type="submit" class="button">寄認證碼到新號碼</button>
+</form>
+
 <h2 id="pw-title">換密碼</h2>
 <form method="POST" action="{{ route('center.password') }}" class="form" aria-labelledby="pw-title" novalidate>
     @csrf
