@@ -5,7 +5,7 @@
 @section('content')
 @include('center.tabs', ['current' => 'profile', 'sub' => 'album'])
 <h2>個人相簿</h2>
-<p id="album-hint" class="hint">相簿照片上限為 {{ $max }} 張（還可以放 {{ $left }} 張），可以一次選好幾張。檔案格式：JPG、PNG，單一檔案不超過 5MB。管理員審核通過後，其他會員才看得到。</p>
+<p id="album-hint" class="hint">相簿照片上限為 {{ $max }} 張（還可以放 {{ $left }} 張），可以一次選好幾張。檔案格式：JPG、PNG，單一檔案不超過 5MB。放上去，其他會員就看得到。</p>
 
 @if ($left > 0)
     <form method="POST" action="{{ route('album.store') }}" class="form" enctype="multipart/form-data" novalidate>
@@ -34,7 +34,6 @@
                     <p class="album-rejected">這張沒有通過管理員審核，已經刪掉了。</p>
                 @else
                     <img src="{{ route('album.show', $ph) }}" alt="我的相簿第 {{ $i + 1 }} 張" loading="lazy">
-                    <p class="meta">{{ $ph->status === 'approved' ? '已經通過審核' : '審核中' }}</p>
                 @endif
                 <form method="POST" action="{{ route('album.destroy', $ph) }}">
                     @csrf

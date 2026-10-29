@@ -410,3 +410,14 @@ html.fs-small { font-size: 93.75%; }
 html.fs-medium { font-size: 100%; }
 html.fs-large { font-size: 118.75%; }
 .settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* 公開頁 */
+.footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.policy h2 { font-size: 1.15rem; margin-top: 24px; }
+.faq-group { margin-top: 24px; }
+.faq-item { border-top: 1px solid var(--line); padding: 4px 0; }
+.faq-item summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.faq-item p { margin: 0 0 12px; }
+.donate { margin-top: 24px; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

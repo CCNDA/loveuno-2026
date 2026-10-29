@@ -37,6 +37,7 @@
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
+                            <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
                             @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
                             <li><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
                             @php($openReports = \App\Models\Report::where('status', 'open')->count())
@@ -87,6 +88,16 @@
     @endauth
 
     <footer class="site-footer">
+        <nav aria-label="網站資訊" class="footer-links">
+            <ul>
+                <li><a href="{{ route('about') }}">關於愛諾園</a></li>
+                <li><a href="{{ route('faq') }}">常見問題</a></li>
+                <li><a href="{{ route('contact') }}">聯絡我們</a></li>
+                <li><a href="{{ route('terms') }}">網站服務條款</a></li>
+                <li><a href="{{ route('privacy') }}">隱私權政策</a></li>
+                <li><a href="https://www.ccnda.org/devote/online" rel="noopener">奉獻支持</a></li>
+            </ul>
+        </nav>
         <div class="wrap">
             <p>社團法人中華基督教網路發展協會 CCNDA</p>
             <p class="version">版本 {{ $appVersion }}</p>

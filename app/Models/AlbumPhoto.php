@@ -26,7 +26,7 @@ class AlbumPhoto extends Model
         return $this->belongsTo(User::class);
     }
 
-    // 跟大頭照同一套：通過審核的，登入會員（沒有封鎖關係）看得到；審核中只有本人和管理員
+    // 登入會員（沒有封鎖關係）看得到 approved 的。10/29 起上傳就是 approved（不用審核）
     public function visibleTo(User $viewer): bool
     {
         if ($viewer->is_admin || $this->user_id === (int) $viewer->id) {

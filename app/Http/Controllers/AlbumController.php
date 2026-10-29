@@ -14,8 +14,9 @@ use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 
-// 個人相簿：最多 9 張（設計稿 PhotoUploader uploadLimit={9}，可以一次選好幾張）；上傳後審核中，
-// 管理員通過後其他會員才看得到（跟大頭照一樣）。不通過的留一格「沒有通過」給會員看，會員可以刪掉。
+// 個人相簿：最多 9 張（設計稿 PhotoUploader uploadLimit={9}，可以一次選好幾張）；上傳後其他會員馬上看得到
+// （熊叔叔 10/29「1不用」：相簿不用審核；大頭照、封面還是要審核）。有不適當的照片走檢舉。
+// status 'rejected' 是以前審核不通過留下的一格，會員可以刪掉。
 // 檔案放在私有的 avatars 磁碟，一律經過 show() 檢查權限才送出。
 class AlbumController extends Controller
 {
@@ -69,7 +70,7 @@ class AlbumController extends Controller
             }
             foreach ($paths as $path) {
                 $photo = new AlbumPhoto;
-                $photo->forceFill(['user_id' => $user->id, 'path' => $path, 'status' => 'pending'])->save();
+                $photo->forceFill(['user_id' => $user->id, 'path' => $path, 'status' => 'approved'])->save();
             }
 
             return true;
@@ -79,7 +80,7 @@ class AlbumController extends Controller
             throw ValidationException::withMessages(['photos' => sprintf('相簿最多 %d 張，請先刪掉一張再放。', AlbumPhoto::MAX)]);
         }
 
-        return redirect()->route('album.edit')->with('status', sprintf('%d 張照片放進相簿了，管理員審核通過後其他會員就看得到。', count($paths)));
+        return redirect()->route('album.edit')->with('status', sprintf('%d 張照片放進相簿了。', count($paths)));
     }
 
     public function destroy(Request $request, AlbumPhoto $photo): RedirectResponse

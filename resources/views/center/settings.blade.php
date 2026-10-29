@@ -65,7 +65,7 @@
 
 <ul class="settings-actions">
     <li><a class="button button-light" href="{{ route('settings.network') }}">網路檢測</a></li>
-    <li><a class="button button-light" href="mailto:{{ config('loveuno.contact_email') }}?subject={{ rawurlencode('愛諾園 Bug 回報') }}">Bug 回報<span class="visually-hidden">（寄 email 到 {{ config('loveuno.contact_email') }}）</span></a></li>
+    <li><a class="button button-light" href="{{ route('contact', ['subject' => 'bug']) }}">Bug 回報</a></li>
     <li><a class="button button-secondary" href="{{ route('settings.delete') }}">註銷帳號…</a></li>
 </ul>
 <script src="{{ asset('js/push.js') }}?v={{ $appVersion }}" defer></script>

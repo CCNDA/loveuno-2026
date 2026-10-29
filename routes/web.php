@@ -32,6 +32,13 @@ use Illuminate\Support\Facades\Route;
 // 沒登入：介紹頁；登入後：日記牆（好友推薦＋日記卡片）
 Route::get('/', HomeController::class)->name('home');
 Route::view('/rules', 'rules')->name('rules');
+// 公開頁（設計稿 PageAbout、PageFaq、PageWebsitePolicy、隱私權政策、PageContactUs）
+Route::view('/about', 'pages.about')->name('about');
+Route::view('/faq', 'pages.faq')->name('faq');
+Route::view('/terms', 'pages.terms')->name('terms');
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+Route::get('/contact', [\App\Http\Controllers\PageController::class, 'contact'])->name('contact');
+Route::post('/contact', [\App\Http\Controllers\PageController::class, 'storeContact'])->middleware('throttle:5,60,contact')->name('contact.store');
 // 職業 Email 認證信的連結（不用登入；確認碼對了才算）
 Route::get('/verify/job/{verification}/{token}', [VerificationController::class, 'showConfirmJob'])
     ->whereNumber('verification')->middleware('throttle:20,60,verify-job-confirm')->name('verify.job.confirm');
@@ -181,10 +188,11 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
-        Route::post('/album/{photo}', [PhotoReviewController::class, 'decideAlbum'])->whereNumber('photo')->name('admin.album.decide');
         Route::get('/verifications', [VerificationReviewController::class, 'index'])->name('admin.verifications');
         Route::post('/verifications/{verification}', [VerificationReviewController::class, 'decide'])->whereNumber('verification')->name('admin.verifications.decide');
         Route::get('/verifications/{verification}/photo', [VerificationReviewController::class, 'photo'])->whereNumber('verification')->name('admin.verifications.photo');
+        Route::get('/contacts', [\App\Http\Controllers\Admin\ContactReviewController::class, 'index'])->name('admin.contacts');
+        Route::post('/contacts/{message}', [\App\Http\Controllers\Admin\ContactReviewController::class, 'handle'])->whereNumber('message')->name('admin.contacts.handle');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

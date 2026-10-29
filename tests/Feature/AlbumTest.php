@@ -23,35 +23,33 @@ class AlbumTest extends TestCase
         return $u;
     }
 
-    public function test_upload_review_and_visibility(): void
+    public function test_upload_visible_without_review(): void
     {
         Storage::fake('avatars');
         $me = $this->member('我');
         $other = $this->member('別人');
         $admin = $this->member('管理員', ['is_admin' => true]);
 
-        $this->actingAs($me)->get('/me/album')->assertOk()->assertSee('相簿照片上限為 9 張');
+        $this->actingAs($me)->get('/me/album')->assertOk()->assertSee('相簿照片上限為 9 張')->assertDontSee('審核');
         $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 2000, 1500)]])
-            ->assertRedirect('/me/album')->assertSessionHas('status', fn ($s) => str_contains($s, '審核'));
+            ->assertRedirect('/me/album')->assertSessionHas('status', '1 張照片放進相簿了。');
         $ph = AlbumPhoto::firstOrFail();
-        $this->assertSame('pending', $ph->status);
+        $this->assertSame('approved', $ph->status);
         [$w] = getimagesizefromstring(Storage::disk('avatars')->get($ph->path));
         $this->assertSame(1200, $w);
 
-        // 審核中：本人、管理員看得到；別人看不到
-        $this->actingAs($me)->get("/album/{$ph->id}")->assertOk();
-        $this->actingAs($admin)->get("/album/{$ph->id}")->assertOk();
-        $this->actingAs($other)->get("/album/{$ph->id}")->assertNotFound();
-        $this->actingAs($other)->get("/members/{$me->id}?tab=album")->assertSee('相簿還沒有照片');
-
-        $this->actingAs($admin)->get('/admin/photos')->assertSee('相簿照片')->assertSee(route('album.show', $ph), false);
-        $this->actingAs($admin)->post("/admin/album/{$ph->id}", ['decision' => 'approve'])->assertRedirect('/admin/photos');
+        // 熊叔叔 10/29「1不用」：不用審核，別人馬上看得到；管理員審核頁沒有相簿
         $this->actingAs($other)->get("/album/{$ph->id}")->assertOk();
         $this->actingAs($other)->get("/members/{$me->id}?tab=album")->assertSee(route('album.show', $ph), false);
+        $this->actingAs($admin)->get('/admin/photos')->assertOk()->assertDontSee(route('album.show', $ph), false);
 
-        // 封鎖就看不到
+        // 封鎖、暫停帳號就看不到
         DB::table('blocks')->insert(['blocker_id' => $me->id, 'blocked_id' => $other->id, 'created_at' => now(), 'updated_at' => now()]);
         $this->actingAs($other)->get("/album/{$ph->id}")->assertNotFound();
+        $third = $this->member('第三人');
+        $this->actingAs($third)->get("/album/{$ph->id}")->assertOk();
+        $me->forceFill(['is_active' => false])->save();
+        $this->actingAs($third)->get("/album/{$ph->id}")->assertNotFound();
     }
 
     public function test_max_nine_and_delete(): void
@@ -75,21 +73,17 @@ class AlbumTest extends TestCase
         $this->assertSame(8, AlbumPhoto::count());
     }
 
-    public function test_reject_deletes_and_validation(): void
+    public function test_validation_and_old_rejected_slot(): void
     {
         Storage::fake('avatars');
         $me = $this->member('我');
-        $admin = $this->member('管理員', ['is_admin' => true]);
         $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->create('a.gif', 10, 'image/gif')]])->assertSessionHasErrors('photos.0');
         $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 100, 100)]])->assertSessionHasErrors('photos.0'); // 太小
+        $this->assertSame(0, AlbumPhoto::count());
 
-        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 800, 800)]]);
-        $ph = AlbumPhoto::firstOrFail();
-        $this->actingAs($me)->post("/admin/album/{$ph->id}", ['decision' => 'approve'])->assertForbidden();
-        $this->actingAs($admin)->post("/admin/album/{$ph->id}", ['decision' => 'reject'])->assertRedirect('/admin/photos');
-        Storage::disk('avatars')->assertMissing($ph->path);
-        // 留一格「沒有通過」給會員看，不佔名額；會員可以刪掉
-        $this->assertSame('rejected', $ph->fresh()->status);
+        // 以前審核不通過留下的一格：會員看得到、不佔名額、可以刪掉
+        $ph = new AlbumPhoto;
+        $ph->forceFill(['user_id' => $me->id, 'path' => '', 'status' => 'rejected'])->save();
         $this->actingAs($me)->get('/me/album')->assertSee('這張沒有通過管理員審核');
         $this->assertSame(0, AlbumPhoto::countedFor($me->id));
         $this->actingAs($me)->delete("/me/album/{$ph->id}")->assertRedirect();
