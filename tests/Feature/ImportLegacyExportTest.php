@@ -102,4 +102,29 @@ class ImportLegacyExportTest extends TestCase
 
         $this->artisan('legacy:import-export', ['dir' => $this->dir . '/nope'])->assertFailed();
     }
+
+    public function test_imports_legacy_phone(): void
+    {
+        $m = fn (int $id, $phone) => ['legacy_id' => $id, 'email' => "m{$id}@example.com", 'password_hash' => password_hash('x', PASSWORD_BCRYPT),
+            'nickname' => "會員{$id}", 'gender' => '女', 'birth_year' => 1990, 'live_place' => '', 'church' => '', 'church_visible' => false,
+            'job' => '', 'intro' => null, 'photo' => null, 'phone' => $phone];
+        User::factory()->create(['phone' => '0933333333']); // 新版已經有人用這支
+        $this->write([
+            $m(1000001, ['country_code' => '886', 'mobile' => '0911111111', 'verified_at' => now()->subMonths(2)->format('Y-m-d H:i:s')]),
+            $m(1000002, ['country_code' => '852', 'mobile' => '091234567', 'verified_at' => now()->subMonths(14)->format('Y-m-d H:i:s')]),
+            $m(1000003, null), // 舊站沒有認證過
+            $m(1000004, ['country_code' => '886', 'mobile' => '0933333333', 'verified_at' => now()->subMonth()->format('Y-m-d H:i:s')]),
+        ]);
+        $this->artisan('legacy:import-export', ['dir' => $this->dir])->expectsOutputToContain('1000004')->assertSuccessful();
+
+        $u = fn (int $id) => User::where('legacy_id', $id)->first();
+        $this->assertSame('0911111111', $u(1000001)->phone);
+        $this->assertTrue($u(1000001)->hasValidPhone());
+        $this->assertSame('+852-91234567', $u(1000002)->phone); // 搬過來，但超過 12 個月：登入時要重新認證
+        $this->assertFalse($u(1000002)->hasValidPhone());
+        $this->assertNull($u(1000003)->phone);
+        $this->assertNull($u(1000003)->phone_verified_at);
+        $this->assertNull($u(1000004)->phone); // 一支手機一個帳號
+        $this->assertNull($u(1000004)->phone_verified_at);
+    }
 }

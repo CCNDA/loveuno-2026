@@ -14,13 +14,17 @@
 @include('center.settings')
 
 <h2 id="phone-title">手機號碼</h2>
-<p>@if (auth()->user()->phone)已認證：{{ \App\Support\Sms::mask(auth()->user()->phone) }}@else已認證（舊站帶過來的帳號，新版還沒有存號碼）@endif</p>
+@php($phoneUntil = \App\Support\Phone::expiresAt(auth()->user()->phone_verified_at))
+<p>@if (auth()->user()->phone)已認證：{{ \App\Support\Sms::mask(auth()->user()->phone) }}@else已認證（新版還沒有存號碼）@endif
+    @if ($phoneUntil)・認證到 {{ $phoneUntil->shown()->format('Y/n/j') }}，之後要重新認證一次@endif</p>
+@php($country = \App\Support\Phone::countryFromPlace(auth()->user()->profile?->live_place))
 <form method="POST" action="{{ route('phone.send') }}" class="form" aria-labelledby="phone-title" novalidate>
     @csrf
+    @include('partials.select-field', ['name' => 'phone_country', 'label' => '國碼', 'options' => \App\Support\Phone::COUNTRIES, 'value' => old('phone_country', $country)])
     <div class="field">
         <label for="phone">新的手機號碼</label>
-        <p id="phone-hint" class="hint">換號碼要先輸入密碼；新號碼收到認證碼、輸入正確後才會換掉。</p>
-        <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="12" value="{{ old('phone') }}"
+        <p id="phone-hint" class="hint">換號碼要先輸入密碼；新號碼收到認證碼、輸入正確後才會換掉。國外的號碼先選國碼，再填門號。</p>
+        <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="16" value="{{ old('phone', '') }}"
                aria-describedby="phone-hint @error('phone') phone-error @enderror" @error('phone') aria-invalid="true" @enderror>
         @error('phone')<p id="phone-error" class="field-error">{{ $message }}</p>@enderror
     </div>

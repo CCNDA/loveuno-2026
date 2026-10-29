@@ -4,9 +4,11 @@
 
 @section('content')
 <h1>{{ $changing ? '更換手機號碼' : '手機認證' }}</h1>
-@unless ($changing)
+@if ($expired)
+    <p>您的手機認證已經超過 {{ \App\Support\Phone::VALID_MONTHS }} 個月，請重新認證一次（號碼沒換的話，直接按「寄認證碼」）。</p>
+@elseif (! $changing)
     <p>電子郵件驗證好了！最後一步：請驗證您的手機，驗證好就可以開始使用愛諾園。</p>
-@endunless
+@endif
 <p class="hint">收不到簡訊的話，請寫信到 <a href="mailto:{{ $contact }}">{{ $contact }}</a> 跟我們聯繫，信裡寫您註冊用的電子郵件。</p>
 
 @if ($pending)
@@ -31,10 +33,11 @@
     <form method="POST" action="{{ route('phone.send') }}" class="form" novalidate>
         @csrf
         @include('partials.errors', ['title' => '認證碼還沒寄出'])
+        @include('partials.select-field', ['name' => 'phone_country', 'label' => '國碼', 'options' => \App\Support\Phone::COUNTRIES, 'value' => old('phone_country', $country)])
         <div class="field">
             <label for="phone">手機號碼</label>
-            <p id="phone-hint" class="hint">台灣的手機號碼，10 碼，09 開頭，例如 0912345678。一支手機只能認證一個帳號，不會顯示給其他會員。</p>
-            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="12" value="{{ old('phone') }}" required
+            <p id="phone-hint" class="hint">台灣：09 開頭的 10 碼，例如 0912345678；國外：先選國碼，再填門號（不含國碼）。一支手機只能認證一個帳號，不會顯示給其他會員。認證 {{ \App\Support\Phone::VALID_MONTHS }} 個月後要重新認證一次。</p>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="16" value="{{ old('phone', $local) }}" required
                    aria-describedby="phone-hint @error('phone') phone-error @enderror" @error('phone') aria-invalid="true" @enderror>
             @error('phone')<p id="phone-error" class="field-error">{{ $message }}</p>@enderror
         </div>

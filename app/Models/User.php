@@ -140,4 +140,16 @@ class User extends Authenticatable implements MustVerifyEmail
             request()->attributes->remove('friend_levels:' . $u->id);
         }
     }
+
+    // 手機認證還在 12 個月內（熊叔叔 10/29「2b照舊站」）
+    public function hasValidPhone(): bool
+    {
+        return $this->phone_verified_at !== null && $this->phone_verified_at->gte(\App\Support\Phone::cutoff());
+    }
+
+    // 列給別人看的會員：手機認證還在 12 個月內
+    public function scopePhoneVerified(\Illuminate\Database\Eloquent\Builder $q): void
+    {
+        $q->whereNotNull('phone_verified_at')->where('phone_verified_at', '>=', \App\Support\Phone::cutoff());
+    }
 }

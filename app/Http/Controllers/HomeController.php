@@ -20,7 +20,7 @@ class HomeController extends Controller
         if (! $me || ! $me->hasVerifiedEmail()) {
             return view('home');
         }
-        if ($me->phone_verified_at === null) {
+        if (\App\Support\Phone::expireIfDue($me) || $me->phone_verified_at === null) {
             return redirect()->route('phone.notice'); // 電郵驗證好了，接著驗證手機（熊叔叔 10/29）
         }
 
@@ -52,7 +52,7 @@ class HomeController extends Controller
             ->whereKeyNot($me->id)
             ->whereNotIn('id', $blocked)
             ->where('email_verified_at', '>=', now()->subDays(30))
-            ->whereNotNull('phone_verified_at')
+            ->phoneVerified()
             ->active()
             ->whereHas('profile', $this->matchesPreferences($me))
             ->with('profile')
@@ -88,7 +88,7 @@ class HomeController extends Controller
         return User::query()
             ->whereKeyNot($me->id)
             ->whereNotNull('email_verified_at')
-            ->whereNotNull('phone_verified_at')
+            ->phoneVerified()
             ->active()
             ->whereNotIn('id', $blocked)
             ->whereHas('profile', $this->matchesPreferences($me))

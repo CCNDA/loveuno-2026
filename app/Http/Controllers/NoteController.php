@@ -25,7 +25,7 @@ class NoteController extends Controller
     public static function canNote(User $me, User $user): bool
     {
         // 雙方都要是啟用中的（暫停的人也不能主動傳，不然對方回不了）
-        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $user->is_active && $me->is_active
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->hasValidPhone() && $user->is_active && $me->is_active
             && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 

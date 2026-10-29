@@ -166,4 +166,54 @@ class PhoneVerifyTest extends TestCase
         $this->assertFalse($r['ok']);
         $this->assertSame('簡訊服務還沒設定好，請寫信跟我們聯繫。', $r['message']);
     }
+
+    public function test_foreign_numbers_like_old_site(): void
+    {
+        $this->assertSame(['+852-91234567', null], \App\Support\Phone::normalize('852', '091234567')); // 開頭的 0 拿掉
+        $this->assertSame(['0912345678', null], \App\Support\Phone::normalize('886', '0912-345-678'));
+        $this->assertNull(\App\Support\Phone::normalize('852', '12345')[0]);   // 太短
+        $this->assertNull(\App\Support\Phone::normalize('999', '91234567')[0]); // 沒有這個國碼
+        $this->assertSame('85291234567', \App\Support\Phone::toTwsms('+852-91234567'));
+        $this->assertSame('0912345678', \App\Support\Phone::toTwsms('0912345678'));
+
+        $u = User::factory()->phoneUnverified()->create(['name' => '香港會員']);
+        \App\Models\Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990, 'live_place' => '香港']);
+        $this->actingAs($u)->get('/phone/verify')->assertSee('value="852" selected', false); // 居住地是香港，先選好
+        Log::spy();
+        $this->actingAs($u)->post('/phone/send', ['phone_country' => '852', 'phone' => '91234567'])->assertRedirect('/phone/verify');
+        Log::shouldHaveReceived('info')->withArgs(fn ($m, $ctx = []) => ($ctx['mobile'] ?? null) === '85291234567');
+        $this->assertSame('+852-91234567', $u->fresh()->phone_pending);
+
+        // 同一支號碼不同寫法也算同一支
+        $other = User::factory()->phoneUnverified()->create();
+        User::whereKey($u->id)->update(['phone' => '+852-91234567']);
+        $this->actingAs($other)->post('/phone/send', ['phone_country' => '852', 'phone' => '091234567'])
+            ->assertSessionHasErrors(['phone' => '這支手機已經用在別的帳號了。如果是您本人的，請寫信跟我們聯繫。']);
+    }
+
+    public function test_expires_after_twelve_months(): void
+    {
+        $u = User::factory()->create(['phone' => '0911111111', 'phone_verified_at' => now()->subMonths(12)->subDay()]);
+        $fresh = User::factory()->create(['phone' => '0922222222', 'phone_verified_at' => now()->subMonths(11)]);
+        $this->assertFalse($u->hasValidPhone());
+        $this->assertTrue($fresh->hasValidPhone());
+        $this->assertSame([$fresh->id], User::whereKey([$u->id, $fresh->id])->phoneVerified()->pluck('id')->all());
+
+        // 登入就要重新認證；號碼留著預填、也還擋別人
+        $this->actingAs($u)->get('/diaries')->assertRedirect('/phone/verify')->assertSessionHas('status', fn ($s) => str_contains($s, '超過 12 個月'));
+        $this->assertNull($u->fresh()->phone_verified_at);
+        $this->assertSame('0911111111', $u->fresh()->phone);
+        $this->actingAs($u)->get('/phone/verify')->assertSee('請重新認證一次')->assertSee('value="0911111111"', false);
+        $u = $u->fresh();
+        $code = $this->sendAndCatchCode($u, '0911111111');
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/diaries');
+        $this->assertTrue($u->fresh()->hasValidPhone());
+
+        // 每天的排程：很久沒登入的也拿掉
+        $old = User::factory()->create(['phone' => '0933333333', 'phone_verified_at' => now()->subMonths(13)]);
+        $this->artisan('phone:expire')->assertSuccessful();
+        $this->assertNull($old->fresh()->phone_verified_at);
+        $this->assertNotNull($fresh->fresh()->phone_verified_at);
+        $this->actingAs($fresh)->get('/center/account')->assertSee('認證到 ' . now()->subMonths(11)->addMonthsNoOverflow(12)->format('Y/n/j'));
+    }
 }

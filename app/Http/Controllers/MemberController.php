@@ -22,7 +22,7 @@ class MemberController extends Controller
         $members = User::query()
             ->whereHas('profile')
             ->whereNotNull('email_verified_at') // 還沒驗證 email、手機的新註冊會員不列出來（10/29「1A」）
-            ->whereNotNull('phone_verified_at')
+            ->phoneVerified() // 手機認證過期的也不列（12 個月）
             ->active() // 帳號設定「啟用帳號」關掉的、註銷的不列
             ->whereNotIn('id', $request->user()->blockRelatedIds()) // 封鎖（任一方）就不列出來
             ->with('profile')

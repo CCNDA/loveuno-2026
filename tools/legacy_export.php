@@ -6,7 +6,8 @@
 //   php legacy_export.php --cnf=/home/ubuntu/.lu2026_ro.cnf --out=/tmp/lu2026_export 1000014 1018068
 //
 // 安全：
-// - 只用唯讀帳號 lu2026_ro（只有 basic、profile、photo 三張表的 SELECT）
+// - 只用唯讀帳號 lu2026_ro（basic、profile、photo 三張表的 SELECT；手機要搬的話還要 certification 的 SELECT，
+//   熊叔叔 10/29「2d手機號碼一起搬」。沒有權限就不匯手機、印一行提醒，其他照常）
 // - 舊站密碼是明文：在這台就先 password_hash，明文不寫進任何檔案、不離開這台
 // - 只匯命令列給的編號；不是數字的參數直接拒絕
 // - 照片只取主照（mainshow=1，沒有就取第一張），檔案從本機 member_photo/image 或 R2 公開網址讀
@@ -60,6 +61,19 @@ foreach ($ph->fetchAll(PDO::FETCH_ASSOC) as $p) {
     $main[(int) $p['ownerid']] ??= $p;
 }
 
+// 手機認證（舊站 certification：phone_certification 3 已認證、4 已過期；phone_timestamp 是認證通過的時間）
+$cert = [];
+try {
+    $cs = $pdo->prepare("SELECT id, phone_certification, phone_country_code, phone_mobile, phone_timestamp FROM certification WHERE id IN ({$in})");
+    $cs->execute($ids);
+    foreach ($cs->fetchAll(PDO::FETCH_ASSOC) as $c) {
+        $cert[(int) $c['id']] = $c;
+    }
+} catch (PDOException) {
+    $cert = null;
+    fwrite(STDERR, "讀不到 certification（唯讀帳號沒有權限？），這次沒有匯出手機\n");
+}
+
 $members = [];
 foreach ($rows as $r) {
     $id = (int) $r['id'];
@@ -91,7 +105,11 @@ foreach ($rows as $r) {
         'job' => (string) $r['job'],
         'intro' => $r['intro'],
         'photo' => $photo,
-    ];
+    ] + ($cert === null ? [] : ['phone' => isset($cert[$id]) && in_array((int) $cert[$id]['phone_certification'], [3, 4], true) ? [
+        'country_code' => (string) $cert[$id]['phone_country_code'],
+        'mobile' => (string) $cert[$id]['phone_mobile'],
+        'verified_at' => (string) $cert[$id]['phone_timestamp'],
+    ] : null]);
 }
 file_put_contents("{$out}/export.json", json_encode(['exported_at' => date('c'), 'members' => $members], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 chmod("{$out}/export.json", 0600);

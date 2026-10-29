@@ -5,16 +5,22 @@ namespace App\Console\Commands;
 use App\Models\Profile;
 use App\Models\User;
 use App\Support\AvatarImage;
+use App\Support\Phone;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 // 匯入 tools/legacy_export.php 在 vm10 匯出的「指定會員」（熊叔叔 10/29 指定的協會同工帳號，Asana 1215470856990770）。
 // - 密碼在匯出時就已經雜湊，這裡直接存雜湊
 // - 照片照上傳的規矩重做成 600×600 JPEG（拿掉 EXIF）；狀態是 pending，要管理員審核才給其他會員看
 // - 不是示範資料（is_demo=false），重種示範資料不會刪到；email 已驗證（舊站會員）
+// - 手機（熊叔叔 10/29「2d手機號碼一起搬」）：舊站認證過的號碼和認證日一起搬，超過 12 個月的登入時要重新認證；
+//   舊站沒有認證過的要在新版認證。同一支手機已經在別的帳號就不搬（一支手機一個帳號，「2c」），印編號。
+//   export.json 沒有 phone 欄位（舊版匯出、或唯讀帳號沒有 certification 權限）就照以前：先當作已認證。
 // 不印 email、密碼，只印編號與筆數。
 class ImportLegacyExport extends Command
 {
@@ -35,6 +41,7 @@ class ImportLegacyExport extends Command
 
         $done = [];
         $skipped = [];
+        $phoneSkipped = [];
         foreach ($data['members'] as $m) {
             $id = (int) ($m['legacy_id'] ?? 0);
             $hash = (string) ($m['password_hash'] ?? '');
@@ -55,7 +62,7 @@ class ImportLegacyExport extends Command
                 continue;
             }
 
-            DB::transaction(function () use ($m, $id, $email, $hash, $dir) {
+            DB::transaction(function () use ($m, $id, $email, $hash, $dir, &$phoneSkipped) {
                 $user = User::firstOrNew(['legacy_id' => $id]);
                 if ($user->deleted_at !== null) {
                     return; // 會員自己註銷了：不要再匯回來
@@ -69,7 +76,17 @@ class ImportLegacyExport extends Command
                 }
                 $user->save();
                 // 直接寫雜湊（不經過 hashed cast，避免被再雜湊一次）
-                DB::table('users')->where('id', $user->id)->update(['password' => $hash, 'email_verified_at' => $user->email_verified_at ?? now(), 'phone_verified_at' => $user->phone_verified_at ?? now()]);
+                DB::table('users')->where('id', $user->id)->update(['password' => $hash, 'email_verified_at' => $user->email_verified_at ?? now()]);
+                if (! array_key_exists('phone', $m)) {
+                    DB::table('users')->where('id', $user->id)->whereNull('phone_verified_at')->update(['phone_verified_at' => now()]);
+                } elseif ($user->phone === null) { // 新版已經認證過號碼的不蓋掉
+                    [$phone, $at] = $this->legacyPhone($m['phone']);
+                    if ($phone !== null && User::where('phone', $phone)->whereKeyNot($user->id)->exists()) {
+                        $phoneSkipped[] = $id;
+                        $phone = $at = null;
+                    }
+                    DB::table('users')->where('id', $user->id)->update(['phone' => $phone, 'phone_verified_at' => $at]);
+                }
 
                 $profile = Profile::updateOrCreate(['user_id' => $user->id], [
                     'gender' => in_array($m['gender'] ?? '', ['男', '女'], true) ? $m['gender'] : '',
@@ -104,7 +121,28 @@ class ImportLegacyExport extends Command
         if ($skipped) {
             $this->warn(sprintf('略過 %d 位：%s', count($skipped), implode('；', $skipped)));
         }
+        if ($phoneSkipped) {
+            $this->warn(sprintf('手機已經在別的帳號、沒有搬的 %d 位（要在新版重新認證）：%s', count($phoneSkipped), implode(', ', $phoneSkipped)));
+        }
 
         return self::SUCCESS;
+    }
+
+    // 舊站的號碼 → [新版的寫法, 認證時間]；格式不對、沒有認證時間就 [null, null]（要在新版認證）
+    private function legacyPhone(?array $p): array
+    {
+        if (! $p) {
+            return [null, null];
+        }
+        [$phone] = Phone::normalize((string) ($p['country_code'] ?: '886'), (string) ($p['mobile'] ?? ''));
+        $at = (string) ($p['verified_at'] ?? '');
+        if ($phone === null || $at === '' || str_starts_with($at, '0000')) {
+            return [null, null];
+        }
+        try {
+            return [$phone, Carbon::parse($at)];
+        } catch (Throwable) {
+            return [null, null];
+        }
     }
 }

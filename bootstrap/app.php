@@ -30,8 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return $next($request);
             },
-            // phone.verified：電郵驗證後還要手機認證才能用會員功能（熊叔叔 10/29「1A」）
+            // phone.verified：電郵驗證後還要手機認證才能用會員功能（熊叔叔 10/29「1A」）；超過 12 個月要重新認證（「2b照舊站」）
             'phone.verified' => function ($request, $next) {
+                if ($request->user() && \App\Support\Phone::expireIfDue($request->user())) {
+                    return redirect()->route('phone.notice')->with('status', '您的手機認證已經超過 12 個月，請重新認證一次。');
+                }
                 if ($request->user() && $request->user()->phone_verified_at === null) {
                     return redirect()->route('phone.notice');
                 }

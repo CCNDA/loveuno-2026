@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Phone;
 use App\Support\Sms;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +17,7 @@ use Illuminate\View\View;
 // 手機認證（熊叔叔 10/29「1A」：會員啟用要電郵認證＋手機認證；「電郵認證後，回來接著要驗證手機，如無法收到簡訊可以EMAIL跟我們聯繫」）。
 // 流程：輸入手機 → 寄 6 碼認證碼（10 分鐘內有效）→ 輸入認證碼 → 完成。照舊站 phone_certification*.php。
 // 已經認證過的人可以「更換手機號碼」（要先輸入密碼；新號碼通過才換掉舊的，中途放棄原本的認證還在，跟舊站一樣）。
+// 熊叔叔 10/29：國外手機也收（2a）、認證 12 個月後要重新認證（2b，App\Support\Phone）、一支手機一個帳號（2c）。
 class PhoneVerifyController extends Controller
 {
     public const CODE_MINUTES = 10;
@@ -29,8 +31,13 @@ class PhoneVerifyController extends Controller
             return redirect()->route('verify.index');
         }
 
+        [$country, $local] = Phone::split($user->phone);
+
         return view('auth.verify-phone', [
             'pending' => $this->pendingOf($user),
+            'expired' => $user->phone !== null && $user->phone_verified_at === null, // 認證過、超過 12 個月了
+            'country' => $user->phone ? $country : Phone::countryFromPlace($user->profile?->live_place),
+            'local' => $user->phone ? $local : '',
             'changing' => $user->phone_verified_at !== null,
             'minutes' => self::CODE_MINUTES,
             'contact' => config('loveuno.contact_email'),
@@ -41,17 +48,15 @@ class PhoneVerifyController extends Controller
     {
         $user = $request->user();
         $changing = $user->phone_verified_at !== null;
-        $request->merge(['phone' => preg_replace('/[\s-]/', '', (string) $request->input('phone'))]);
-        $rules = ['phone' => ['required', 'regex:/^09\d{8}$/']];
         if ($changing) {
-            $rules['current_password'] = ['required', 'current_password']; // 換號碼要先輸入密碼（舊站也是）
+            $request->validate(['current_password' => ['required', 'current_password']], [ // 換號碼要先輸入密碼（舊站也是）
+                'current_password.current_password' => '密碼不正確。',
+            ], ['current_password' => '目前的密碼']);
         }
-        $data = $request->validate($rules, [
-            'phone.required' => '請輸入手機號碼。',
-            'phone.regex' => '請輸入台灣的手機號碼，10 碼，09 開頭，例如 0912345678。',
-            'current_password.current_password' => '密碼不正確。',
-        ], ['phone' => '手機號碼', 'current_password' => '目前的密碼']);
-        $phone = $data['phone'];
+        [$phone, $error] = Phone::normalize((string) $request->input('phone_country', '886'), (string) $request->input('phone'));
+        if ($phone === null) {
+            throw ValidationException::withMessages(['phone' => $error]);
+        }
         if ($changing && $phone === $user->phone) {
             throw ValidationException::withMessages(['phone' => '這就是您現在認證的號碼。']);
         }
@@ -69,7 +74,7 @@ class PhoneVerifyController extends Controller
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         // 先寄簡訊再寫資料庫：寄不出去就不動狀態（舊站也是這個順序）
-        $result = Sms::send($phone, sprintf('CCNDA簡訊：愛諾園手機認證碼 %s，%d 分鐘內有效。', $code, self::CODE_MINUTES), self::CODE_MINUTES * 60);
+        $result = Sms::send(Phone::toTwsms($phone), sprintf('CCNDA簡訊：愛諾園手機認證碼 %s，%d 分鐘內有效。', $code, self::CODE_MINUTES), self::CODE_MINUTES * 60);
         if (! $result['ok']) {
             throw ValidationException::withMessages(['phone' => $result['message']]);
         }
