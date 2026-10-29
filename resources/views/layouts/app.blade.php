@@ -7,7 +7,7 @@
     <meta name="description" content="愛諾園：基督徒單身交友，用信仰認識彼此。">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $appVersion }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/app/icon-192.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="愛諾園">

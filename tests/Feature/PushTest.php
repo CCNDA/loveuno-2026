@@ -35,7 +35,7 @@ class PushTest extends TestCase
 
     public function test_manifest_and_settings_box(): void
     {
-        $this->assertFileExists(public_path('manifest.webmanifest')); // 靜態檔由 nginx 送，測試裡看檔案在不在
+        $this->assertFileExists(public_path('manifest.json')); // 靜態檔由 nginx 送，測試裡看檔案在不在
         $u = $this->member();
         $this->actingAs($u)->get('/center/account')->assertSee('rel="manifest"', false)->assertSee('id="push-box"', false)->assertSee('push.js');
     }
