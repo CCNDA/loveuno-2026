@@ -5,6 +5,17 @@
 @section('content')
 <h1>認識朋友</h1>
 
+@if ($errors->any())
+    <div class="error-summary" role="alert" aria-labelledby="filter-error-title">
+        <h2 id="filter-error-title">篩選條件有問題，先顯示全部會員</h2>
+        <ul>
+            @foreach ($errors->all() as $message)
+                <li>{{ $message }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <form method="GET" action="{{ route('members.index') }}" class="filters" role="search" aria-label="篩選會員">
     <div class="field">
         <label for="gender">性別</label>

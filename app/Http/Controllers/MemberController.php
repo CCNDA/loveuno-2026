@@ -16,7 +16,7 @@ class MemberController extends Controller
         $filters = $request->validate([
             'gender' => ['nullable', 'in:男,女'],
             'place' => ['nullable', 'string', 'max:20'],
-        ]);
+        ], ['gender.in' => '性別只能選弟兄或姊妹。'], ['gender' => '性別', 'place' => '居住地']);
 
         $members = User::query()
             ->whereHas('profile')

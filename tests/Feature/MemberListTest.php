@@ -49,7 +49,10 @@ class MemberListTest extends TestCase
     public function test_invalid_gender_is_rejected(): void
     {
         $viewer = $this->member('看的人', '男', '台北市');
-        $this->actingAs($viewer)->get('/members?gender=x')->assertSessionHasErrors('gender');
+        $this->actingAs($viewer)->from('/members')->get('/members?gender=x')->assertSessionHasErrors('gender');
+        // 回到列表時要看得到錯誤（小布 0.3.0 複測：原本沒有任何提示）
+        $this->actingAs($viewer)->followingRedirects()->from('/members')->get('/members?gender=x')
+            ->assertOk()->assertSee('篩選條件有問題')->assertSee('性別只能選弟兄或姊妹');
     }
 
     public function test_avatar_is_hidden_from_screen_readers(): void
