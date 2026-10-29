@@ -42,7 +42,7 @@ class Verification extends Model
     {
         return match ($this->status) {
             'email_sent' => '認證信已寄出，請到公司（學校）信箱點信裡的連結',
-            'pending' => '審核中（約 3 個工作天）',
+            'pending' => '審核中（約 3-5 個工作天）',
             'approved' => '已通過',
             'rejected' => '沒有通過：' . ($this->reject_reason !== '' ? $this->reject_reason : '請重新申請'),
             default => $this->status,

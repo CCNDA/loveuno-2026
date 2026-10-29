@@ -27,7 +27,7 @@ class HomeController extends Controller
         $blocked = $me->blockRelatedIds();
         $diaries = Diary::visibleTo($me)
             ->whereNotIn('user_id', $blocked)
-            ->with('user.profile')
+            ->with(['user.profile', 'user.verifications' => fn ($q) => $q->where('status', 'approved')])
             ->withInteractions($me)
             // 卡片上的留言（設計稿 DiaryWall）：不含封鎖對象的；畫面只放最新 3 則
             ->with(['comments' => fn ($q) => $q->whereNotIn('user_id', $blocked)->with('user.profile')->orderBy('created_at')->orderBy('id')])

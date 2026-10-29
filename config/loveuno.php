@@ -12,6 +12,6 @@ return [
         'twsms_password' => env('TWSMS_PASSWORD'),
     ],
 
-    // 會員收不到簡訊等問題要寫信來的地方（舊站 info/contact.php 用的信箱）
-    'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'info@ccnda.org'),
+    // 會員收不到簡訊等問題要寫信來的地方（熊叔叔 10/29「愛諾園有愛諾園的專屬信箱 support@loveuno.com」）
+    'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'support@loveuno.com'),
 ];

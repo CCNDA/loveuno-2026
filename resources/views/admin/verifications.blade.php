@@ -4,7 +4,6 @@
 
 @section('content')
 <h1>審核身份認證</h1>
-@include('partials.errors', ['title' => '這次沒有審核成功'])
 <p class="meta">待審核 {{ $pending->count() }} 件。照片審完（通過或不通過）就會刪掉。</p>
 
 @if ($pending->isEmpty())
@@ -26,16 +25,19 @@
                         @endif
                         <dt>送出時間</dt><dd>{{ $v->updated_at->format('Y/n/j H:i') }}</dd>
                     </dl>
+                    @php($bag = $errors->getBag('v' . $v->id))
                     <form method="POST" action="{{ route('admin.verifications.decide', $v) }}" class="form" novalidate>
                         @csrf
+                        <input type="hidden" name="version" value="{{ $v->updated_at?->getTimestamp() }}">
                         <div class="field">
-                            <label for="reason-{{ $v->id }}">不通過的理由（按「不通過」才要選）</label>
-                            <select id="reason-{{ $v->id }}" name="reason">
+                            <label for="reason-{{ $v->id }}">不通過的理由（按「不通過」才要選；會員會收到）</label>
+                            <select id="reason-{{ $v->id }}" name="reason" @if ($bag->has('reason')) aria-invalid="true" aria-describedby="reason-{{ $v->id }}-error" @endif>
                                 <option value="">請選擇</option>
                                 @foreach (\App\Models\Verification::REJECT_REASONS[$v->kind] as $r)
                                     <option value="{{ $r }}">{{ $r }}</option>
                                 @endforeach
                             </select>
+                            @if ($bag->has('reason'))<p id="reason-{{ $v->id }}-error" class="field-error" role="alert">{{ $bag->first('reason') }}</p>@endif
                         </div>
                         <div class="review-actions">
                             <button type="submit" name="decision" value="approve" class="button">通過<span class="visually-hidden">（{{ $v->user->name }}）</span></button>

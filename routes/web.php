@@ -30,8 +30,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::view('/rules', 'rules')->name('rules');
 // 職業 Email 認證信的連結（不用登入；確認碼對了才算）
-Route::get('/verify/job/{verification}/{token}', [\App\Http\Controllers\VerificationController::class, 'confirmJob'])
+Route::get('/verify/job/{verification}/{token}', [VerificationController::class, 'showConfirmJob'])
     ->whereNumber('verification')->middleware('throttle:20,60,verify-job-confirm')->name('verify.job.confirm');
+Route::post('/verify/job/{verification}/{token}', [VerificationController::class, 'confirmJob'])
+    ->whereNumber('verification')->middleware('throttle:20,60,verify-job-confirm')->name('verify.job.confirm.store');
 
 // 繁／简切換：存在 session；回上一頁只回本站（不跟著外站的 Referer 走）
 Route::get('/script/{script}', function (\Illuminate\Http\Request $request, string $script) {

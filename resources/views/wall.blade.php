@@ -44,7 +44,7 @@
                         <header class="wall-card-head">
                             @include('partials.avatar', ['user' => $d->user])
                             <div>
-                                <p class="wall-author"><a href="{{ route('members.show', $d->user) }}">{{ $d->user->name }}</a></p>
+                                <p class="wall-author"><a href="{{ route('members.show', $d->user) }}">{{ $d->user->name }}</a>@if ($d->user->approvedVerifications()->isNotEmpty()) <img src="{{ asset('images/brand/verified-badge.svg') }}" alt="已認證" width="15" height="15" class="verified-badge">@endif</p>
                                 <p class="meta"><time datetime="{{ $d->published_on->toDateString() }}">{{ $d->published_on->format('Y-m-d') }}</time>@if($d->is_prayer)・<span class="tag tag-prayer">代禱</span>@endif @if($d->visibility === 'private')・<span class="tag">只有自己看得到</span>@endif</p>
                             </div>
                         </header>

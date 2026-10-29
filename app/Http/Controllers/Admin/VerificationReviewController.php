@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\VerificationController;
 use App\Models\Verification;
+use App\Notifications\VerificationDecided;
+use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +27,11 @@ class VerificationReviewController extends Controller
     public function decide(Request $request, Verification $verification): RedirectResponse
     {
         abort_unless($verification->status === 'pending', 409);
-        $data = $request->validate([
+        // 管理員看過的是哪一版：會員在審核途中重新上傳／重填，就不能讓「通過」套到沒看過的那一份
+        if (! hash_equals((string) $verification->updated_at?->getTimestamp(), (string) $request->input('version'))) {
+            return redirect()->route('admin.verifications')->with('status', sprintf('%s 剛剛重新送了%s，請重新看過再決定。', $verification->user->name, $verification->label()));
+        }
+        $data = $request->validateWithBag('v' . $verification->id, [
             'decision' => ['required', 'in:approve,reject'],
             'reason' => ['nullable', 'required_if:decision,reject', Rule::in(Verification::REJECT_REASONS[$verification->kind] ?? [])],
         ], [
@@ -33,16 +40,23 @@ class VerificationReviewController extends Controller
         ], ['reason' => '不通過的理由']);
 
         $path = $verification->file_path;
+        $approved = $data['decision'] === 'approve';
         $verification->forceFill([
-            'status' => $data['decision'] === 'approve' ? 'approved' : 'rejected',
-            'reject_reason' => $data['decision'] === 'reject' ? $data['reason'] : '',
+            'status' => $approved ? 'approved' : 'rejected',
+            'reject_reason' => $approved ? '' : $data['reason'],
             'file_path' => '',
+            'company_email' => $approved ? $verification->company_email : '', // 不通過就不留公司 Email
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ])->save();
         if ($path !== '') {
-            Storage::disk('avatars')->delete($path); // 先改資料再刪檔
+            VerificationController::deleteQuietly($path); // 先改資料再刪檔；刪不掉不讓頁面 500
         }
+        if ($approved) {
+            Points::checkTasks($verification->user); // 完成 XX 認證 +10（Figma「可獲得積點項目」，點數照舊站）
+        }
+        // 舊站 admin/*_approve.php 會寄站內信說結果；新版寄 email
+        $verification->user->notify(new VerificationDecided($verification->label(), $approved, $verification->reject_reason));
 
         return redirect()->route('admin.verifications')->with('status', sprintf('%s 的%s：%s。', $verification->user->name, $verification->label(), $data['decision'] === 'approve' ? '通過' : '不通過'));
     }

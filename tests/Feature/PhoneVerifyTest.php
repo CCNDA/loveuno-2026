@@ -42,7 +42,7 @@ class PhoneVerifyTest extends TestCase
         $u = $this->newMember();
         $this->actingAs($u)->get('/diaries')->assertRedirect('/phone/verify');
         $this->actingAs($u)->get('/')->assertRedirect('/phone/verify');
-        $this->actingAs($u)->get('/phone/verify')->assertOk()->assertSee('手機認證')->assertSee('info@ccnda.org');
+        $this->actingAs($u)->get('/phone/verify')->assertOk()->assertSee('手機認證')->assertSee('support@loveuno.com');
     }
 
     public function test_send_code_then_verify(): void

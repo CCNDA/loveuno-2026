@@ -11,10 +11,10 @@
     <h2 class="visually-hidden">個人資料</h2>
     @php($rows = $p->detailRows())
     @php($approved = $member->approvedVerifications())
-    @if ($approved->isNotEmpty())
-        @php($rows['身份認證'] = collect(['job' => '職業' . ($approved->get('job') ? '（' . $approved->get('job')->company . '）' : ''), 'id' => '身分證明', 'church' => '教會週報'])
-            ->filter(fn ($t, $k) => $approved->has($k))->implode('、') . ' 已通過')
-    @endif
+    @php($rows['手機認證'] = $member->phone_verified_at ? '已認證' : '尚未認證')
+    @php($rows['職業 Email 認證'] = $approved->has('job') ? '已認證' : '尚未認證')
+    @php($rows['身分文件認證'] = $approved->has('id') ? '已認證' : '尚未認證')
+    @php($rows['教會週報認證'] = $approved->has('church') ? '已認證' : '尚未認證')
     @if (empty($rows))
         <p>這位會員還沒有填個人資料。</p>
     @else

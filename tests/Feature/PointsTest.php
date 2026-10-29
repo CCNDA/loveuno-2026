@@ -54,7 +54,7 @@ class PointsTest extends TestCase
         $this->assertSame(20, (int) $types['profile']);
         $this->assertSame(10, (int) $types['love']);
         $this->assertSame(10, (int) $types['preferences']);
-        $this->assertSame(1 + 20 + 10 + 10, $this->balance($u)); // 含每日登入
+        $this->assertSame(1 + 20 + 10 + 10 + 10, $this->balance($u)); // 含每日登入、手機認證（factory 預設手機已驗證）
     }
 
     public function test_photo_approval_awards_twenty(): void
@@ -98,12 +98,12 @@ class PointsTest extends TestCase
         $u = $this->member(['live_place' => '台北市', 'job' => '工程師', 'faith' => '基督徒', 'marital' => '未婚', 'children' => '0',
             'education' => '大學', 'blood_type' => 'O', 'smoking' => '從來不抽', 'drinking' => '從來不喝']);
         $this->actingAs($u)->get('/center/points')->assertOk()
-            ->assertSee('我目前的愛諾積點')->assertSee('<strong>21</strong>', false)
+            ->assertSee('我目前的愛諾積點')->assertSee('<strong>31</strong>', false) // 基本資料 20＋手機認證 10＋每日登入 1
             ->assertSeeInOrder(['完成基本資料建檔', '+20', '任務已完成', '完成希望對象建檔', '+10', '立即前往'])
             ->assertSee('送禮物給好友')->assertSee('邀請約會見面');
 
         $this->actingAs($u)->get('/center/points?tab=records')->assertOk()
             ->assertSeeInOrder(['使用紀錄', '完成基本資料建檔', '+20'])->assertSee('每日登入')->assertSee('總計')
-            ->assertSee('<td>21</td>', false); // 最新一筆的總計＝目前餘額
+            ->assertSee('<td>31</td>', false); // 最新一筆的總計＝目前餘額
     }
 }

@@ -16,6 +16,11 @@ class Points
         'preferences' => [10, '完成希望對象建檔'],
         'love' => [10, '完成戀愛履歷建檔'],
         'photo' => [20, '完成主顯示照片建檔並通過審核'],
+        // Figma「可獲得積點項目」有這四項（沒寫點數），點數照舊站：手機、職業、身分、教會各 +10
+        'phone' => [10, '完成手機認證'],
+        'job' => [10, '完成職業E-mail認證'],
+        'id' => [10, '完成身分文件認證'],
+        'church' => [10, '完成教會週報認證'],
     ];
 
     // 每天一次（ref = 日期）
@@ -88,7 +93,12 @@ class Points
             // 0.16～0.20 暫時用「寫了自我介紹」給 type=intro；0.21.0 起改成問卷、type=love，舊的 intro 紀錄不算完成
             'love' => LoveHistory::isComplete($p->love_history),
             'photo' => $p->photo_status === 'approved',
+            'phone' => $user->phone_verified_at !== null,
         ];
+        $approved = \App\Models\Verification::where('user_id', $user->id)->where('status', 'approved')->pluck('kind')->all();
+        foreach (['job', 'id', 'church'] as $k) {
+            $done[$k] = in_array($k, $approved, true);
+        }
         foreach ($done as $type => $ok) {
             if ($ok) {
                 [$amount, $label] = self::TASKS[$type];
