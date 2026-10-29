@@ -91,19 +91,9 @@ class Diary extends Model
         return (int) $this->user_id === (int) $user->id;
     }
 
-    // 附圖跟大頭照一樣：通過審核才給別人看；審核中只有作者和管理員看得到
+    // 附圖不用審核（熊叔叔 10/29「1B」）：看得到這篇日記的人就看得到照片
     public function imageVisibleTo(User $viewer): bool
     {
-        if (! $this->image_path) {
-            return false;
-        }
-        if ($viewer->is_admin && $this->image_status === 'pending') {
-            return true; // 管理員審核用（不管日記公不公開）
-        }
-        if (! $this->isReachableBy($viewer)) {
-            return false;
-        }
-
-        return $this->image_status === 'approved' || ($this->image_status === 'pending' && $this->isOwnedBy($viewer));
+        return (bool) $this->image_path && $this->isReachableBy($viewer);
     }
 }

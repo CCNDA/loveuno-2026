@@ -155,30 +155,29 @@ class PrayerTest extends TestCase
         $this->actingAs($v)->get("/diaries/{$d->id}")->assertDontSee('不想看到的留言');
     }
 
-    public function test_diary_image_needs_review_before_others_see_it(): void
+    public function test_diary_image_is_public_right_away(): void
     {
+        // 熊叔叔 10/29「1B」：日記照片不用審核
         Storage::fake('avatars');
         $a = $this->member('作者');
-        $admin = $this->member('管理員', ['is_admin' => true]);
         $v = $this->member('讀者');
 
         $this->actingAs($a)->post('/diaries', [
             'title' => '有照片', 'body' => '內容', 'visibility' => 'public',
             'image' => UploadedFile::fake()->image('p.png', 2400, 1200),
-        ])->assertRedirect()->assertSessionHas('status', fn ($s) => str_contains($s, '審核'));
+        ])->assertRedirect()->assertSessionHas('status', '日記發表了。');
         $d = Diary::firstOrFail();
-        $this->assertSame('pending', $d->image_status);
         [$w, $h] = getimagesizefromstring(Storage::disk('avatars')->get($d->image_path));
         $this->assertSame([1200, 600], [$w, $h]); // 只縮不裁
 
-        $this->actingAs($a)->get("/diaries/{$d->id}/image")->assertOk()->assertHeader('Content-Type', 'image/jpeg');
-        $this->actingAs($v)->get("/diaries/{$d->id}/image")->assertNotFound();
-        $this->actingAs($v)->get('/')->assertDontSee("/diaries/{$d->id}/image", false);
-
-        $this->actingAs($admin)->get('/admin/photos')->assertSee('日記照片')->assertSee("/diaries/{$d->id}/image", false);
-        $this->actingAs($admin)->post("/admin/diary-images/{$d->id}", ['decision' => 'approve', 'photo' => $d->image_path])->assertRedirect('/admin/photos');
-        $this->actingAs($v)->get("/diaries/{$d->id}/image")->assertOk();
+        $this->actingAs($v)->get("/diaries/{$d->id}/image")->assertOk()->assertHeader('Content-Type', 'image/jpeg');
         $this->actingAs($v)->get('/')->assertSee("/diaries/{$d->id}/image", false);
+        $this->actingAs($v)->get('/admin/photos')->assertForbidden();
+
+        // 不公開的日記：別人看不到照片
+        $d->update(['visibility' => 'private']);
+        $this->actingAs($v)->get("/diaries/{$d->id}/image")->assertNotFound();
+        $d->update(['visibility' => 'public']);
 
         // 拿掉照片：檔案刪掉
         $path = $d->fresh()->image_path;
@@ -187,22 +186,45 @@ class PrayerTest extends TestCase
         $this->assertNull($d->fresh()->image_path);
     }
 
-    public function test_rejected_diary_image_is_deleted_and_stale_review_refused(): void
+    public function test_comment_from_wall_card(): void
     {
-        Storage::fake('avatars');
-        $a = $this->member('作者');
-        $admin = $this->member('管理員', ['is_admin' => true]);
-        $this->actingAs($a)->post('/diaries', ['title' => 't', 'body' => 'b', 'visibility' => 'public', 'image' => UploadedFile::fake()->image('p.jpg', 800, 800)]);
-        $d = Diary::firstOrFail();
+        // 熊叔叔 10/29「2照設計」：留言框在日記牆卡片上
+        $author = $this->member('作者');
+        $d = $this->diary($author);
+        $v = $this->member('讀者');
 
-        $this->actingAs($admin)->post("/admin/diary-images/{$d->id}", ['decision' => 'approve', 'photo' => 'old-one.jpg'])->assertSessionHas('status', fn ($s) => str_contains($s, '剛剛換了'));
-        $this->assertSame('pending', $d->fresh()->image_status);
+        $this->actingAs($v)->get('/')->assertSee('id="comment-body-' . $d->id . '"', false)->assertSee('placeholder="請輸入留言"', false);
+        $this->actingAs($v)->post("/diaries/{$d->id}/comments", ['body' => '為你禱告', 'from' => 'wall'])->assertRedirect('/#d' . $d->id);
+        $this->actingAs($v)->get('/')->assertSee('為你禱告')->assertSee('剛剛');
 
-        $path = $d->image_path;
-        $this->actingAs($admin)->post("/admin/diary-images/{$d->id}", ['decision' => 'reject', 'photo' => $path]);
-        Storage::disk('avatars')->assertMissing($path);
-        $this->assertSame('rejected', $d->fresh()->image_status);
-        $this->actingAs($a)->post("/admin/diary-images/{$d->id}", ['decision' => 'approve', 'photo' => 'x'])->assertForbidden();
+        // 錯誤只出現在那一張卡片
+        $other = $this->diary($author, ['title' => '另一篇']);
+        $this->actingAs($v)->post("/diaries/{$other->id}/comments", ['body' => '', 'from' => 'wall'])
+            ->assertRedirect('/#d' . $other->id)->assertSessionHasErrorsIn('comment' . $other->id, 'body');
+    }
+
+    public function test_wall_card_shows_latest_three_comments(): void
+    {
+        $author = $this->member('作者');
+        $d = $this->diary($author);
+        $v = $this->member('讀者');
+        foreach (['第一則', '第二則', '第三則', '第四則'] as $i => $text) {
+            $c = new DiaryComment(['body' => $text]);
+            $c->forceFill(['diary_id' => $d->id, 'user_id' => $v->id, 'created_at' => now()->subMinutes(10 - $i)])->save();
+        }
+
+        $html = $this->actingAs($v)->get('/')->getContent();
+        $this->assertStringNotContainsString('第一則', $html);
+        $this->assertStringContainsString('第四則', $html);
+        $this->assertStringContainsString('看全部 4 則留言', $html);
+    }
+
+    public function test_wall_comment_error_shows_on_that_card(): void
+    {
+        $author = $this->member('作者');
+        $d = $this->diary($author);
+        $this->actingAs($author)->post("/diaries/{$d->id}/comments", ['body' => '', 'from' => 'wall']);
+        $this->actingAs($author)->get('/')->assertSee('id="comment-error-' . $d->id . '"', false)->assertSee('請填寫留言。');
     }
 
     public function test_deleting_diary_removes_image_prayers_and_comments(): void

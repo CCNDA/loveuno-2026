@@ -23,6 +23,8 @@ class HomeController extends Controller
             ->whereNotIn('user_id', $blocked)
             ->with('user.profile')
             ->withInteractions($me)
+            // 卡片上的留言（設計稿 DiaryWall）：不含封鎖對象的；畫面只放最新 3 則
+            ->with(['comments' => fn ($q) => $q->whereNotIn('user_id', $blocked)->with('user.profile')->orderBy('created_at')->orderBy('id')])
             ->orderByDesc('published_on')->orderByDesc('id')
             ->limit(10)->get();
 

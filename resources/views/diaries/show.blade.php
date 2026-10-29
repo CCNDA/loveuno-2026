@@ -15,7 +15,6 @@
     @if ($diary->imageVisibleTo(auth()->user()))
         <img class="diary-image" src="{{ route('diaries.image', $diary) }}?v={{ $diary->image_updated_at?->timestamp }}"
              alt="{{ $diary->user->name }} 這篇日記附的照片" loading="lazy">
-        @if ($diary->image_status === 'pending')<p class="hint">照片審核中，通過後其他會員才看得到。</p>@endif
     @endif
     @include('diaries.partials.interact', ['d' => $diary, 'from' => 'show'])
 </article>

@@ -9,6 +9,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
 // 日記牆上的互動：「為你禱告」、留言、看附圖（設計稿首頁 DiaryWall）。
@@ -36,14 +37,23 @@ class DiaryInteractionController extends Controller
     public function comment(Request $request, Diary $diary): RedirectResponse
     {
         $this->authorizeReach($request, $diary);
-        $data = $request->validate([
+        $fromWall = $request->input('from') === 'wall';
+        // 日記牆一頁有 10 張卡片、10 個留言框：錯誤放在這一篇自己的 error bag，才知道是哪一張
+        $v = Validator::make($request->all(), [
             'body' => ['required', 'string', 'max:500'],
         ], [], ['body' => '留言']);
+        if ($v->fails()) {
+            $to = $fromWall ? rtrim(route('home'), '/') . '/#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
 
-        $comment = new DiaryComment(['body' => $data['body']]);
+            return redirect()->to($to)->withErrors($v, $fromWall ? 'comment' . $diary->id : 'default')->withInput();
+        }
+
+        $comment = new DiaryComment(['body' => $v->validated()['body']]);
         $comment->forceFill(['diary_id' => $diary->id, 'user_id' => $request->user()->id])->save();
 
-        return redirect()->to(route('diaries.show', $diary) . '#comment-' . $comment->id)->with('status', '留言送出了。');
+        $to = $fromWall ? rtrim(route('home'), '/') . '/#d' . $diary->id : route('diaries.show', $diary) . '#comment-' . $comment->id;
+
+        return redirect()->to($to)->with('status', '留言送出了。');
     }
 
     public function destroyComment(Request $request, Diary $diary, DiaryComment $comment): RedirectResponse

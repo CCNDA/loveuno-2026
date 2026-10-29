@@ -45,30 +45,4 @@
     </section>
 @endforeach
 
-<section aria-labelledby="review-diary">
-    <h2 id="review-diary">日記照片</h2>
-    <p class="meta" role="status">待審核 {{ $diaryImages->count() }} 張</p>
-    @if ($diaryImages->isEmpty())
-        <p>目前沒有要審核的日記照片。</p>
-    @else
-        <ul class="review-list">
-            @foreach ($diaryImages as $d)
-                <li class="review-item">
-                    <img src="{{ route('diaries.image', $d) }}?v={{ $d->image_updated_at?->timestamp }}"
-                         alt="{{ $d->user->name }}〈{{ $d->title }}〉附的照片" class="review-diary" width="240" height="180">
-                    <div>
-                        <p class="member-name"><a href="{{ route('members.show', $d->user) }}">{{ $d->user->name }}</a>〈{{ $d->title }}〉</p>
-                        <p class="meta">上傳時間 {{ $d->image_updated_at?->format('Y/n/j H:i') }}@if($d->visibility === 'private')・這篇只有作者看得到@endif</p>
-                        <form method="POST" action="{{ route('admin.diary-images.decide', $d) }}" class="review-actions">
-                            @csrf
-                            <input type="hidden" name="photo" value="{{ $d->image_path }}">
-                            <button type="submit" name="decision" value="approve" class="button">通過</button>
-                            <button type="submit" name="decision" value="reject" class="button button-secondary">不通過（刪掉）</button>
-                        </form>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
-    @endif
-</section>
 @endsection

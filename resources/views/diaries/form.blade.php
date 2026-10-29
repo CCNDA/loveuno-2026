@@ -33,19 +33,16 @@
 
     <div class="field">
         <label for="image">照片（可以不放）</label>
-        <p id="image-hint" class="hint">JPG、PNG 或 WebP，5MB 以內。照片要等管理員審核通過，其他會員才看得到。</p>
+        <p id="image-hint" class="hint">JPG、PNG 或 WebP，5MB 以內。看得到這篇日記的會員都看得到照片。</p>
         <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp"
                aria-describedby="image-hint @error('image') image-error @enderror"
                @error('image') aria-invalid="true" @enderror>
         @error('image')<p id="image-error" class="field-error">{{ $message }}</p>@enderror
     </div>
-    @if ($diary->exists && ! $diary->image_path && $diary->image_status === 'rejected')
-        <p class="notice" role="status">上次放的照片沒有通過管理員審核，已經刪掉了。可以換一張再試。</p>
-    @endif
     @if ($diary->exists && $diary->image_path)
         <div class="field">
             <img class="diary-image diary-image-thumb" src="{{ route('diaries.image', $diary) }}?v={{ $diary->image_updated_at?->timestamp }}" alt="目前附的照片">
-            <p class="hint">{{ $diary->image_status === 'approved' ? '已經通過審核。' : '審核中。' }}換一張就重新審核。</p>
+            <p class="hint">選一張新的就會換掉這張。</p>
             <div class="field-check">
                 <input id="remove_image" name="remove_image" type="checkbox" value="1">
                 <label for="remove_image">拿掉這張照片</label>

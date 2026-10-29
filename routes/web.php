@@ -125,7 +125,6 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
-        Route::post('/diary-images/{diary}', [PhotoReviewController::class, 'decideDiary'])->whereNumber('diary')->name('admin.diary-images.decide');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

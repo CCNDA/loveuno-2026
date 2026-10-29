@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PhotoController;
-use App\Models\Diary;
 use App\Models\Profile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
-// 管理員審核大頭照、個人化封面、日記附圖（只有 is_admin 的帳號進得來）
+// 管理員審核大頭照與個人化封面（只有 is_admin 的帳號進得來）。日記附圖不用審核（熊叔叔 10/29「1B」）
 class PhotoReviewController extends Controller
 {
     public function index(): View
@@ -24,9 +23,7 @@ class PhotoReviewController extends Controller
                 ->get();
         }
 
-        $diaryImages = Diary::with('user:id,name')->where('image_status', 'pending')->orderBy('image_updated_at')->get();
-
-        return view('admin.photos', ['pending' => $pending, 'diaryImages' => $diaryImages]);
+        return view('admin.photos', ['pending' => $pending]);
     }
 
     public function decide(Request $request, Profile $profile): RedirectResponse
@@ -59,35 +56,6 @@ class PhotoReviewController extends Controller
             }
             $profile->forceFill([$kind . '_status' => 'rejected', $kind . '_path' => null])->save();
             $msg = sprintf('%s 的%s不通過，檔案已刪除。', $profile->user->name, $label);
-        }
-
-        return redirect()->route('admin.photos')->with('status', $msg);
-    }
-
-    // 日記附圖：跟大頭照同一套規則（看到的是哪一張要對得上；不通過就刪檔）
-    public function decideDiary(Request $request, Diary $diary): RedirectResponse
-    {
-        $data = $request->validate([
-            'decision' => ['required', 'in:approve,reject'],
-            'photo' => ['required', 'string'],
-        ], [
-            'decision.required' => '請按「通過」或「不通過」其中一個按鈕。',
-            'decision.in' => '請按「通過」或「不通過」其中一個按鈕。',
-            'photo.required' => '找不到要審核的是哪一張，請重新整理頁面再審。',
-        ]);
-        abort_unless($diary->image_status === 'pending', 409);
-        $name = $diary->user->name;
-        if (! hash_equals((string) $diary->image_path, $data['photo'])) {
-            return redirect()->route('admin.photos')->with('status', sprintf('%s 剛剛換了日記照片，請重新看過再決定。', $name));
-        }
-
-        if ($data['decision'] === 'approve') {
-            $diary->forceFill(['image_status' => 'approved'])->save();
-            $msg = sprintf('%s 的日記照片通過了。', $name);
-        } else {
-            Storage::disk('avatars')->delete($diary->image_path);
-            $diary->forceFill(['image_status' => 'rejected', 'image_path' => null])->save();
-            $msg = sprintf('%s 的日記照片不通過，檔案已刪除。', $name);
         }
 
         return redirect()->route('admin.photos')->with('status', $msg);

@@ -27,7 +27,7 @@ class DiaryWriteController extends Controller
         $diary = $request->user()->diaries()->create($data + ['published_on' => now()->toDateString()]);
         $this->saveImage($diary, $jpeg);
 
-        return redirect()->route('diaries.show', $diary)->with('status', $this->statusMessage('日記發表了。', $jpeg));
+        return redirect()->route('diaries.show', $diary)->with('status', '日記發表了。');
     }
 
     public function edit(Request $request, Diary $diary): View
@@ -49,7 +49,7 @@ class DiaryWriteController extends Controller
             $this->deleteImage($diary);
         }
 
-        return redirect()->route('diaries.show', $diary)->with('status', $this->statusMessage('日記改好了。', $jpeg));
+        return redirect()->route('diaries.show', $diary)->with('status', '日記改好了。');
     }
 
     public function destroy(Request $request, Diary $diary): RedirectResponse
@@ -96,7 +96,7 @@ class DiaryWriteController extends Controller
         }
     }
 
-    // 新照片要重新審核；舊檔刪掉
+    // 換照片：舊檔刪掉。不用審核（熊叔叔 10/29「1B」），狀態直接是 approved
     private function saveImage(Diary $diary, ?string $jpeg): void
     {
         if ($jpeg === null) {
@@ -105,7 +105,7 @@ class DiaryWriteController extends Controller
         $old = $diary->image_path;
         $path = Str::random(40) . '.jpg';
         Storage::disk('avatars')->put($path, $jpeg);
-        $diary->forceFill(['image_path' => $path, 'image_status' => 'pending', 'image_updated_at' => now()])->save();
+        $diary->forceFill(['image_path' => $path, 'image_status' => 'approved', 'image_updated_at' => now()])->save();
         if ($old && $old !== $path) {
             Storage::disk('avatars')->delete($old);
         }
@@ -117,11 +117,6 @@ class DiaryWriteController extends Controller
             Storage::disk('avatars')->delete($diary->image_path);
             $diary->forceFill(['image_path' => null, 'image_status' => '', 'image_updated_at' => now()])->save();
         }
-    }
-
-    private function statusMessage(string $done, ?string $jpeg): string
-    {
-        return $jpeg === null ? $done : $done . '照片要等管理員審核通過，其他會員才看得到。';
     }
 
     // 刪除前先確認一次（大會現場展示時避免誤刪）

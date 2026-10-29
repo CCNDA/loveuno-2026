@@ -48,6 +48,7 @@
                             <img class="diary-image" src="{{ route('diaries.image', $d) }}?v={{ $d->image_updated_at?->timestamp }}" alt="{{ $d->user->name }}〈{{ $d->title }}〉附的照片" loading="lazy">
                         @endif
                         @include('diaries.partials.interact', ['from' => 'wall'])
+                        @include('diaries.partials.wall-comments')
                     </article>
                 </li>
             @endforeach
