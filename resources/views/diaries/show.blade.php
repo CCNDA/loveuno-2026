@@ -13,5 +13,8 @@
     <div class="diary-body">{!! nl2br(e($diary->body)) !!}</div>
 </article>
 
+@if ($diary->user_id === auth()->id())
+    <p><a href="{{ route('diaries.edit', $diary) }}">修改這篇</a></p>
+@endif
 <p><a href="{{ route('diaries.index') }}">← 回心情日記</a></p>
 @endsection

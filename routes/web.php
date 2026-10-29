@@ -5,8 +5,10 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\DiaryController;
+use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
@@ -41,10 +43,18 @@ Route::middleware('auth')->group(function () {
 // 個人檔案與日記都要登入、email 已驗證才能看（舊站 2026-10-28 起也是要登入）
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/me', [MemberController::class, 'me'])->name('me');
+    Route::get('/me/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/me', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');
     Route::get('/diaries', [DiaryController::class, 'index'])->name('diaries.index');
+    // 寫日記（create 要排在 {diary} 前面）；改、刪只有作者本人
+    Route::get('/diaries/create', [DiaryWriteController::class, 'create'])->name('diaries.create');
+    Route::post('/diaries', [DiaryWriteController::class, 'store'])->middleware('throttle:20,60')->name('diaries.store');
     Route::get('/diaries/{diary}', [DiaryController::class, 'show'])->name('diaries.show');
+    Route::get('/diaries/{diary}/edit', [DiaryWriteController::class, 'edit'])->name('diaries.edit');
+    Route::put('/diaries/{diary}', [DiaryWriteController::class, 'update'])->name('diaries.update');
+    Route::delete('/diaries/{diary}', [DiaryWriteController::class, 'destroy'])->name('diaries.destroy');
 
     // 大頭照（上傳要審核；檔案經過 PhotoController 檢查權限才送出）
     Route::get('/me/photo', [PhotoController::class, 'edit'])->name('photo.edit');

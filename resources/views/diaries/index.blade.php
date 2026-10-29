@@ -4,6 +4,7 @@
 
 @section('content')
 <h1>心情日記</h1>
+<p><a class="button" href="{{ route('diaries.create') }}">寫日記</a></p>
 
 @if ($diaries->isEmpty())
     <p>還沒有日記。</p>

@@ -159,3 +159,13 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .review-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .button-secondary { background: #fff; color: var(--error); border: 2px solid var(--error); }
 .button-secondary:hover { background: #fff5f5; color: var(--error); }
+
+/* 編輯表單 */
+.form-wide { max-width: 40rem; }
+.field input[type="text"], .field textarea {
+    width: 100%; min-height: 48px; padding: 8px 12px; font: inherit; font-size: 1rem;
+    border: 2px solid #8c857b; border-radius: 8px; background: #fff; color: var(--text);
+}
+.field textarea { line-height: 1.7; resize: vertical; }
+.field textarea[aria-invalid="true"] { border-color: var(--error); }
+.danger-zone { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
