@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\PhotoReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\BlockController;
 use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryWriteController;
@@ -65,6 +66,10 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');
+    // 封鎖（先到確認頁）
+    Route::get('/members/{user}/block', [BlockController::class, 'confirm'])->whereNumber('user')->name('blocks.confirm');
+    Route::post('/members/{user}/block', [BlockController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,block')->name('blocks.store');
+    Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
     Route::get('/diaries', [DiaryController::class, 'index'])->name('diaries.index');
     // 寫日記（create 要排在 {diary} 前面）；改、刪只有作者本人
     Route::get('/diaries/create', [DiaryWriteController::class, 'create'])->name('diaries.create');

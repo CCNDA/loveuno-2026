@@ -14,6 +14,14 @@
     <p><a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>・<a href="{{ route('photo.edit') }}">換大頭照</a>@if($member->profile?->photo_status === 'pending')（審核中）@endif</p>
 @endif
 
+@if ($iBlocked ?? false)
+    <p class="notice" role="status">您已封鎖這位會員，所以看不到對方的檔案和日記，對方也看不到您的。</p>
+    <form method="POST" action="{{ route('blocks.destroy', $member) }}">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="button">解除封鎖</button>
+    </form>
+@else
 @php($p = $member->profile)
 @if (! $p)
     <p>這位會員還沒有填個人檔案。</p>
@@ -56,4 +64,8 @@
         </ul>
     @endif
 </section>
+@if (! $isMe)
+    <p class="danger-zone"><a href="{{ route('blocks.confirm', $member) }}">封鎖這位會員…</a></p>
+@endif
+@endif
 @endsection

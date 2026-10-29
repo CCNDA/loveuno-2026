@@ -34,6 +34,9 @@ class Profile extends Model
         if (! $this->photo_path || ! $viewer) {
             return false;
         }
+        if (! $viewer->is_admin && $viewer->id !== $this->user_id && $viewer->blockedEitherWay($this->user)) {
+            return false; // 封鎖（任一方）就看不到照片；管理員審核不受影響
+        }
 
         return $this->photo_status === 'approved'
             || ($this->photo_status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));

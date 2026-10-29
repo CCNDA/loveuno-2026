@@ -17,7 +17,11 @@ class CenterController extends Controller
 {
     public function account(Request $request): View
     {
-        return view('center.account', ['user' => $request->user()]);
+        $user = $request->user();
+        $blocked = \App\Models\User::whereIn('id', \DB::table('blocks')->where('blocker_id', $user->id)->pluck('blocked_id'))
+            ->orderBy('name')->get(['id', 'name']);
+
+        return view('center.account', ['user' => $user, 'blocked' => $blocked]);
     }
 
     public function updatePassword(Request $request): RedirectResponse

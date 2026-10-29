@@ -244,3 +244,8 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
     .notes-layout:not(.has-thread) .notes-thread { display: none; }
     .notes-back { display: block; }
 }
+
+/* 封鎖名單 */
+.blocked-item { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.inline-form { display: inline; margin: 0; }
+.blocked-item .link-button { color: var(--brand); text-decoration: underline; }

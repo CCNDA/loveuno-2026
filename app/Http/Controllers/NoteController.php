@@ -21,7 +21,7 @@ class NoteController extends Controller
     // 可以傳紙條的對象：不是自己、email 已驗證、有個人檔案（跟「認識朋友」列得出來的人一致）
     public static function canNote(User $me, User $user): bool
     {
-        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->profile()->exists();
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 
     public function show(Request $request, User $user): View
@@ -69,6 +69,8 @@ class NoteController extends Controller
             ->limit(100)
             ->get();
 
+        $blocked = $me->blockRelatedIds();
+        $rows = $rows->reject(fn ($r) => in_array((int) $r->other_id, $blocked, true))->values(); // 封鎖的對話不列出來
         $users = User::with('profile')->whereIn('id', $rows->pluck('other_id'))->get()->keyBy('id');
         $last = Note::whereIn('id', $rows->pluck('last_id'))->get()->keyBy('id');
 

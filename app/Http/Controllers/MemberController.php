@@ -21,6 +21,7 @@ class MemberController extends Controller
         $members = User::query()
             ->whereHas('profile')
             ->whereNotNull('email_verified_at') // 還沒驗證 email 的新註冊會員不列出來
+            ->whereNotIn('id', $request->user()->blockRelatedIds()) // 封鎖（任一方）就不列出來
             ->with('profile')
             ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))
             ->when($filters['place'] ?? null, fn ($q, $pl) => $q->whereHas('profile', fn ($p) => $p->where('live_place', $pl)))
@@ -42,6 +43,11 @@ class MemberController extends Controller
     public function show(Request $request, User $user): View
     {
         $viewer = $request->user();
+        // 對方封鎖我：當作不存在。我封鎖對方：只顯示「已封鎖」和解除按鈕
+        abort_if($user->hasBlocked($viewer), 404);
+        if ($viewer->hasBlocked($user)) {
+            return view('members.show', ['member' => $user, 'diaries' => collect(), 'isMe' => false, 'iBlocked' => true]);
+        }
         $diaries = $user->diaries()->visibleTo($viewer)
             ->orderByDesc('published_on')->orderByDesc('id')
             ->limit(5)->get();
@@ -50,6 +56,7 @@ class MemberController extends Controller
             'member' => $user->load('profile'),
             'diaries' => $diaries,
             'isMe' => $viewer->is($user),
+            'iBlocked' => false,
         ]);
     }
 
