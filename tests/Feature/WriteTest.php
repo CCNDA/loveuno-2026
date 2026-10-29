@@ -134,6 +134,16 @@ class WriteTest extends TestCase
         $this->artisan('user:set-profile', ['email' => $u->email])->assertFailed();
     }
 
+    public function test_bottom_nav_only_for_logged_in_and_marks_current(): void
+    {
+        $this->get('/')->assertDontSee('手機快速選單');
+        $u = $this->member();
+        $html = $this->actingAs($u)->get('/diaries/create')->assertSee('手機快速選單')->getContent();
+        // 底部選單裡「寫日記」標成目前頁，「認識朋友」沒有
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">✏️</span>寫日記#u', $html);
+        $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">👥</span>認識朋友#u', $html);
+    }
+
     public function test_guest_cannot_write(): void
     {
         $this->get('/diaries/create')->assertRedirect('/login');
