@@ -156,6 +156,14 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
     // 送禮物（一次 3 點、同一位會員一天一份；互送＝普通好友）
     Route::get('/gifts', [GiftController::class, 'index'])->name('gifts.index');
+    // 約會（Asana 1220005805400335）
+    Route::get('/dates', [\App\Http\Controllers\MeetupController::class, 'index'])->name('meetups.index');
+    Route::get('/dates/{meetup}', [\App\Http\Controllers\MeetupController::class, 'show'])->whereNumber('meetup')->name('meetups.show');
+    Route::post('/dates/{meetup}/respond', [\App\Http\Controllers\MeetupController::class, 'respond'])->whereNumber('meetup')->name('meetups.respond');
+    Route::post('/dates/{meetup}/cancel', [\App\Http\Controllers\MeetupController::class, 'cancel'])->whereNumber('meetup')->name('meetups.cancel');
+    Route::post('/dates/{meetup}/attend', [\App\Http\Controllers\MeetupController::class, 'attend'])->whereNumber('meetup')->name('meetups.attend');
+    Route::get('/members/{user}/date', [\App\Http\Controllers\MeetupController::class, 'create'])->whereNumber('user')->name('meetups.create');
+    Route::post('/members/{user}/date', [\App\Http\Controllers\MeetupController::class, 'store'])->whereNumber('user')->middleware('throttle:10,1440,date-send')->name('meetups.store');
     Route::get('/members/{user}/gift', [GiftController::class, 'create'])->whereNumber('user')->name('gifts.create');
     Route::post('/members/{user}/gift', [GiftController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,gift-send')->name('gifts.store');
     // 好友：我的朋友、解除關係
@@ -209,6 +217,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::delete('/news/{announcement}', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'destroy'])->whereNumber('announcement')->name('admin.news.destroy');
         Route::get('/love-stories', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'index'])->name('admin.love-stories');
         Route::post('/love-stories/{story}', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'decide'])->whereNumber('story')->name('admin.love-stories.decide');
+        Route::get('/dates', [\App\Http\Controllers\Admin\MeetupAdminController::class, 'index'])->name('admin.meetups');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

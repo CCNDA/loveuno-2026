@@ -96,6 +96,7 @@ class SettingsController extends Controller
             AlbumPhoto::where('user_id', $user->id)->delete();
             Verification::where('user_id', $user->id)->delete();
             DB::table('friendships')->where('user_id', $user->id)->orWhere('friend_id', $user->id)->delete();
+            DB::table('meetups')->where('sender_id', $user->id)->orWhere('recipient_id', $user->id)->delete(); // 舊站 delete_profile_final.php 也刪
             DB::table('point_transactions')->where('user_id', $user->id)->delete();
             $user->profile()->delete();
             $user->forceFill([

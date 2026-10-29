@@ -33,11 +33,12 @@
     <p class="member-actions">
         <a class="button" href="{{ route('notes.show', $member) }}">傳紙條給 {{ $member->name }}</a>
         <a class="button button-light" href="{{ route('gifts.create', $member) }}"><img src="{{ asset('images/brand/gift.svg') }}" alt="" width="20" height="20"> 送禮物</a>
+        <a class="button button-light" href="{{ route('meetups.create', $member) }}">約會<span class="visually-hidden">（邀請 {{ $member->name }}）</span></a>
     </p>
 @endif
 @if ($isMe)
     <p>
-        <a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('friends.index') }}">我的朋友</a>・<a href="{{ route('gifts.index') }}">我的禮物</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>
+        <a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('friends.index') }}">我的朋友</a>・<a href="{{ route('gifts.index') }}">我的禮物</a>・<a href="{{ route('meetups.index') }}">我的約會</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>
         ・<a href="{{ route('photo.edit') }}">換大頭照</a>@if ($member->profile?->photo_status === 'pending')（審核中）@endif
         ・<a href="{{ route('cover.edit') }}">換封面</a>@if ($member->profile?->cover_status === 'pending')（審核中）@endif
     </p>

@@ -4,6 +4,9 @@
 
 @section('content')
 <h1 class="visually-hidden">日記牆</h1>
+@if ($pendingDates > 0)
+    <p class="notice"><a href="{{ route('meetups.index') }}">您有 {{ $pendingDates }} 個約會邀請等您回覆，去看看 →</a></p>
+@endif
 @if ($newGifts > 0)
     <p class="notice"><a href="{{ route('gifts.index') }}">您收到 {{ $newGifts }} 份新禮物，去看看 →</a></p>
 @endif

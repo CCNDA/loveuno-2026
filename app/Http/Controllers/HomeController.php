@@ -42,6 +42,9 @@ class HomeController extends Controller
             'suggestions' => $this->suggestions($me, $blocked),
             'newcomers' => $this->newcomers($me, $blocked),
             'newGifts' => Gift::unopenedCountFor($me),
+            // 等我回覆的約會邀請（日期還沒到的）
+            'pendingDates' => \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->where('meet_on', '>', today())
+                ->whereNotIn('sender_id', $blocked)->count(),
             'occasions' => Occasions::for($me),
         ]);
     }

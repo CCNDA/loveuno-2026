@@ -39,6 +39,7 @@
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
                             <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
                             <li><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
+                            <li><a href="{{ route('admin.meetups') }}" @if(request()->routeIs('admin.meetups')) aria-current="page" @endif>約會紀錄</a></li>
                             @php($pendingStories = \App\Models\LoveStory::where('status', 'pending')->count())
                             <li><a href="{{ route('admin.love-stories') }}" @if(request()->routeIs('admin.love-stories')) aria-current="page" @endif>愛的見證@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
                             @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())

@@ -2,12 +2,12 @@
 // 在 vm10（舊站正式機）上執行：只匯出「指定的會員編號」，給新版愛諾園匯入用。
 // 熊叔叔 2026-10-29 TG：「我會找協會會員的id 做示範」（Asana 1215470856990770）。
 //
-// 用法（ubuntu 身分，唯讀帳號設定檔由熊叔叔建立）：
-//   php legacy_export.php --cnf=/home/ubuntu/.lu2026_ro.cnf --out=/tmp/lu2026_export 1000014 1018068
+// 用法（ubuntu 身分）：
+//   php legacy_export.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_export 1000014 1018068
 //
 // 安全：
-// - 只用唯讀帳號 lu2026_ro（basic、profile、photo 三張表的 SELECT；手機要搬的話還要 certification 的 SELECT，
-//   熊叔叔 10/29「2d手機號碼一起搬」。沒有權限就不匯手機、印一行提醒，其他照常）
+// - 只用唯讀帳號（熊叔叔給的 cora_ro：austwoon_unomember 整個庫只有 SELECT，要從 127.0.0.1 連，設定檔寫 host=127.0.0.1）。
+//   手機（熊叔叔 10/29「2d手機號碼一起搬」）要讀 certification；讀不到就不匯手機、印一行提醒，其他照常
 // - 舊站密碼是明文：在這台就先 password_hash，明文不寫進任何檔案、不離開這台
 // - 只匯命令列給的編號；不是數字的參數直接拒絕
 // - 照片只取主照（mainshow=1，沒有就取第一張），檔案從本機 member_photo/image 或 R2 公開網址讀
@@ -37,7 +37,8 @@ if (empty($c['user']) || empty($c['password'])) {
     fwrite(STDERR, "唯讀設定檔讀不到 user／password\n");
     exit(2);
 }
-$pdo = new PDO('mysql:host=localhost;dbname=austwoon_unomember;charset=utf8mb4', $c['user'], $c['password'],
+$host = preg_match('/^[A-Za-z0-9.\-]+$/', (string) ($c['host'] ?? '')) ? $c['host'] : 'localhost'; // cora_ro 只開 127.0.0.1
+$pdo = new PDO("mysql:host={$host};dbname=austwoon_unomember;charset=utf8mb4", $c['user'], $c['password'],
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 unset($c, $cnf);
 
@@ -71,7 +72,7 @@ try {
     }
 } catch (PDOException) {
     $cert = null;
-    fwrite(STDERR, "讀不到 certification（唯讀帳號沒有權限？），這次沒有匯出手機\n");
+    fwrite(STDERR, "讀不到 certification，這次沒有匯出手機\n");
 }
 
 $members = [];
