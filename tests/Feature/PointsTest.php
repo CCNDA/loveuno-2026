@@ -43,8 +43,9 @@ class PointsTest extends TestCase
     public function test_profile_tasks_award_once(): void
     {
         $u = $this->member();
-        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台北市', 'job' => '老師', 'intro' => '我喜歡讀經'])->assertRedirect();
-        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台中市', 'job' => '老師', 'intro' => '再改一次'])->assertRedirect();
+        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台北市', 'job' => '老師'])->assertRedirect();
+        $this->actingAs($u)->put('/me', ['name' => '新朋友', 'live_place' => '台中市', 'job' => '老師'])->assertRedirect();
+        $this->actingAs($u)->put('/me/intro', ['intro' => '我喜歡讀經，' . str_repeat('也喜歡爬山', 6)])->assertRedirect();
         $this->actingAs($u)->put('/center/preferences', ['pref_gender' => '男'])->assertRedirect();
 
         $types = DB::table('point_transactions')->where('user_id', $u->id)->pluck('amount', 'type')->all();

@@ -8,7 +8,15 @@
 @endif
 <div class="member-head">
     @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
-    <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+    <div>
+        <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+        @if (! ($iBlocked ?? false))
+            <p class="meta">
+                最近登入：{{ $member->last_login_at ? \App\Support\Ago::days($member->last_login_at) : '—' }}
+                ・最近更新：{{ $member->profile?->updated_at ? \App\Support\Ago::days($member->profile->updated_at) : '—' }}
+            </p>
+        @endif
+    </div>
 </div>
 @if (! $isMe && ! ($iBlocked ?? false))
     @php($level = auth()->user()->friendLevelWith($member))
@@ -44,44 +52,14 @@
 @if (! $p)
     <p>這位會員還沒有填個人檔案。</p>
 @else
-    <dl class="profile">
-        @if ($p->gender !== '')<div><dt>性別</dt><dd>{{ $p->genderLabel() }}</dd></div>@endif
-        @if ($p->ageGroup())<div><dt>年齡</dt><dd>{{ $p->ageGroup() }}</dd></div>@endif
-        @if ($p->live_place !== '')<div><dt>居住地</dt><dd>{{ $p->live_place }}</dd></div>@endif
-        @if ($p->job !== '')<div><dt>職業</dt><dd>{{ $p->job }}</dd></div>@endif
-        @if ($p->church_visible && $p->church !== '')<div><dt>教會</dt><dd>{{ $p->church }}</dd></div>@endif
-    </dl>
-
-    @if ($p->intro)
-        <section aria-labelledby="intro-title">
-            <h2 id="intro-title">自我介紹</h2>
-            <p class="prose">{!! nl2br(e($p->intro)) !!}</p>
-        </section>
-    @endif
-
-    @if ($p->hope)
-        <section aria-labelledby="hope-title">
-            <h2 id="hope-title">期待認識的人</h2>
-            <p class="prose">{!! nl2br(e($p->hope)) !!}</p>
-        </section>
+    @include('members.partials.tabs')
+    @if (auth()->user()->is_admin && ($p->real_name !== '' || $p->home_phone !== ''))
+        <aside class="notice admin-only" aria-label="只有管理員看得到">
+            <p>只有管理員看得到：真實姓名 {{ $p->real_name !== '' ? $p->real_name : '（沒填）' }}・住家電話 {{ $p->home_phone !== '' ? $p->home_phone : '（沒填）' }}</p>
+        </aside>
     @endif
 @endif
 
-<section aria-labelledby="recent-title">
-    <h2 id="recent-title">最近的心情日記</h2>
-    @if ($diaries->isEmpty())
-        <p>還沒有日記。</p>
-    @else
-        <ul class="plain-list">
-            @foreach ($diaries as $diary)
-                <li>
-                    <a href="{{ route('diaries.show', $diary) }}">{{ $diary->title }}</a>
-                    <span class="meta">・<time datetime="{{ $diary->published_on->toDateString() }}">{{ $diary->published_on->format('Y/n/j') }}</time></span>
-                </li>
-            @endforeach
-        </ul>
-    @endif
-</section>
 @if (! $isMe)
     <ul class="danger-zone danger-links">
         <li><a href="{{ route('blocks.confirm', $member) }}">封鎖這位會員…</a></li>

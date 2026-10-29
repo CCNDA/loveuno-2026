@@ -1,41 +1,36 @@
 @extends('layouts.app')
 
-@section('title', '編輯個人檔案')
+@section('title', '個人資料')
 
 @section('content')
 @include('center.tabs', ['current' => 'profile', 'sub' => 'info'])
-<h2>個人資料與自我介紹</h2>
+<h2>個人資料</h2>
 <p class="hint">性別和出生年是註冊時填的，這裡不能改；要改請找管理員。其他會員只會看到年齡層，看不到出生年。</p>
 
 <form method="POST" action="{{ route('profile.update') }}" class="form form-wide" novalidate>
     @csrf
     @method('PUT')
-    @include('partials.errors', ['title' => '個人檔案還沒存好'])
+    @include('partials.errors', ['title' => '個人資料還沒存好'])
 
     @php($fields = [
-        ['name', '暱稱', 'text', 20, $user->name, '會顯示給其他會員看，不用寫真實姓名。'],
-        ['live_place', '居住地', 'text', 20, $profile->live_place, '例如：台北市'],
-        ['job', '職業', 'text', 20, $profile->job, null],
-        ['church', '教會', 'text', 100, $profile->church, '要不要給別人看，可以在下面選。'],
+        ['name', '暱稱', 20, $user->name, '會顯示給其他會員看，不用寫真實姓名。'],
+        ['real_name', '真實姓名（可以不填）', 30, $profile->real_name, '姓名不會顯示於交友檔案，只有管理員看得到。'],
+        ['home_phone', '住家電話（可以不填）', 20, $profile->home_phone, '住家電話不會顯示於交友檔案，只有管理員看得到。範例：02-1234-5678'],
+        ['live_place', '居住地', 20, $profile->live_place, '例如：台北市'],
+        ['job', '職業', 20, $profile->job, '例如：老師、工程師、學生'],
     ])
-    @foreach ($fields as [$key, $label, $type, $max, $value, $hint])
+    @foreach ($fields as [$key, $label, $max, $value, $hint])
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>
             @if ($hint)<p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>@endif
             @php($desc = trim(($hint ? $key . '-hint' : '') . ($errors->has($key) ? ' ' . $key . '-error' : '')))
-            <input id="{{ $key }}" name="{{ $key }}" type="{{ $type }}" maxlength="{{ $max }}" value="{{ old($key, $value) }}"
-                   @if ($key === 'name') required autocomplete="nickname" @endif
+            <input id="{{ $key }}" name="{{ $key }}" type="{{ $key === 'home_phone' ? 'tel' : 'text' }}" maxlength="{{ $max }}" value="{{ old($key, $value) }}"
+                   @if ($key === 'name') required autocomplete="nickname" @elseif ($key === 'real_name') autocomplete="name" @elseif ($key === 'home_phone') autocomplete="tel" inputmode="tel" @endif
                    @if ($desc !== '') aria-describedby="{{ $desc }}" @endif
                    @error($key) aria-invalid="true" @enderror>
             @error($key)<p id="{{ $key }}-error" class="field-error">{{ $message }}</p>@enderror
         </div>
     @endforeach
-
-    <div class="field field-check">
-        {{-- 送出失敗回來時，沒勾的 checkbox 不會出現在 old()，要用這次送的值，不是資料庫的舊值 --}}
-        <input id="church_visible" name="church_visible" type="checkbox" value="1" @checked($errors->any() ? old('church_visible') : $profile->church_visible)>
-        <label for="church_visible">讓其他會員看到我的教會</label>
-    </div>
 
     <fieldset class="field">
         <legend>生日（月、日，可以不填）</legend>
@@ -64,16 +59,25 @@
         @error('birth_day')<p id="birth_day-error" class="field-error">{{ $message }}</p>@enderror
     </fieldset>
 
-    @foreach ([['intro', '自我介紹', 2000, $profile->intro], ['hope', '期待認識的人', 1000, $profile->hope]] as [$key, $label, $max, $value])
+    @php($O = \App\Support\ProfileOptions::class)
+    @include('partials.select-field', ['name' => 'faith', 'label' => '信仰', 'options' => $O::FAITH, 'value' => $profile->faith])
+    @include('partials.select-field', ['name' => 'marital', 'label' => '婚姻狀況', 'options' => $O::MARITAL, 'value' => $profile->marital])
+    @include('partials.select-field', ['name' => 'children', 'label' => '子女人數', 'options' => $O::CHILDREN, 'value' => $profile->children])
+    @include('partials.select-field', ['name' => 'education', 'label' => '教育程度', 'options' => $O::EDUCATION, 'value' => $profile->education])
+    @include('partials.select-field', ['name' => 'blood_type', 'label' => '血型', 'options' => $O::BLOOD, 'value' => $profile->blood_type])
+
+    @foreach ([['height', '身高（cm）', $profile->height, 120, 230], ['weight', '體重（kg）', $profile->weight, 30, 200]] as [$key, $label, $value, $min, $max])
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>
-            <p id="{{ $key }}-hint" class="hint">最多 {{ $max }} 字。請不要寫電話、住址等聯絡方式。</p>
-            <textarea id="{{ $key }}" name="{{ $key }}" rows="6" maxlength="{{ $max }}"
-                      aria-describedby="{{ trim($key . '-hint' . ($errors->has($key) ? ' ' . $key . '-error' : '')) }}"
-                      @error($key) aria-invalid="true" @enderror>{{ old($key, $value) }}</textarea>
+            <input id="{{ $key }}" name="{{ $key }}" type="number" inputmode="numeric" min="{{ $min }}" max="{{ $max }}" value="{{ old($key, $value) }}" class="input-short"
+                   @error($key) aria-invalid="true" aria-describedby="{{ $key }}-error" @enderror>
             @error($key)<p id="{{ $key }}-error" class="field-error">{{ $message }}</p>@enderror
         </div>
     @endforeach
+
+    @include('partials.select-field', ['name' => 'smoking', 'label' => '是否抽菸', 'options' => $O::SMOKING, 'value' => $profile->smoking])
+    @include('partials.select-field', ['name' => 'drinking', 'label' => '是否喝酒', 'options' => $O::DRINKING, 'value' => $profile->drinking])
+    @include('partials.select-field', ['name' => 'family_planning', 'label' => '計劃生育', 'options' => $O::FAMILY_PLANNING, 'value' => $profile->family_planning, 'hint' => '婚後想不想要有孩子。'])
 
     <button type="submit" class="button">存檔</button>
 </form>

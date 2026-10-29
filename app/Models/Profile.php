@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
-    'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place'])]
-// 生日月日只拿來算「生日快到了」，轉成陣列／JSON 時不輸出（熊叔叔 10/29「3A」：不顯示日期）
-#[Hidden(['birth_month', 'birth_day'])]
+    'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place',
+    'real_name', 'home_phone', 'faith', 'marital', 'children', 'education', 'blood_type', 'height', 'weight', 'smoking', 'drinking',
+    'family_planning', 'headline', 'verse_book', 'verse_chapter', 'verse_verse', 'verse_text', 'languages', 'hobbies', 'sports'])]
+// 轉成陣列／JSON 時不輸出：生日月日（只拿來算「生日快到了」，10/29「3A」）、真實姓名與住家電話（只有管理員看得到，10/29「1B」）
+#[Hidden(['birth_month', 'birth_day', 'real_name', 'home_phone'])]
 class Profile extends Model
 {
     protected $primaryKey = 'user_id';
@@ -22,6 +24,14 @@ class Profile extends Model
         return [
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
+            'children' => 'integer',
+            'height' => 'integer',
+            'weight' => 'integer',
+            'verse_chapter' => 'integer',
+            'verse_verse' => 'integer',
+            'languages' => 'array',
+            'hobbies' => 'array',
+            'sports' => 'array',
             'photo_updated_at' => 'datetime',
             'cover_updated_at' => 'datetime',
         ];

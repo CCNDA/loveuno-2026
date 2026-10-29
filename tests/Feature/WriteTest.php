@@ -23,12 +23,14 @@ class WriteTest extends TestCase
     public function test_edit_profile_but_not_gender_or_birth_year(): void
     {
         $u = $this->member('原名');
-        $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee('編輯個人檔案');
+        $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee('<h2>個人資料</h2>', false);
 
         $this->actingAs($u)->put('/me', [
-            'name' => '新暱稱', 'live_place' => '台中市', 'job' => '老師', 'church' => '某某教會', 'church_visible' => '1',
-            'intro' => "第一行\n第二行", 'hope' => '一起讀經', 'gender' => '男', 'birth_year' => 2000,
-        ])->assertRedirect("/members/{$u->id}")->assertSessionHas('status', '個人檔案存好了。');
+            'name' => '新暱稱', 'live_place' => '台中市', 'job' => '老師', 'gender' => '男', 'birth_year' => 2000,
+        ])->assertRedirect("/members/{$u->id}")->assertSessionHas('status', '個人資料存好了。');
+        $this->actingAs($u)->put('/me/intro', [
+            'church' => '某某教會', 'church_visible' => '1', 'intro' => "第一行\n第二行，" . str_repeat('我', 30), 'hope' => '一起讀經',
+        ])->assertRedirect("/members/{$u->id}?tab=intro")->assertSessionHas('status', '自我介紹存好了。');
 
         $p = $u->profile->fresh();
         $this->assertSame('新暱稱', $u->fresh()->name);
@@ -39,7 +41,8 @@ class WriteTest extends TestCase
     {
         $u = $this->member();
         $this->actingAs($u)->put('/me', ['name' => ''])->assertSessionHasErrors('name');
-        $this->actingAs($u)->put('/me', ['name' => 'x', 'intro' => str_repeat('長', 2001)])->assertSessionHasErrors('intro');
+        $this->actingAs($u)->put('/me/intro', ['intro' => str_repeat('長', 2001)])->assertSessionHasErrors('intro');
+        $this->actingAs($u)->put('/me/intro', ['intro' => '太短'])->assertSessionHasErrors(['intro' => '自我介紹請寫 30 個字以上（也可以先不寫）。']);
     }
 
     public function test_write_edit_delete_own_diary(): void
@@ -84,14 +87,14 @@ class WriteTest extends TestCase
     {
         $u = $this->member();
         $this->actingAs($u)->put('/me', ['name' => str_repeat('名', 21)])->assertSessionHasErrors('name');
-        $this->actingAs($u)->put('/me', ['name' => 'x', 'hope' => str_repeat('長', 1001)])->assertSessionHasErrors('hope');
+        $this->actingAs($u)->put('/me/intro', ['hope' => str_repeat('長', 1001)])->assertSessionHasErrors('hope');
         $this->actingAs($u)->post('/diaries', ['title' => str_repeat('題', 151), 'body' => 'x', 'visibility' => 'public'])->assertSessionHasErrors('title');
         $this->actingAs($u)->post('/diaries', ['title' => 't', 'body' => str_repeat('字', 10001), 'visibility' => 'public'])->assertSessionHasErrors('body');
 
         // 先勾、再取消：存成 false
-        $this->actingAs($u)->put('/me', ['name' => 'x', 'church_visible' => '1']);
+        $this->actingAs($u)->put('/me/intro', ['church_visible' => '1']);
         $this->assertTrue($u->profile->fresh()->church_visible);
-        $this->actingAs($u)->put('/me', ['name' => 'x']);
+        $this->actingAs($u)->put('/me/intro', []);
         $this->assertFalse($u->profile->fresh()->church_visible);
 
         // 沒有 profile 的帳號，存檔時會建一筆

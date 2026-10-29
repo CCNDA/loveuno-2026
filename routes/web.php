@@ -86,6 +86,8 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/center/points', [CenterController::class, 'points'])->name('center.points');
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');
     Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60,preferences-save')->name('center.preferences.update');
+    Route::get('/me/intro', [ProfileController::class, 'editIntro'])->name('profile.intro');
+    Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');

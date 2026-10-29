@@ -88,7 +88,9 @@ class ScriptTest extends TestCase
 
         $html = $this->actingAs($u)->get('/me/edit')->getContent();
         $this->assertStringContainsString('value="繁體暱稱"', $html);      // 表單值不轉
+        $this->assertStringContainsString('个人资料', $html);              // 畫面文字轉了
+        $html = $this->actingAs($u)->get('/me/intro')->getContent();
         $this->assertStringContainsString('>我喜歡讀經</textarea>', $html);
-        $this->assertStringContainsString('编辑个人档案', $html);          // 畫面文字轉了
+        $this->assertStringContainsString('自我介绍', $html);
     }
 }

@@ -48,12 +48,15 @@ class MemberController extends Controller
         if ($viewer->hasBlocked($user)) {
             return view('members.show', ['member' => $user, 'diaries' => collect(), 'isMe' => false, 'iBlocked' => true]);
         }
-        $diaries = $user->diaries()->visibleTo($viewer)
-            ->orderByDesc('published_on')->orderByDesc('id')
-            ->limit(5)->get();
+        // 四個分頁：個人資料（預設）／自我介紹／心情日記／個人相簿
+        $tab = in_array($request->query('tab'), ['intro', 'diary', 'album'], true) ? $request->query('tab') : 'info';
+        $diaries = $tab === 'diary'
+            ? $user->diaries()->visibleTo($viewer)->orderByDesc('published_on')->orderByDesc('id')->paginate(10)->withQueryString()
+            : collect();
 
         return view('members.show', [
             'member' => $user->load('profile'),
+            'tab' => $tab,
             'diaries' => $diaries,
             'isMe' => $viewer->is($user),
             'iBlocked' => false,
