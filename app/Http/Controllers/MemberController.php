@@ -20,6 +20,7 @@ class MemberController extends Controller
 
         $members = User::query()
             ->whereHas('profile')
+            ->whereNotNull('email_verified_at') // 還沒驗證 email 的新註冊會員不列出來
             ->with('profile')
             ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))
             ->when($filters['place'] ?? null, fn ($q, $pl) => $q->whereHas('profile', fn ($p) => $p->where('live_place', $pl)))

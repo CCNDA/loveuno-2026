@@ -13,7 +13,7 @@
     <p>這位會員還沒有填個人檔案。</p>
 @else
     <dl class="profile">
-        @if ($p->gender !== '')<div><dt>性別</dt><dd>{{ $p->gender }}</dd></div>@endif
+        @if ($p->gender !== '')<div><dt>性別</dt><dd>{{ $p->genderLabel() }}</dd></div>@endif
         @if ($p->ageGroup())<div><dt>年齡</dt><dd>{{ $p->ageGroup() }}</dd></div>@endif
         @if ($p->live_place !== '')<div><dt>居住地</dt><dd>{{ $p->live_place }}</dd></div>@endif
         @if ($p->job !== '')<div><dt>職業</dt><dd>{{ $p->job }}</dd></div>@endif

@@ -54,11 +54,12 @@
     </div>
 
     {{-- 錯誤摘要的 #gender 連到整組 --}}
-    <fieldset id="gender" tabindex="-1" class="field" @error('gender') aria-describedby="gender-error" @enderror>
+    <fieldset id="gender" tabindex="-1" class="field">
         <legend>性別</legend>
         @foreach (['男' => '弟兄', '女' => '姊妹'] as $value => $label)
             <div class="field-check">
-                <input id="gender-{{ $loop->index }}" name="gender" type="radio" value="{{ $value }}" @checked(old('gender') === $value)>
+                <input id="gender-{{ $loop->index }}" name="gender" type="radio" value="{{ $value }}" @checked(old('gender') === $value)
+                       @error('gender') aria-invalid="true" aria-describedby="gender-error" @enderror>
                 <label for="gender-{{ $loop->index }}">{{ $label }}</label>
             </div>
         @endforeach
@@ -79,7 +80,7 @@
     <div class="field field-check">
         <input id="agree" name="agree" type="checkbox" value="1" @checked(old('agree'))
                @error('agree') aria-invalid="true" aria-describedby="agree-error" @enderror>
-        <label for="agree">我已經讀過並同意愛諾園的會員規範</label>
+        <label for="agree">我已經讀過並同意愛諾園的<a href="{{ route('rules') }}" target="_blank" rel="noopener">會員規範（另開新分頁）</a></label>
     </div>
     @error('agree')<p id="agree-error" class="field-error">{{ $message }}</p>@enderror
 

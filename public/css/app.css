@@ -85,7 +85,9 @@ h3 { font-size: 1.1rem; margin: 0 0 .5rem; }
     font-size: 1rem; /* iPhone 輸入框字小於 16px 會自動放大 */
     border: 2px solid #8c857b; border-radius: 8px; background: #fff; color: var(--text);
 }
-.field input[aria-invalid="true"] { border-color: var(--error); }
+.field input[aria-invalid="true"], .field select[aria-invalid="true"] { border-color: var(--error); }
+fieldset.field { border: 0; padding: 0; margin: 0 0 16px; }
+fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .field-check { display: flex; align-items: center; gap: 8px; }
 .field-check input { width: 24px; height: 24px; }
 .field-check label { margin: 0; font-weight: 400; }

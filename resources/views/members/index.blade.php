@@ -39,7 +39,7 @@
                 <div>
                     <p class="member-name"><a href="{{ route('members.show', $m) }}">{{ $m->name }}</a></p>
                     <p class="meta">
-                        {{ collect([$m->profile->gender, $m->profile->ageGroup(), $m->profile->live_place])->filter()->implode('・') }}
+                        {{ collect([$m->profile->genderLabel(), $m->profile->ageGroup(), $m->profile->live_place])->filter()->implode('・') }}
                     </p>
                     @if ($m->profile->intro)
                         <p class="excerpt">{{ \Illuminate\Support\Str::limit($m->profile->intro, 40) }}</p>
