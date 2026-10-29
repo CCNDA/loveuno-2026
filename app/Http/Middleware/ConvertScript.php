@@ -27,7 +27,7 @@ class ConvertScript
         }
 
         $body = ToSimplified::html($body);
-        $body = str_replace('<html lang="zh-Hant-TW">', '<html lang="zh-Hans">', $body);
+        $body = str_replace('<html lang="zh-Hant-TW"', '<html lang="zh-Hans"', $body); // <html> 後面可能還有 class（字體大小）
         $response->setContent($body);
 
         return $response;

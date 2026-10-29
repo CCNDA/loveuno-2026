@@ -33,6 +33,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_demo' => 'boolean',
             'is_admin' => 'boolean',
             'points' => 'integer',
+            'notify_email' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 

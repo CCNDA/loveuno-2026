@@ -11,6 +11,8 @@
     <div><dt>暱稱</dt><dd>{{ $user->name }}</dd></div>
 </dl>
 
+@include('center.settings')
+
 <h2 id="phone-title">手機號碼</h2>
 <p>@if (auth()->user()->phone)已認證：{{ \App\Support\Sms::mask(auth()->user()->phone) }}@else已認證（舊站帶過來的帳號，新版還沒有存號碼）@endif</p>
 <form method="POST" action="{{ route('phone.send') }}" class="form" aria-labelledby="phone-title" novalidate>

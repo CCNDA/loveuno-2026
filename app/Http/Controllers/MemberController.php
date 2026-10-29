@@ -23,6 +23,7 @@ class MemberController extends Controller
             ->whereHas('profile')
             ->whereNotNull('email_verified_at') // 還沒驗證 email、手機的新註冊會員不列出來（10/29「1A」）
             ->whereNotNull('phone_verified_at')
+            ->where('is_active', true) // 帳號設定「啟用帳號」關掉的不列
             ->whereNotIn('id', $request->user()->blockRelatedIds()) // 封鎖（任一方）就不列出來
             ->with('profile')
             ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))
@@ -47,6 +48,7 @@ class MemberController extends Controller
         $viewer = $request->user();
         // 對方封鎖我：當作不存在。我封鎖對方：只顯示「已封鎖」和解除按鈕
         abort_if($user->hasBlocked($viewer), 404);
+        abort_if(! $user->is_active && ! $viewer->is($user) && ! $viewer->is_admin, 404); // 暫停的帳號：當作不存在
         if ($viewer->hasBlocked($user)) {
             return view('members.show', ['member' => $user, 'diaries' => collect(), 'isMe' => false, 'iBlocked' => true]);
         }

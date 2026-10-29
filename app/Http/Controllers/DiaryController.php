@@ -12,6 +12,7 @@ class DiaryController extends Controller
     {
         $diaries = Diary::visibleTo($request->user())
             ->whereNotIn('user_id', $request->user()->blockRelatedIds())
+            ->whereHas('user', fn ($q) => $q->where('is_active', true)->orWhere('id', $request->user()->id))
             ->with('user:id,name')
             ->withInteractions($request->user())
             ->orderByDesc('published_on')->orderByDesc('id')

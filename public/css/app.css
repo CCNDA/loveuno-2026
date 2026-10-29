@@ -404,3 +404,9 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .verify-card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
 .verify-status { font-weight: 700; }
 .verified-badge { vertical-align: middle; }
+
+/* 帳號設定：字體大小（html 上的 class，rem 一起變） */
+html.fs-small { font-size: 93.75%; }
+html.fs-medium { font-size: 100%; }
+html.fs-large { font-size: 118.75%; }
+.settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Friendship;
 use App\Models\Gift;
 use App\Models\User;
+use App\Notifications\NewActivity;
 use App\Support\NotEnoughPoints;
 use App\Support\Points;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -80,6 +81,10 @@ class GiftController extends Controller
             throw ValidationException::withMessages(['item' => '今天已經送過禮物給 ' . $user->name . ' 了，明天再送吧。']);
         } catch (NotEnoughPoints) {
             throw ValidationException::withMessages(['item' => sprintf('愛諾積點不夠（送禮物要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS['gift'][0])]);
+        }
+
+        if ($user->notify_email) { // 帳號設定「Email 通知」（舊站 gift.php「禮物通知」信）
+            defer(fn () => $user->notify(new NewActivity('送了一份禮物給您', $me->name, route('gifts.index'))));
         }
 
         // 對方也送過我：互送禮物 → 普通好友

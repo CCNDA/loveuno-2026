@@ -83,7 +83,8 @@ class Diary extends Model
     // 看得到、也沒有封鎖關係：才能看內容、禱告、留言
     public function isReachableBy(User $viewer): bool
     {
-        return $this->isVisibleTo($viewer) && ! $viewer->blockedEitherWay($this->user);
+        return $this->isVisibleTo($viewer) && ! $viewer->blockedEitherWay($this->user)
+            && ($this->user->is_active || $this->isOwnedBy($viewer)); // 暫停的帳號的日記別人看不到
     }
 
     public function isOwnedBy(User $user): bool

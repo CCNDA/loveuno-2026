@@ -27,6 +27,7 @@ class HomeController extends Controller
         $blocked = $me->blockRelatedIds();
         $diaries = Diary::visibleTo($me)
             ->whereNotIn('user_id', $blocked)
+            ->whereHas('user', fn ($q) => $q->where('is_active', true)->orWhere('id', $me->id)) // 暫停的帳號的日記不上牆
             ->with(['user.profile', 'user.verifications' => fn ($q) => $q->where('status', 'approved')])
             ->withInteractions($me)
             // 卡片上的留言（設計稿 DiaryWall）：不含封鎖對象的；畫面只放最新 3 則
@@ -52,6 +53,7 @@ class HomeController extends Controller
             ->whereNotIn('id', $blocked)
             ->where('email_verified_at', '>=', now()->subDays(30))
             ->whereNotNull('phone_verified_at')
+            ->where('is_active', true)
             ->whereHas('profile', $this->matchesPreferences($me))
             ->with('profile')
             ->orderByDesc('email_verified_at')->orderByDesc('id')
@@ -87,6 +89,7 @@ class HomeController extends Controller
             ->whereKeyNot($me->id)
             ->whereNotNull('email_verified_at')
             ->whereNotNull('phone_verified_at')
+            ->where('is_active', true)
             ->whereNotIn('id', $blocked)
             ->whereHas('profile', $this->matchesPreferences($me))
             ->with('profile')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Friendship;
+use App\Notifications\NewActivity;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,7 @@ class NoteController extends Controller
     // 可以傳紙條的對象：不是自己、email 已驗證、有個人檔案（跟「認識朋友」列得出來的人一致）
     public static function canNote(User $me, User $user): bool
     {
-        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null
+        return ! $me->is($user) && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $user->is_active
             && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 
@@ -57,6 +58,9 @@ class NoteController extends Controller
         $note->recipient_id = $user->id;
         $note->save();
         Friendship::raiseByNotes($me, $user); // 互傳紙條夠多：普通好友 → 聊天好友
+        if ($user->notify_email) { // 帳號設定「Email 通知」；回應送出後才寄，不拖慢送出
+            defer(fn () => $user->notify(new NewActivity('傳了一張紙條給您', $me->name, route('notes.show', $me))));
+        }
 
         return redirect()->route('notes.show', $user)->with('status', '紙條送出了。');
     }
