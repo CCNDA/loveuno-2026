@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active' => true,
         'notify_email' => true,
         'font_size' => 'medium',
+        'font_family' => 'system',
         'script' => 'hant',
     ];
 

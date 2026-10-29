@@ -87,6 +87,15 @@ class SettingsTest extends TestCase
         $this->actingAs($me)->post("/notes/{$other->id}", ['body' => 'x'])->assertNotFound(); // 暫停的人也不能主動傳
     }
 
+    public function test_huninn_font_only_loaded_when_chosen(): void
+    {
+        $u = $this->member();
+        $this->actingAs($u)->get('/center/account')->assertDontSee('huninn.css')->assertSee('粉圓');
+        $this->actingAs($u)->put('/center/settings', $this->settings(['font_family' => 'huninn']))->assertRedirect();
+        $this->actingAs($u)->get('/center/account')->assertSee('huninn.css')->assertSee('ff-huninn');
+        $this->actingAs($u)->put('/center/settings', $this->settings(['font_family' => 'comic']))->assertSessionHasErrorsIn('settings', 'font_family');
+    }
+
     public function test_network_page(): void
     {
         $u = $this->member();

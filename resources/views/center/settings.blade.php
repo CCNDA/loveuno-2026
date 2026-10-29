@@ -49,6 +49,7 @@
     </fieldset>
 
     @include('partials.select-field', ['name' => 'font_size', 'label' => '字體大小', 'options' => \App\Http\Controllers\SettingsController::FONT_SIZES, 'value' => $bag->any() ? old('font_size') : $user->font_size, 'required' => true])
+    @include('partials.select-field', ['name' => 'font_family', 'label' => '字體', 'options' => \App\Http\Controllers\SettingsController::FONT_FAMILIES, 'value' => $bag->any() ? old('font_family') : $user->font_family, 'hint' => '粉圓是比較圓潤可愛的字體；手機網路慢的話，第一次會比較久。'])
     @include('partials.select-field', ['name' => 'script', 'label' => '顯示語言', 'options' => \App\Http\Controllers\SettingsController::SCRIPTS, 'value' => $bag->any() ? old('script') : (session('script') ?? $user->script), 'required' => true])
 
     <button type="submit" class="button">存設定</button>

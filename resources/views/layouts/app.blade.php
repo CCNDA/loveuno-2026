@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant-TW" class="fs-{{ auth()->user()?->font_size ?? 'medium' }}">
+<html lang="zh-Hant-TW" class="fs-{{ auth()->user()?->font_size ?? 'medium' }}@if (auth()->user()?->font_family === 'huninn') ff-huninn @endif">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,7 @@
     <meta name="description" content="愛諾園：基督徒單身交友，用信仰認識彼此。">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $appVersion }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
     <meta name="theme-color" content="#E5BBA2">
 </head>

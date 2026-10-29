@@ -21,20 +21,24 @@ class SettingsController extends Controller
 
     public const SCRIPTS = ['hant' => '繁體中文', 'hans' => '简体中文'];
 
+    public const FONT_FAMILIES = ['system' => '系統字體', 'huninn' => '粉圓（第一次載入約 5MB）'];
+
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validateWithBag('settings', [
             'notify_email' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'font_size' => ['required', 'in:' . implode(',', array_keys(self::FONT_SIZES))],
+            'font_family' => ['nullable', 'in:' . implode(',', array_keys(self::FONT_FAMILIES))],
             'script' => ['required', 'in:' . implode(',', array_keys(self::SCRIPTS))],
-        ], [], ['font_size' => '字體大小', 'script' => '顯示語言']);
+        ], [], ['font_size' => '字體大小', 'font_family' => '字體', 'script' => '顯示語言']);
 
         $user = $request->user();
         $user->forceFill([
             'notify_email' => $request->boolean('notify_email'),
             'is_active' => $request->boolean('is_active'),
             'font_size' => $data['font_size'],
+            'font_family' => $data['font_family'] ?? 'system',
             'script' => $data['script'],
         ])->save();
         $request->session()->put('script', $data['script']); // 這次登入馬上換
