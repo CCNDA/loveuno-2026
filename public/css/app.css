@@ -328,3 +328,12 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .friend-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .friend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
 .friend-item .member-name { margin: 0; }
+
+/* 愛積點 */
+.points-balance { font-size: 1.15rem; }
+.points-balance strong { font-size: 1.6rem; color: var(--brand-dark); }
+.points-table { width: 100%; border-collapse: collapse; margin: 8px 0 24px; }
+.points-table th, .points-table td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.points-table thead th { font-size: .9rem; color: var(--muted); }
+.points-table tbody th { font-weight: 400; }
+.points-table td a { display: inline-flex; align-items: center; min-height: 44px; }

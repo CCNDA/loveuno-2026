@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Diary;
 use App\Support\AvatarImage;
+use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +27,7 @@ class DiaryWriteController extends Controller
         $jpeg = $this->imageFromRequest($request); // 先轉檔：讀不出來就整篇不存，免得日記存了、照片沒了
         $diary = $request->user()->diaries()->create($data + ['published_on' => now()->toDateString()]);
         $this->saveImage($diary, $jpeg);
+        Points::daily($request->user(), 'diary'); // 寫日記 +3，一天算一次
 
         return redirect()->route('diaries.show', $diary)->with('status', '日記發表了。');
     }

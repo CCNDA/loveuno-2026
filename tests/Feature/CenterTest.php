@@ -28,7 +28,7 @@ class CenterTest extends TestCase
         $this->assertMatchesRegularExpression('#aria-current="page"\s*>帳號管理#u', $html);
         $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee('個人資料與自我介紹');
         $this->actingAs($u)->get('/me/photo')->assertOk()->assertSee('身份認證（年底開放前）');
-        $this->actingAs($u)->get('/center/points')->assertOk()->assertSee('還在準備中');
+        $this->actingAs($u)->get('/center/points')->assertOk()->assertSee('我目前的愛諾積點');
     }
 
     public function test_change_password_requires_current_and_rehashes(): void

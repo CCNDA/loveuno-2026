@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -46,6 +47,8 @@ class ProfileController extends Controller
             'intro' => $data['intro'] ?? null,
             'hope' => $data['hope'] ?? null,
         ]);
+
+        Points::checkTasks($user); // 基本資料、戀愛履歷（自我介紹）填好就給點
 
         // 直接回自己的檔案頁（經過 /me 再轉一次，提示訊息會在中途被用掉）
         return redirect()->route('members.show', $user)->with('status', '個人檔案存好了。');

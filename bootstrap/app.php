@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // 選了「简体」就把整頁 HTML 轉成簡體（熊叔叔 10/29「1 3 4 都要」的 3）
         $middleware->web(append: [\App\Http\Middleware\ConvertScript::class]);
 
+        // 每日登入 +1 愛諾積點（記住我直接進來的也算）
+        $middleware->web(append: [\App\Http\Middleware\AwardDailyLogin::class]);
+
         // registration.open：註冊沒開放（config loveuno.registration_open）就 404
         // admin：只有 is_admin 的帳號（審核大頭照）
         $middleware->alias([

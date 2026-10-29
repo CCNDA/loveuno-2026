@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PhotoController;
 use App\Models\Profile;
+use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +49,7 @@ class PhotoReviewController extends Controller
 
         if ($data['decision'] === 'approve') {
             $profile->forceFill([$kind . '_status' => 'approved'])->save();
+            Points::checkTasks($profile->user); // 大頭照通過審核 +20
             $msg = sprintf('%s 的%s通過了。', $profile->user->name, $label);
         } else {
             // 不通過就把檔案刪掉，不留在主機上

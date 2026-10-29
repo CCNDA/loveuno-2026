@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Profile;
 use App\Models\User;
+use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,9 +47,22 @@ class CenterController extends Controller
         return redirect()->route('center.account')->with('status', '密碼換好了。其他裝置上的登入已經登出。');
     }
 
+    // 愛積點：任務獎勵（預設）／使用紀錄（?tab=records）
     public function points(Request $request): View
     {
-        return view('center.points', ['user' => $request->user()]);
+        $user = $request->user();
+        Points::checkTasks($user); // 以前就填好的（例如舊站匯入、示範會員）第一次打開這頁時補給
+        $tab = $request->query('tab') === 'records' ? 'records' : 'tasks';
+
+        return view('center.points', [
+            'user' => $user->fresh(),
+            'tab' => $tab,
+            'status' => Points::taskStatus($user),
+            'links' => ['profile' => 'profile.edit', 'preferences' => 'center.preferences', 'intro' => 'profile.edit', 'photo' => 'photo.edit'],
+            'records' => $tab === 'records'
+                ? DB::table('point_transactions')->where('user_id', $user->id)->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get()
+                : collect(),
+        ]);
     }
 
     public function preferences(Request $request): View
@@ -79,6 +93,8 @@ class CenterController extends Controller
             'pref_age_max' => $data['pref_age_max'] ?? null,
             'pref_place' => trim((string) ($data['pref_place'] ?? '')),
         ]);
+
+        Points::checkTasks($request->user());
 
         return redirect()->route('center.preferences')->with('status', '交友條件存好了。');
     }
