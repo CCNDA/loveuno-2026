@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Diary;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,7 +32,7 @@ class HomeController extends Controller
     }
 
     // 好友推薦：照自己在「交友條件」填的（性別、年齡、居住地）挑，沒填就不限；最多 6 位、每次隨機
-    private function suggestions(User $me, array $blocked)
+    private function suggestions(User $me, array $blocked): Collection
     {
         $pref = $me->profile;
         $now = (int) now()->format('Y');
@@ -55,7 +56,7 @@ class HomeController extends Controller
                 }
             })
             ->with('profile')
-            ->inRandomOrder()
+            ->inRandomOrder() // 會員多了以後要改（每次排序全部會員）；目前幾十位沒問題
             ->limit(6)
             ->get();
     }
