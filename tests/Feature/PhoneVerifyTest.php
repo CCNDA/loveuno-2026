@@ -173,6 +173,9 @@ class PhoneVerifyTest extends TestCase
         $this->assertSame(['0912345678', null], \App\Support\Phone::normalize('886', '0912-345-678'));
         $this->assertNull(\App\Support\Phone::normalize('852', '12345')[0]);   // 太短
         $this->assertNull(\App\Support\Phone::normalize('999', '91234567')[0]); // 沒有這個國碼
+        $x = User::factory()->phoneUnverified()->create();
+        $this->actingAs($x)->post('/phone/send', ['phone_country' => '999', 'phone' => '91234567'])->assertSessionHasErrors(['phone_country' => '請選擇國碼。']);
+        $this->flushSession(); // 上一個請求的 old() 不要帶到下一個
         $this->assertSame('85291234567', \App\Support\Phone::toTwsms('+852-91234567'));
         $this->assertSame('0912345678', \App\Support\Phone::toTwsms('0912345678'));
 

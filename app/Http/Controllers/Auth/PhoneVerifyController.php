@@ -53,9 +53,10 @@ class PhoneVerifyController extends Controller
                 'current_password.current_password' => '密碼不正確。',
             ], ['current_password' => '目前的密碼']);
         }
-        [$phone, $error] = Phone::normalize((string) $request->input('phone_country', '886'), (string) $request->input('phone'));
+        $country = (string) $request->input('phone_country', '886');
+        [$phone, $error] = Phone::normalize($country, (string) $request->input('phone'));
         if ($phone === null) {
-            throw ValidationException::withMessages(['phone' => $error]);
+            throw ValidationException::withMessages([isset(Phone::COUNTRIES[$country]) ? 'phone' : 'phone_country' => $error]);
         }
         if ($changing && $phone === $user->phone) {
             throw ValidationException::withMessages(['phone' => '這就是您現在認證的號碼。']);

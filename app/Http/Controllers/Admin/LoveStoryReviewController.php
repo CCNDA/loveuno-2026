@@ -16,7 +16,7 @@ class LoveStoryReviewController extends Controller
     {
         return view('admin.love-stories', [
             'pending' => LoveStory::with(['submitter', 'male', 'female'])->where('status', 'pending')->orderBy('id')->get(),
-            'approved' => LoveStory::where('status', 'approved')->orderByDesc('approved_at')->get(),
+            'approved' => LoveStory::published()->get(),
         ]);
     }
 

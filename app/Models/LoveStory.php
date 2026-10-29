@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,6 +12,12 @@ class LoveStory extends Model
     protected function casts(): array
     {
         return ['approved_at' => 'datetime', 'submitter_id' => 'integer'];
+    }
+
+    // 公開的，新公開的在前面
+    public function scopePublished(Builder $q): void
+    {
+        $q->where('status', 'approved')->orderByDesc('approved_at')->orderByDesc('id');
     }
 
     public function submitter(): BelongsTo

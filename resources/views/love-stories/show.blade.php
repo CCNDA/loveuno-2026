@@ -10,12 +10,13 @@
     @if ($story->status !== 'approved')
         <p class="notice" role="status">{{ $story->status === 'pending' ? '審核中：管理員看過以後才會公開，現在只有您和管理員看得到。' : '這篇沒有公開。' }}</p>
     @endif
+    @auth
     <ul class="story-couple">
         @foreach ([$story->male, $story->female] as $person)
             <li>
                 @if ($person)
                     @include('partials.avatar', ['user' => $person, 'size' => 'md'])
-                    <span>@auth<a href="{{ route('members.show', $person) }}">{{ $person->name }}</a>@else{{ $person->name }}@endauth
+                    <span><a href="{{ route('members.show', $person) }}">{{ $person->name }}</a>
                         @if ($person->approvedVerifications()->isNotEmpty()) <img src="{{ asset('images/brand/verified-badge.svg') }}" alt="已認證" width="15" height="15" class="verified-badge">@endif</span>
                 @else
                     <span class="meta">（已經離開愛諾園的會員）</span>
@@ -23,6 +24,9 @@
             </li>
         @endforeach
     </ul>
+    @else
+    <p class="meta">會員<a href="{{ route('login') }}">登入</a>後可以看到兩位的檔案。</p>
+    @endauth
     @if ($story->photo_path)
         <img src="{{ route('love-stories.photo', $story) }}" alt="{{ $story->title }}的照片" class="story-photo" loading="lazy">
     @endif

@@ -63,7 +63,8 @@ class NewsLoveStoryTest extends TestCase
         $this->actingAs($she)->get('/love-stories/new')->assertOk()->assertSee('value="' . $she->id . '"', false);
         $form = ['title' => '神所配合的', 'male_id' => $he->id, 'female_id' => $she->id, 'body' => "我們在愛諾園認識。\n感謝主！"];
         // 性別不對、不是本人
-        $this->actingAs($she)->post('/love-stories', ['male_id' => $other->id] + $form)->assertSessionHasErrors('male_id');
+        $this->actingAs($she)->post('/love-stories', ['male_id' => $other->id] + $form)->assertSessionHasErrors(['male_id' => '這個會員編號不對，請再跟對方確認一次。']);
+        $this->actingAs($she)->post('/love-stories', ['male_id' => 999999] + $form)->assertSessionHasErrors(['male_id' => '這個會員編號不對，請再跟對方確認一次。']);
         $this->actingAs($other)->post('/love-stories', $form)->assertSessionHasErrors(['male_id' => '請用男方或女方本人的帳號投稿（您的會員編號是 ' . $other->id . '）。']);
         $this->assertSame(0, LoveStory::count());
 
@@ -82,7 +83,9 @@ class NewsLoveStoryTest extends TestCase
 
         auth()->logout();
         $this->get('/love-stories')->assertOk()->assertSee('神所配合的');
-        $this->get("/love-stories/{$s->id}")->assertOk()->assertSee('弟兄')->assertSee('姊妹')->assertSee('感謝主', false);
+        $this->get("/love-stories/{$s->id}")->assertOk()->assertDontSee(route('members.show', $he), false)->assertSee('後可以看到兩位的檔案')->assertSee('感謝主', false);
+        $this->actingAs($other)->get("/love-stories/{$s->id}")->assertSee('弟兄')->assertSee('姊妹');
+        auth()->logout();
         $this->get("/love-stories/{$s->id}/photo")->assertOk()->assertHeader('Content-Type', 'image/jpeg');
         $this->get('/')->assertSee('愛的見證')->assertSee(route('love-stories.show', $s), false)->assertSee('更多愛的故事');
 
@@ -99,5 +102,13 @@ class NewsLoveStoryTest extends TestCase
     {
         $this->get('/')->assertOk()->assertSee('嚴謹認證 安心交友')->assertSee('我們需要您的支持')->assertSee('https://www.ccnda.org/devote/online', false)
             ->assertSee('images/welcome-banner.svg', false);
+    }
+
+    public function test_legacy_member_number_works(): void
+    {
+        $he = $this->member('弟兄', '男', ['legacy_id' => 1000014]);
+        $she = $this->member('姊妹', '女');
+        $this->actingAs($she)->post('/love-stories', ['title' => '舊站認識的', 'male_id' => 1000014, 'female_id' => $she->id, 'body' => '感謝主'])->assertRedirect();
+        $this->assertSame($he->id, LoveStory::sole()->male_id);
     }
 }

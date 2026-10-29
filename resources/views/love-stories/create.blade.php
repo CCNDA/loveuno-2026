@@ -13,7 +13,7 @@
     @foreach ([['title', '標題', 50, null, 'text'], ['male_id', '男方會員編號', 10, $mine === 'male_id' ? $me->id : null, 'numeric'], ['female_id', '女方會員編號', 10, $mine === 'female_id' ? $me->id : null, 'numeric']] as [$key, $label, $max, $default, $mode])
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>
-            @if ($mode === 'numeric')<p id="{{ $key }}-hint" class="hint">會員編號在「會員中心 → 帳號管理」最上面。</p>@endif
+            @if ($mode === 'numeric')<p id="{{ $key }}-hint" class="hint">會員編號在「會員中心 → 帳號管理」最上面；舊站的 7 位數會員編號也可以。</p>@endif
             <input id="{{ $key }}" name="{{ $key }}" type="text" @if ($mode === 'numeric') inputmode="numeric" @endif maxlength="{{ $max }}" value="{{ old($key, $default) }}" required
                    aria-describedby="@if ($mode === 'numeric'){{ $key }}-hint @endif @error($key){{ $key }}-error @enderror" @error($key) aria-invalid="true" @enderror>
             @error($key)<p id="{{ $key }}-error" class="field-error">{{ $message }}</p>@enderror

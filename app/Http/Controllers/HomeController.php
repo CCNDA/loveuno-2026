@@ -19,7 +19,7 @@ class HomeController extends Controller
         $me = $request->user();
         if (! $me || ! $me->hasVerifiedEmail()) {
             return view('home', [ // 歡迎頁（設計稿 PageWelcome）：最新 4 篇愛的見證
-                'stories' => \App\Models\LoveStory::where('status', 'approved')->orderByDesc('approved_at')->orderByDesc('id')->limit(4)->get(),
+                'stories' => \App\Models\LoveStory::published()->limit(4)->get(),
             ]);
         }
         if (\App\Support\Phone::expireIfDue($me) || $me->phone_verified_at === null) {
