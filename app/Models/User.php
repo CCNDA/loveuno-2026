@@ -78,4 +78,33 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return in_array((int) $other->id, $this->blockRelatedIds(), true);
     }
+
+    // 我的好友等級：[對方 id => 1～3]。跟封鎖名單一樣快取在「這一個請求」上（會員列表每張卡片都會問）
+    public function friendLevels(): array
+    {
+        $key = 'friend_levels:' . $this->id;
+        $attrs = request()->attributes;
+        if (! $attrs->has($key)) {
+            $map = [];
+            foreach (Friendship::where('user_id', $this->id)->orWhere('friend_id', $this->id)->get() as $f) {
+                $map[$f->otherThan($this)] = $f->level;
+            }
+            $attrs->set($key, $map);
+        }
+
+        return $attrs->get($key);
+    }
+
+    // 0＝路人甲（Friendship::LEVELS）
+    public function friendLevelWith(User $other): int
+    {
+        return $this->friendLevels()[(int) $other->id] ?? 0;
+    }
+
+    public static function forgetFriendLevels(User ...$users): void
+    {
+        foreach ($users as $u) {
+            request()->attributes->remove('friend_levels:' . $u->id);
+        }
+    }
 }

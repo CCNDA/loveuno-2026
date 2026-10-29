@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Friendship;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class BlockController extends Controller
             'blocker_id' => $me->id, 'blocked_id' => $user->id, 'created_at' => now(), 'updated_at' => now(),
         ]);
         $this->forgetCache($request, $me, $user);
+        Friendship::remove($me, $user); // 封鎖就不是好友了（解除封鎖也不會自動恢復）
 
         return redirect()->route('center.account')->with('status', sprintf('已封鎖 %s。對方不會收到通知。', $user->name));
     }

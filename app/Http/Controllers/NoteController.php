@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Friendship;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,7 @@ class NoteController extends Controller
         $note->sender_id = $me->id;
         $note->recipient_id = $user->id;
         $note->save();
+        Friendship::raiseByNotes($me, $user); // 互傳紙條夠多：普通好友 → 聊天好友
 
         return redirect()->route('notes.show', $user)->with('status', '紙條送出了。');
     }

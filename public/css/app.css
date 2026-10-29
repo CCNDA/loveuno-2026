@@ -321,3 +321,10 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
 .wall-comments .comment-list { margin-top: 8px; }
 .wall-comments .comment-item:first-child { border-top: 0; }
+
+/* 好友 */
+.relationship { margin: 8px 0; }
+.relationship a { display: inline-flex; align-items: center; min-height: 44px; }
+.friend-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.friend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.friend-item .member-name { margin: 0; }

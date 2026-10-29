@@ -52,6 +52,8 @@
                     <p class="meta">
                         {{ collect([$m->profile->genderLabel(), $m->profile->ageGroup(), $m->profile->live_place])->filter()->implode('・') }}
                     </p>
+                    @php($level = auth()->user()->friendLevelWith($m))
+                    @if ($level > 0)<p class="meta"><span class="tag">{{ \App\Models\Friendship::LEVELS[$level] }}</span></p>@endif
                     @if ($m->profile->intro)
                         <p class="excerpt">{{ \Illuminate\Support\Str::limit($m->profile->intro, 40) }}</p>
                     @endif

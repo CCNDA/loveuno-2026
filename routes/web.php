@@ -11,6 +11,7 @@ use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryInteractionController;
 use App\Http\Controllers\DiaryWriteController;
+use App\Http\Controllers\FriendController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
@@ -91,6 +92,10 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/members/{user}/block', [BlockController::class, 'confirm'])->whereNumber('user')->name('blocks.confirm');
     Route::post('/members/{user}/block', [BlockController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,block')->name('blocks.store');
     Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
+    // 好友：我的朋友、解除關係
+    Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
+    Route::get('/members/{user}/unfriend', [FriendController::class, 'confirmDestroy'])->whereNumber('user')->name('friends.confirm');
+    Route::delete('/members/{user}/friend', [FriendController::class, 'destroy'])->whereNumber('user')->name('friends.destroy');
     // 檢舉（封鎖了也可以檢舉）
     Route::get('/members/{user}/report', [ReportController::class, 'create'])->whereNumber('user')->name('reports.create');
     Route::post('/members/{user}/report', [ReportController::class, 'store'])->whereNumber('user')->middleware('throttle:10,1440,report')->name('reports.store');
