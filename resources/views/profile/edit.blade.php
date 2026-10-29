@@ -3,7 +3,8 @@
 @section('title', '編輯個人檔案')
 
 @section('content')
-<h1>編輯個人檔案</h1>
+@include('center.tabs', ['current' => 'profile', 'sub' => 'info'])
+<h2>個人資料與自我介紹</h2>
 <p class="hint">性別和出生年是註冊時填的，這裡不能改；要改請找管理員。其他會員只會看到年齡層，看不到出生年。</p>
 
 <form method="POST" action="{{ route('profile.update') }}" class="form form-wide" novalidate>

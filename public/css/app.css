@@ -188,3 +188,24 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
     body.has-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     .site-header .nav .nav-dup { display: none; }
 }
+
+/* 會員中心：圓形分頁（loveuno-web 版型）。虛線圓框、目前頁實心磚紅白字（白字對 #a3644a 4.69:1） */
+.center-tabs ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; list-style: none; padding: 0; margin: 8px 0 24px; }
+.center-tabs a {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    width: 104px; height: 104px; border-radius: 50%; border: 2px dashed #b9826a;
+    color: var(--brand-dark); font-weight: 700; text-decoration: none; background: var(--surface);
+}
+.center-tabs a:hover { background: #fbefe8; }
+.center-tabs a[aria-current="page"] { background: var(--button); border-style: solid; border-color: var(--button); color: #fff; }
+.center-subtabs ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 8px; list-style: none; padding: 0; margin: 0 0 16px; }
+.center-subtabs a, .subtab-soon {
+    display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 12px;
+    border: 1px solid var(--button); border-radius: 6px; color: var(--brand-dark); text-decoration: none; background: var(--surface);
+}
+.center-subtabs a[aria-current="page"] { background: var(--button); color: #fff; font-weight: 700; }
+.subtab-soon { border-style: dashed; color: var(--muted); }
+.age-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.age-range input { width: 6rem; min-height: 48px; padding: 8px; font-size: 1rem; border: 2px solid #8c857b; border-radius: 8px; }
+.age-range label { font-weight: 400; margin: 0; }
+@media (max-width: 400px) { .center-tabs a { width: 76px; height: 76px; font-size: .9rem; } }

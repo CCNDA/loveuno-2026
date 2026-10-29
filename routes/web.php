@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\PhotoReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\MemberController;
@@ -41,9 +42,18 @@ Route::middleware('auth')->group(function () {
 });
 
 // 個人檔案與日記都要登入、email 已驗證才能看（舊站 2026-10-28 起也是要登入）
-Route::middleware(['auth', 'verified'])->group(function () {
+// auth.session：換密碼後其他裝置的 session 會失效（logoutOtherDevices 要配這個才有用）
+Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/me', [MemberController::class, 'me'])->name('me');
     Route::get('/me/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+
+    // 會員中心（帳號管理／個人檔案／愛積點／交友條件）
+    Route::redirect('/center', '/center/account');
+    Route::get('/center/account', [CenterController::class, 'account'])->name('center.account');
+    Route::put('/center/password', [CenterController::class, 'updatePassword'])->middleware('throttle:5,10')->name('center.password');
+    Route::get('/center/points', [CenterController::class, 'points'])->name('center.points');
+    Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');
+    Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60')->name('center.preferences.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');

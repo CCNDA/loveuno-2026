@@ -3,9 +3,10 @@
 @section('title', '我的大頭照')
 
 @section('content')
+@include('center.tabs', ['current' => 'profile', 'sub' => 'photo'])
 <div class="member-head">
     @include('partials.avatar', ['user' => auth()->user(), 'size' => 'lg'])
-    <h1>我的大頭照</h1>
+    <h2>我的大頭照</h2>
 </div>
 
 @if ($profile->photo_status === 'pending')

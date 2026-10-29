@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'gender', 'birth_year', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope'])]
+#[Fillable(['user_id', 'gender', 'birth_year', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
+    'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place'])]
 class Profile extends Model
 {
     protected $primaryKey = 'user_id';
