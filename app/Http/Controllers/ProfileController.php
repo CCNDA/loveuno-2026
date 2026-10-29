@@ -47,6 +47,7 @@ class ProfileController extends Controller
             'hope' => $data['hope'] ?? null,
         ]);
 
-        return redirect()->route('me')->with('status', '個人檔案存好了。');
+        // 直接回自己的檔案頁（經過 /me 再轉一次，提示訊息會在中途被用掉）
+        return redirect()->route('members.show', $user)->with('status', '個人檔案存好了。');
     }
 }

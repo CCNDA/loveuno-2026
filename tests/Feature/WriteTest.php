@@ -96,7 +96,7 @@ class WriteTest extends TestCase
 
         // 沒有 profile 的帳號，存檔時會建一筆
         $bare = User::factory()->create();
-        $this->actingAs($bare)->put('/me', ['name' => '新人', 'live_place' => '高雄市'])->assertRedirect('/me');
+        $this->actingAs($bare)->put('/me', ['name' => '新人', 'live_place' => '高雄市'])->assertRedirect("/members/{$bare->id}");
         $this->assertSame('高雄市', $bare->fresh()->profile->live_place);
     }
 
