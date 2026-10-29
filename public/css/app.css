@@ -3,7 +3,7 @@
    無障礙：字級 18px 起跳、文字對比 ≥ 4.5:1、焦點外框明顯、觸控目標 ≥ 44px。 */
 
 :root {
-    /* 配色照熊叔叔 10/29 給的 loveuno-web 切版：蜜桃頁首、米白底、磚紅主按鈕、紫褐次按鈕。
+    /* 配色照 CCNDA/loveuno-frontend 的 styles/theme.ts（設計 token，MIT，CCNDA）：BROWN 頁首、PALE_ORANGE 底、PRIMARY_BROWN 主按鈕、BRAND_BROWN 次按鈕。
        每一組文字／底色都算過對比 ≥ 4.5:1（切版的頁首白字對蜜桃底只有約 1.8，改成深褐字）。 */
     --bg: #fffdf4;          /* 米白底（loveuno-web manifest background_color） */
     --surface: #ffffff;
@@ -11,9 +11,9 @@
     --muted: #5e5049;       /* 對米白約 7:1 */
     --brand: #8a4a32;       /* 連結：對米白約 6.6:1 */
     --brand-dark: #6e3a27;
-    --button: #a3644a;      /* 主按鈕：白字約 4.7:1 */
+    --button: #a46246;      /* PRIMARY_BROWN：白字 4.76:1 */
     --button-dark: #8a4a32;
-    --plum: #644754;        /* 次按鈕：白字約 8.2:1 */
+    --plum: #664a53;        /* BRAND_BROWN：白字 7.87:1（當頁首文字只有 4.48，所以頁首字不用它） */
     --header: #e5bba2;      /* 頁首蜜桃色（manifest theme_color）：深褐字 7.7:1 */
     --header-text: #3d2a22;
     --line: #ead9cc;

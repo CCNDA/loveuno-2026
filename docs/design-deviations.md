@@ -16,11 +16,11 @@
 | # | 項目 | 原始設計 | 新版 | 為什麼 | 狀態 |
 |---|---|---|---|---|---|
 | 1 | 頁首文字 | 蜜桃底（約 #E4BBA4）配白字 | 蜜桃底配深褐字 #3d2a22 | 白字對蜜桃底對比 1.76:1，無障礙規定至少 4.5:1；深褐字 7.69:1。長輩讀者多 | 🟠 請設計師給一組符合 4.5:1 的頁首配色 |
-| 2 | 色碼 | 設計稿原檔沒拿到 | 頁首 #E5BBA2、米白底 #FFFDF4 照切版 manifest.json（0.12.0 起）；主按鈕 #a3644a、次按鈕 #644754 是從截圖估的 | 切版的 CSS 裡沒有寫色碼（寫在元件裡）；manifest 有兩個 | 🟠 請設計師給正式色票 |
+| 2 | 色碼 | CCNDA/loveuno-frontend `styles/theme.ts`（BROWN #E5BBA2、PALE_ORANGE #FFFDF4、PRIMARY_BROWN #A46246、BRAND_BROWN #664A53 …） | 0.12.0 起四個主色都照 theme.ts；只有頁首文字沒用 BRAND_BROWN（對頁首只有 4.48:1，差一點不到 4.5），改深褐 #3d2a22（7.7:1）；連結用比 PRIMARY_BROWN 深一點的 #8a4a32 | 無障礙對比 | 🟠 頁首文字顏色 |
 | 3 | 連結文字顏色 | 磚紅 | 深一點的磚紅 #8a4a32（對米白 6.59:1） | 主按鈕的 #a3644a 當文字放在米白底上是 4.57:1，剛好過 4.5；連結是小字、長輩讀者多，留一點餘裕 | 🟠 |
-| 4 | 字型 | FakePearl（切版的 CSS 指定） | 系統字（Noto Sans TC／蘋方／微軟正黑體） | 沒有字型檔與授權資訊；中文網頁字型檔很大，手機載入慢 | 🟠 要不要用、授權與檔案從哪來 |
+| 4 | 字型 | loveuno-frontend 用 Lato（Google Fonts）＋ FakePearl（從 jsDelivr CDN 載入） | 系統字（Noto Sans TC／蘋方／微軟正黑體） | FakePearl 的授權資訊沒寫在 repo 裡，也不想讓網站依賴外部 CDN；中文字型檔很大，手機載入慢 | 🟠 FakePearl 的授權、要不要自己放字型檔 |
 | 5 | 字級 | 內文約 14～16px | 內文 18px 起跳 | 長輩讀者多；iPhone 輸入框小於 16px 會自動放大 | 🟠 |
-| 6 | Logo、favicon、圖示 | 圖檔 Logo（愛諾園 LoveUNO）、favicon、底部選單圖示 | 0.12.0 起直接用切版網站上的檔案（brand-logo-text.svg、favicon.png、diary-wall／write-diary／pair／loveletter／account.svg），放在 public/images/brand（熊叔叔 10/29「LOGO什麼的都要放上去吧」） | 是從切版網站下載的成品，不是原始檔 | 🟠 請提供原始檔；「認識朋友」用 pair、「我的檔案」用 account 圖示對不對 |
+| 6 | Logo、favicon、圖示 | 圖檔 Logo（愛諾園 LoveUNO）、favicon、底部選單圖示 | 0.12.0 起用 loveuno-frontend `assets/`、`public/` 裡的檔案（brand-logo-text.svg、favicon.png、diary-wall／write-diary／pair／loveletter／account.svg；跟切版網站下載的逐位元組相同），放在 public/images/brand（熊叔叔 10/29「LOGO什麼的都要放上去吧」） | 專案 repo 裡的 SVG 就是原始檔（MIT，CCNDA） | 🟠 請提供原始檔；「認識朋友」用 pair、「我的檔案」用 account 圖示對不對 |
 
 ## 二、版面
 
