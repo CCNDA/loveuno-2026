@@ -24,7 +24,8 @@ class MemberController extends Controller
             ->with('profile')
             ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))
             ->when($filters['place'] ?? null, fn ($q, $pl) => $q->whereHas('profile', fn ($p) => $p->where('live_place', $pl)))
-            ->orderBy('id')
+            // 示範會員排前面，舊站匯入的測試帳號（legacy_id 有值）排後面，展示時第一眼看到的是有內容的檔案
+            ->orderByRaw('legacy_id IS NOT NULL')->orderBy('id')
             ->paginate(12)
             ->withQueryString();
 
