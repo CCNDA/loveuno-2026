@@ -274,3 +274,25 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 
 /* 繁／简切換 */
 .script-toggle { border: 1px solid var(--header-text); }
+
+/* 日記：代禱標籤、附圖、為你禱告／留言（設計稿 DiaryWall） */
+.tag-prayer { background: var(--header); color: var(--header-text); font-weight: 700; }
+.diary-image { display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: var(--radius); }
+.diary-image-thumb { max-width: 240px; }
+.review-diary { object-fit: contain; background: #efe7dc; }
+.diary-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.diary-actions form { margin: 0; }
+.action-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; text-decoration: none; cursor: pointer; }
+.action-button:hover { background: #fdf3ec; }
+.action-button.is-on { border-color: var(--brand); background: #fdf3ec; font-weight: 700; }
+.action-count { font-variant-numeric: tabular-nums; }
+.comments { margin-top: 32px; }
+.comment-form { margin-bottom: 16px; }
+.comment-list { list-style: none; padding: 0; margin: 0; }
+.comment-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.comment-main { flex: 1; min-width: 0; }
+.comment-head { margin: 0; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.comment-head a { font-weight: 700; }
+.comment-body { margin: 4px 0; overflow-wrap: anywhere; }
+.comment-item .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
+.avatar-sm { width: 40px; height: 40px; font-size: 1rem; }

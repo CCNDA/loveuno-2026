@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Diary;
+use App\Models\DiaryComment;
+use App\Models\DiaryPrayer;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -44,6 +46,9 @@ class DemoSeeder extends Seeder
         ['主日的詩歌', '今天唱〈奇異恩典〉，唱到第三段突然很想哭。謝謝主一路的保守。'],
     ];
 
+    // 示範留言（設計稿 DiaryWall 的「為你禱告」「謝謝」那種短短的回應）
+    private const COMMENTS = ['為你禱告', '阿們！願主賜你平安', '謝謝你的分享，很受激勵', '我也有一樣的感受', '加油，一起努力'];
+
     public function run(): void
     {
         DB::transaction(function () {
@@ -75,13 +80,30 @@ class DemoSeeder extends Seeder
 
             // 日記分給前幾位會員，日期往前排；最後一篇設成不公開，展示「只有自己看得到」
             $day = now()->startOfDay();
+            $diaries = [];
             foreach (self::DIARIES as $i => [$title, $body]) {
-                $users[$i % count($users)]->diaries()->create([
+                $diaries[] = $users[$i % count($users)]->diaries()->create([
                     'title' => $title,
                     'body' => $body,
                     'visibility' => $i === count(self::DIARIES) - 1 ? 'private' : 'public',
+                    'is_prayer' => $i % 3 === 0, // 每三篇有一篇是代禱
                     'published_on' => $day->copy()->subDays($i * 2),
                 ]);
+            }
+
+            // 展示「為你禱告」和留言：公開的日記，由其他示範會員來禱告、留言
+            foreach ($diaries as $i => $diary) {
+                if ($diary->visibility !== 'public') {
+                    continue;
+                }
+                $others = array_values(array_filter($users, fn ($u) => $u->id !== $diary->user_id));
+                foreach (array_slice($others, $i % 2, 1 + $i % 4) as $u) {
+                    DiaryPrayer::create(['diary_id' => $diary->id, 'user_id' => $u->id]);
+                }
+                foreach (array_slice(self::COMMENTS, $i % count(self::COMMENTS), $i % 3) as $k => $text) {
+                    $c = new DiaryComment(['body' => $text]);
+                    $c->forceFill(['diary_id' => $diary->id, 'user_id' => $others[$k % count($others)]->id])->save();
+                }
             }
         });
     }

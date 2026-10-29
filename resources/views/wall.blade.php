@@ -34,16 +34,20 @@
         <ol class="wall-list">
             @foreach ($diaries as $d)
                 <li>
-                    <article class="wall-card" aria-labelledby="wall-d{{ $d->id }}">
+                    <article class="wall-card" id="d{{ $d->id }}" aria-labelledby="wall-d{{ $d->id }}">
                         <header class="wall-card-head">
                             @include('partials.avatar', ['user' => $d->user])
                             <div>
                                 <p class="wall-author"><a href="{{ route('members.show', $d->user) }}">{{ $d->user->name }}</a></p>
-                                <p class="meta"><time datetime="{{ $d->published_on->toDateString() }}">{{ $d->published_on->format('Y-m-d') }}</time>@if($d->visibility === 'private')・<span class="tag">只有自己看得到</span>@endif</p>
+                                <p class="meta"><time datetime="{{ $d->published_on->toDateString() }}">{{ $d->published_on->format('Y-m-d') }}</time>@if($d->is_prayer)・<span class="tag tag-prayer">代禱</span>@endif @if($d->visibility === 'private')・<span class="tag">只有自己看得到</span>@endif</p>
                             </div>
                         </header>
                         <h3 id="wall-d{{ $d->id }}" class="wall-title"><a href="{{ route('diaries.show', $d) }}">{{ $d->title }}</a></h3>
                         <p class="excerpt">{{ \Illuminate\Support\Str::limit($d->body, 120) }}</p>
+                        @if ($d->imageVisibleTo(auth()->user()))
+                            <img class="diary-image" src="{{ route('diaries.image', $d) }}?v={{ $d->image_updated_at?->timestamp }}" alt="{{ $d->user->name }}〈{{ $d->title }}〉附的照片" loading="lazy">
+                        @endif
+                        @include('diaries.partials.interact', ['from' => 'wall'])
                     </article>
                 </li>
             @endforeach

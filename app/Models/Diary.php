@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-// user_id 不在 Fillable：作者只能由程式指定（$user->diaries()->create()），表單帶不進來
-#[Fillable(['title', 'body', 'visibility', 'published_on'])]
+// user_id 不在 Fillable：作者只能由程式指定（$user->diaries()->create()），表單帶不進來。
+// image_* 也不在 Fillable：只有上傳流程（DiaryWriteController）用 forceFill 設定。
+#[Fillable(['title', 'body', 'visibility', 'is_prayer', 'published_on'])]
 class Diary extends Model
 {
     /** @use HasFactory<DiaryFactory> */
@@ -21,12 +23,31 @@ class Diary extends Model
         return [
             'published_on' => 'date',
             'user_id' => 'integer',
+            'is_prayer' => 'boolean',
+            'image_updated_at' => 'datetime',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function prayers(): HasMany
+    {
+        return $this->hasMany(DiaryPrayer::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(DiaryComment::class);
+    }
+
+    // 列表用：禱告人數、留言數、我有沒有按過「為你禱告」
+    public function scopeWithInteractions(Builder $query, User $viewer): Builder
+    {
+        return $query->withCount(['prayers', 'comments'])
+            ->withExists(['prayers as prayed_by_me' => fn (Builder $q) => $q->where('user_id', $viewer->id)]);
     }
 
     // 看得到的日記：公開的，加上自己的（含不公開）
@@ -42,8 +63,30 @@ class Diary extends Model
         return $this->visibility === 'public' || $this->isOwnedBy($viewer);
     }
 
+    // 看得到、也沒有封鎖關係：才能看內容、禱告、留言
+    public function isReachableBy(User $viewer): bool
+    {
+        return $this->isVisibleTo($viewer) && ! $viewer->blockedEitherWay($this->user);
+    }
+
     public function isOwnedBy(User $user): bool
     {
         return (int) $this->user_id === (int) $user->id;
+    }
+
+    // 附圖跟大頭照一樣：通過審核才給別人看；審核中只有作者和管理員看得到
+    public function imageVisibleTo(User $viewer): bool
+    {
+        if (! $this->image_path) {
+            return false;
+        }
+        if ($viewer->is_admin && $this->image_status === 'pending') {
+            return true; // 管理員審核用（不管日記公不公開）
+        }
+        if (! $this->isReachableBy($viewer)) {
+            return false;
+        }
+
+        return $this->image_status === 'approved' || ($this->image_status === 'pending' && $this->isOwnedBy($viewer));
     }
 }

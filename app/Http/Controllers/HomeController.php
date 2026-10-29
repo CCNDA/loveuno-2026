@@ -22,6 +22,7 @@ class HomeController extends Controller
         $diaries = Diary::visibleTo($me)
             ->whereNotIn('user_id', $blocked)
             ->with('user.profile')
+            ->withInteractions($me)
             ->orderByDesc('published_on')->orderByDesc('id')
             ->limit(10)->get();
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
+use App\Http\Controllers\DiaryInteractionController;
 use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemberController;
@@ -98,6 +99,12 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/diaries/{diary}/delete', [DiaryWriteController::class, 'confirmDestroy'])->whereNumber('diary')->name('diaries.delete');
     Route::delete('/diaries/{diary}', [DiaryWriteController::class, 'destroy'])->whereNumber('diary')->name('diaries.destroy');
 
+    // 為你禱告（再按一次取消）、留言、附圖
+    Route::post('/diaries/{diary}/pray', [DiaryInteractionController::class, 'pray'])->whereNumber('diary')->middleware('throttle:60,10,diary-pray')->name('diaries.pray');
+    Route::post('/diaries/{diary}/comments', [DiaryInteractionController::class, 'comment'])->whereNumber('diary')->middleware('throttle:20,10,diary-comment')->name('diaries.comments.store');
+    Route::delete('/diaries/{diary}/comments/{comment}', [DiaryInteractionController::class, 'destroyComment'])->whereNumber(['diary', 'comment'])->name('diaries.comments.destroy');
+    Route::get('/diaries/{diary}/image', [DiaryInteractionController::class, 'image'])->whereNumber('diary')->name('diaries.image');
+
     // 大頭照（上傳要審核；檔案經過 PhotoController 檢查權限才送出）
     Route::get('/me/photo', [PhotoController::class, 'edit'])->defaults('kind', 'photo')->name('photo.edit');
     Route::post('/me/photo', [PhotoController::class, 'update'])->defaults('kind', 'photo')->middleware('throttle:10,60,photo-upload')->name('photo.update');
@@ -113,5 +120,6 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/photos', [PhotoReviewController::class, 'index'])->name('admin.photos');
         Route::post('/photos/{profile}', [PhotoReviewController::class, 'decide'])->name('admin.photos.decide');
+        Route::post('/diary-images/{diary}', [PhotoReviewController::class, 'decideDiary'])->whereNumber('diary')->name('admin.diary-images.decide');
     });
 });
