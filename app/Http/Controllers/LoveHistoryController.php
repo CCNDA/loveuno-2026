@@ -15,9 +15,7 @@ class LoveHistoryController extends Controller
 {
     public function edit(Request $request): View
     {
-        $profile = $request->user()->profile ?? new Profile(['user_id' => $request->user()->id]);
-
-        return view('profile.love', ['answers' => $profile->love_history ?? []]);
+        return view('profile.love', ['answers' => $request->user()->profile?->love_history ?? []]);
     }
 
     public function update(Request $request): RedirectResponse

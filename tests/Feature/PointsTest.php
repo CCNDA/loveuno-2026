@@ -52,7 +52,7 @@ class PointsTest extends TestCase
 
         $types = DB::table('point_transactions')->where('user_id', $u->id)->pluck('amount', 'type')->all();
         $this->assertSame(20, (int) $types['profile']);
-        $this->assertSame(10, (int) $types['intro']);
+        $this->assertSame(10, (int) $types['love']);
         $this->assertSame(10, (int) $types['preferences']);
         $this->assertSame(1 + 20 + 10 + 10, $this->balance($u)); // 含每日登入
     }

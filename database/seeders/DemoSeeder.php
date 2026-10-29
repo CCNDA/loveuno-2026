@@ -75,6 +75,12 @@ class DemoSeeder extends Seeder
                     'intro' => $intro,
                     'hope' => $hope,
                 ]);
+                // 戀愛履歷：每位挑不同的選項，展示時看得到這一塊
+                $love = [];
+                foreach (\App\Support\LoveHistory::QUESTIONS as $k => [$label, $options]) {
+                    $love[$k] = $options[($i + strlen($k)) % count($options)];
+                }
+                Profile::where('user_id', $user->id)->update(['love_history' => json_encode($love + ['cvmemreason' => '', 'cvnote' => '希望兩個人一起服事、一起成長。'], JSON_UNESCAPED_UNICODE)]);
                 $users[] = $user;
             }
 

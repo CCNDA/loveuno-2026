@@ -14,7 +14,7 @@ class Points
     public const TASKS = [
         'profile' => [20, '完成基本資料建檔'],
         'preferences' => [10, '完成希望對象建檔'],
-        'intro' => [10, '完成戀愛履歷建檔'],
+        'love' => [10, '完成戀愛履歷建檔'],
         'photo' => [20, '完成主顯示照片建檔並通過審核'],
     ];
 
@@ -85,7 +85,8 @@ class Points
             'profile' => trim((string) $p->live_place) !== '' && trim((string) $p->job) !== ''
                 && collect(['faith', 'marital', 'children', 'education', 'blood_type', 'smoking', 'drinking'])->every(fn ($k) => (string) $p->{$k} !== ''),
             'preferences' => $p->pref_gender !== '' || $p->pref_age_min !== null || $p->pref_age_max !== null || $p->pref_place !== '',
-            'intro' => LoveHistory::isComplete($p->love_history), // type 名沿用 intro（已經給過的紀錄不重給）
+            // 0.16～0.20 暫時用「寫了自我介紹」給 type=intro；0.21.0 起改成問卷、type=love，舊的 intro 紀錄不算完成
+            'love' => LoveHistory::isComplete($p->love_history),
             'photo' => $p->photo_status === 'approved',
         ];
         foreach ($done as $type => $ok) {

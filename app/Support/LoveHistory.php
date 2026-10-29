@@ -16,18 +16,40 @@ class LoveHistory
         'cvmemtime' => ['最難忘的戀愛交往時間', ['無', '不到一個月', '1~3個月', '3~6個月', '6個月~1年', '1年~2年', '2年~3年', '3年以上', '保留']],
         'cvmembreak' => ['最難忘的戀愛分手原因', ['無', '我們沒有分手', '個性不合', '信仰不合', '親友反對', '我找到更好的', '對方變心了', '時間久了自然就淡了', '搬家 / 出國 / 當兵', '其他外在因素', '我也不知道為什麼', '其他', '保留']],
         'cvfeelld' => ['對於遠距離戀愛的感覺', self::FEEL],
-        'cvfeelsister' => ['對於與非基督徒交往的感覺', self::FEEL],
         'cvfeelweb' => ['對於網路戀愛的感覺', self::FEEL],
+        'cvfeelsister' => ['對於與非基督徒交往的感覺', self::FEEL],
         'cvfeelhomo' => ['對於姊弟戀的感覺', self::FEEL],
         'cvfeelbreak' => ['對於分手的感覺', ['不確定', '不合則分，沒什麼大不了', '分手是愛情必經的段落', '不喜歡分手，但是也不會勉強跟不愛的人在一起', '很害怕分手，最好永遠不要發生', '若分手了也是神的心意', '保留']],
         'cvhopeway' => ['希望的戀愛方式', ['不確定', '細水長流的愛情', '不在乎天長地久，只在乎曾經擁有', '合則來不合則去', '如膠似漆黏在一起', '平凡普通、但專一幸福的愛情', '只要是合神心意就願意順服', '保留']],
     ];
 
-    // 文字題（舊站也是非必填）
+    // 畫面上的順序（照舊站 profile3.php）：文字題「最難忘的原因」接在分手原因後面、「對愛情的期許」在最後
+    public const ORDER = ['cvcurrent', 'cvpast', 'cvmempartner', 'cvmemtime', 'cvmembreak', 'cvmemreason',
+        'cvfeelld', 'cvfeelweb', 'cvfeelsister', 'cvfeelhomo', 'cvfeelbreak', 'cvhopeway', 'cvnote'];
+
+    // 文字題（舊站也是非必填；舊站沒有字數上限，新版 300／500 字，記在 docs #38）
     public const TEXTS = [
         'cvmemreason' => ['最難忘的原因', 300],
         'cvnote' => ['對愛情的期許', 500],
     ];
+
+    // 會員檔案上要列的 [題目, 答案]（照舊站 show_profile 全部列出；沒寫的文字題不列）
+    public static function displayRows(?array $answers): array
+    {
+        if (! $answers) {
+            return [];
+        }
+        $rows = [];
+        foreach (self::ORDER as $k) {
+            $label = self::QUESTIONS[$k][0] ?? self::TEXTS[$k][0];
+            $a = (string) ($answers[$k] ?? '');
+            if ($a !== '') {
+                $rows[] = [$label, $a];
+            }
+        }
+
+        return $rows;
+    }
 
     // 選擇題都答了才算「完成戀愛履歷建檔」（愛積點 +10）
     public static function isComplete(?array $answers): bool
