@@ -3,7 +3,10 @@
 @section('title', $member->name)
 
 @section('content')
-<h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+<div class="member-head">
+    @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
+    <h1>{{ $member->name }}@if($isMe) <span class="tag">我</span>@endif</h1>
+</div>
 
 @php($p = $member->profile)
 @if (! $p)

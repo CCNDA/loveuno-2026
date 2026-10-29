@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/me', [MemberController::class, 'me'])->name('me');
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{user}', [MemberController::class, 'show'])->name('members.show');
     Route::get('/diaries', [DiaryController::class, 'index'])->name('diaries.index');
     Route::get('/diaries/{diary}', [DiaryController::class, 'show'])->name('diaries.show');

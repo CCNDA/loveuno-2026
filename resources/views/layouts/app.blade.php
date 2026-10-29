@@ -20,7 +20,8 @@
                     <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首頁</a></li>
                     @auth
                         <li><a href="{{ route('diaries.index') }}" @if(request()->routeIs('diaries.*')) aria-current="page" @endif>心情日記</a></li>
-                        <li><a href="{{ route('me') }}" @if(request()->routeIs('members.*')) aria-current="page" @endif>我的檔案</a></li>
+                        <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif>認識朋友</a></li>
+                        <li><a href="{{ route('me') }}" @if(request()->routeIs('members.show') && request()->route('user')?->is(auth()->user())) aria-current="page" @endif>我的檔案</a></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -9,6 +10,33 @@ use Illuminate\View\View;
 
 class MemberController extends Controller
 {
+    // 認識朋友：示範會員列表，可以用性別、居住地篩選
+    public function index(Request $request): View
+    {
+        $filters = $request->validate([
+            'gender' => ['nullable', 'in:男,女'],
+            'place' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $members = User::query()
+            ->whereHas('profile')
+            ->with('profile')
+            ->when($filters['gender'] ?? null, fn ($q, $g) => $q->whereHas('profile', fn ($p) => $p->where('gender', $g)))
+            ->when($filters['place'] ?? null, fn ($q, $pl) => $q->whereHas('profile', fn ($p) => $p->where('live_place', $pl)))
+            ->orderBy('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        $places = Profile::where('live_place', '<>', '')
+            ->distinct()->orderBy('live_place')->pluck('live_place');
+
+        return view('members.index', [
+            'members' => $members,
+            'places' => $places,
+            'filters' => $filters,
+        ]);
+    }
+
     public function show(Request $request, User $user): View
     {
         $viewer = $request->user();
