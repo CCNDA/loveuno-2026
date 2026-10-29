@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
     'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place',
     'real_name', 'home_phone', 'faith', 'marital', 'children', 'education', 'blood_type', 'height', 'weight', 'smoking', 'drinking',
-    'family_planning', 'headline', 'verse_book', 'verse_chapter', 'verse_verse', 'verse_text', 'languages', 'hobbies', 'sports'])]
+    'family_planning', 'headline', 'verse_book', 'verse_chapter', 'verse_verse', 'verse_text', 'languages', 'hobbies', 'sports', 'love_history'])]
 // 轉成陣列／JSON 時不輸出：生日月日（只拿來算「生日快到了」，10/29「3A」）、真實姓名與住家電話（只有管理員看得到，10/29「1B」）
 #[Hidden(['birth_month', 'birth_day', 'real_name', 'home_phone'])]
 class Profile extends Model
@@ -31,6 +31,7 @@ class Profile extends Model
             'languages' => 'array',
             'hobbies' => 'array',
             'sports' => 'array',
+            'love_history' => 'array',
             'photo_updated_at' => 'datetime',
             'cover_updated_at' => 'datetime',
         ];

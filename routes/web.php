@@ -14,6 +14,7 @@ use App\Http\Controllers\DiaryInteractionController;
 use App\Http\Controllers\DiaryWriteController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\GiftController;
+use App\Http\Controllers\LoveHistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
@@ -88,6 +89,8 @@ Route::middleware(['auth', 'auth.session', 'verified'])->group(function () {
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');
     Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60,preferences-save')->name('center.preferences.update');
     Route::get('/me/intro', [ProfileController::class, 'editIntro'])->name('profile.intro');
+    Route::get('/me/love', [LoveHistoryController::class, 'edit'])->name('profile.love');
+    Route::put('/me/love', [LoveHistoryController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.love.update');
     // 個人相簿（最多 9 張，要審核）
     Route::get('/me/album', [AlbumController::class, 'edit'])->name('album.edit');
     Route::post('/me/album', [AlbumController::class, 'store'])->middleware('throttle:20,60,album-upload')->name('album.store');

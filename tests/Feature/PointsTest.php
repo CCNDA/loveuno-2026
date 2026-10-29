@@ -45,7 +45,9 @@ class PointsTest extends TestCase
         $u = $this->member();
         $this->actingAs($u)->put('/me', $this->profileForm(['name' => '新朋友', 'live_place' => '台北市', 'job' => '老師']))->assertRedirect();
         $this->actingAs($u)->put('/me', $this->profileForm(['name' => '新朋友', 'live_place' => '台中市', 'job' => '老師']))->assertRedirect();
-        $this->actingAs($u)->put('/me/intro', $this->introForm(['intro' => '我喜歡讀經，' . str_repeat('也喜歡爬山', 6)]))->assertRedirect();
+        // 完成戀愛履歷建檔＝問卷選擇題都答了（熊叔叔 10/29「3A」）
+        $love = collect(\App\Support\LoveHistory::QUESTIONS)->map(fn ($q) => $q[1][0])->all();
+        $this->actingAs($u)->put('/me/love', $love)->assertRedirect();
         $this->actingAs($u)->put('/center/preferences', ['pref_gender' => '男'])->assertRedirect();
 
         $types = DB::table('point_transactions')->where('user_id', $u->id)->pluck('amount', 'type')->all();

@@ -50,7 +50,20 @@
             <p class="prose">{!! nl2br(e($p->hope)) !!}</p>
         </section>
     @endif
-    @if (! $p->hasIntroduction())
+    @php($love = collect(\App\Support\LoveHistory::QUESTIONS + \App\Support\LoveHistory::TEXTS)
+        ->map(fn ($q, $k) => [$q[0], (string) (($p->love_history ?? [])[$k] ?? '')])
+        ->filter(fn ($row) => ! in_array($row[1], ['', '保留', '無'], true)))
+    @if ($love->isNotEmpty())
+        <section aria-labelledby="love-title">
+            <h3 id="love-title">戀愛履歷</h3>
+            <dl class="profile">
+                @foreach ($love as [$q, $a])
+                    <div><dt>{{ $q }}</dt><dd>{!! nl2br(e($a)) !!}</dd></div>
+                @endforeach
+            </dl>
+        </section>
+    @endif
+    @if (! $p->hasIntroduction() && $love->isEmpty())
         <p>這位會員還沒有寫自我介紹。</p>
     @endif
 @elseif ($tab === 'diary')

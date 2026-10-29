@@ -85,7 +85,7 @@ class Points
             'profile' => trim((string) $p->live_place) !== '' && trim((string) $p->job) !== ''
                 && collect(['faith', 'marital', 'children', 'education', 'blood_type', 'smoking', 'drinking'])->every(fn ($k) => (string) $p->{$k} !== ''),
             'preferences' => $p->pref_gender !== '' || $p->pref_age_min !== null || $p->pref_age_max !== null || $p->pref_place !== '',
-            'intro' => trim((string) $p->intro) !== '',
+            'intro' => LoveHistory::isComplete($p->love_history), // type 名沿用 intro（已經給過的紀錄不重給）
             'photo' => $p->photo_status === 'approved',
         ];
         foreach ($done as $type => $ok) {
