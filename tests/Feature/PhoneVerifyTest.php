@@ -219,4 +219,17 @@ class PhoneVerifyTest extends TestCase
         $this->assertNotNull($fresh->fresh()->phone_verified_at);
         $this->actingAs($fresh)->get('/center/account')->assertSee('認證到 ' . now()->subMonths(11)->addMonthsNoOverflow(12)->format('Y/n/j'));
     }
+
+    public function test_unverified_profile_is_hidden_even_by_url(): void
+    {
+        $new = User::factory()->phoneUnverified()->create(['name' => '新會員']);
+        \App\Models\Profile::create(['user_id' => $new->id, 'gender' => '女', 'birth_year' => 1990]);
+        $other = User::factory()->create();
+        \App\Models\Profile::create(['user_id' => $other->id, 'gender' => '男', 'birth_year' => 1990]);
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($other)->get("/members/{$new->id}")->assertNotFound();
+        $this->actingAs($admin)->get("/members/{$new->id}")->assertOk();
+        $new->forceFill(['phone' => '0955555555', 'phone_verified_at' => now()])->save();
+        $this->actingAs($other)->get("/members/{$new->id}")->assertOk();
+    }
 }

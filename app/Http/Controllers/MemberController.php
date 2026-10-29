@@ -49,6 +49,8 @@ class MemberController extends Controller
         // 對方封鎖我：當作不存在。我封鎖對方：只顯示「已封鎖」和解除按鈕
         abort_if($user->hasBlocked($viewer), 404);
         abort_if(! $user->is_active && ! $viewer->is($user) && ! $viewer->is_admin, 404); // 暫停的帳號：當作不存在
+        // 還沒驗證 email、手機（或手機認證過期）的帳號：會員列表不列，直接打網址也當作不存在（小布 0.22.0 驗收發現）
+        abort_if((! $user->hasVerifiedEmail() || ! $user->hasValidPhone()) && ! $viewer->is($user) && ! $viewer->is_admin, 404);
         if ($viewer->hasBlocked($user)) {
             return view('members.show', ['member' => $user, 'diaries' => collect(), 'isMe' => false, 'iBlocked' => true]);
         }
