@@ -31,10 +31,20 @@ class ProfileController extends Controller
             'church_visible' => ['nullable', 'boolean'],
             'intro' => ['nullable', 'string', 'max:2000'],
             'hope' => ['nullable', 'string', 'max:1000'],
-        ], [], [
+            // 生日（月、日）：只用來提醒好友，要嘛兩個都填、要嘛都不填
+            'birth_month' => ['nullable', 'integer', 'between:1,12', 'required_with:birth_day'],
+            'birth_day' => ['nullable', 'integer', 'between:1,31', 'required_with:birth_month'],
+        ], [
+            'birth_month.required_with' => '生日的月和日要一起選（或都不選）。',
+            'birth_day.required_with' => '生日的月和日要一起選（或都不選）。',
+        ], [
             'name' => '暱稱', 'live_place' => '居住地', 'job' => '職業', 'church' => '教會',
-            'intro' => '自我介紹', 'hope' => '期待認識的人',
+            'intro' => '自我介紹', 'hope' => '期待認識的人', 'birth_month' => '生日的月', 'birth_day' => '生日的日',
         ]);
+        // 2/30、4/31 這種日子不存在（用閏年 2000 檢查，2/29 可以）
+        if (! empty($data['birth_month']) && ! checkdate((int) $data['birth_month'], (int) $data['birth_day'], 2000)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['birth_day' => sprintf('%d 月沒有 %d 日。', $data['birth_month'], $data['birth_day'])]);
+        }
 
         $user = $request->user();
         $user->forceFill(['name' => trim($data['name'])])->save();
@@ -46,6 +56,8 @@ class ProfileController extends Controller
             'church_visible' => $request->boolean('church_visible'),
             'intro' => $data['intro'] ?? null,
             'hope' => $data['hope'] ?? null,
+            'birth_month' => $data['birth_month'] ?? null,
+            'birth_day' => $data['birth_day'] ?? null,
         ]);
 
         Points::checkTasks($user); // 基本資料、戀愛履歷（自我介紹）填好就給點

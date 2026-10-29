@@ -360,3 +360,14 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .welcome-main .member-name, .welcome-main .meta { margin: 0; }
 .gift-card img { width: 96px; height: 96px; object-fit: contain; }
 .gift-thumb { width: 56px; height: 56px; object-fit: contain; flex: none; }
+
+/* 生日、特殊節日 */
+.birthday-selects { display: flex; gap: 16px; }
+.birthday-selects label { font-weight: 400; }
+.occasions { margin-top: 24px; }
+.occasion-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.occasion-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); }
+.occasion-item p { margin: 0; }
+.occasion-item a { display: inline-flex; align-items: center; min-height: 44px; }
+.occasion-birthday { background: #fdf3ec; }
+.occasion-anniversary { background: #f1eee8; }

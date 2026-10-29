@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Diary;
 use App\Models\Gift;
+use App\Support\Occasions;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class HomeController extends Controller
             'suggestions' => $this->suggestions($me, $blocked),
             'newcomers' => $this->newcomers($me, $blocked),
             'newGifts' => Gift::unopenedCountFor($me),
+            'occasions' => Occasions::for($me),
         ]);
     }
 

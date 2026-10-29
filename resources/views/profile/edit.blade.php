@@ -37,6 +37,33 @@
         <label for="church_visible">讓其他會員看到我的教會</label>
     </div>
 
+    <fieldset class="field" aria-describedby="birthday-hint">
+        <legend>生日（月、日，可以不填）</legend>
+        <p id="birthday-hint" class="hint">只用來提醒您的好友「生日快到了」，不會顯示日期。出生年註冊時就填了，只顯示年齡層。</p>
+        <div class="birthday-selects">
+            <div>
+                <label for="birth_month">月</label>
+                <select id="birth_month" name="birth_month" @error('birth_month') aria-invalid="true" aria-describedby="birth_month-error" @enderror>
+                    <option value="">—</option>
+                    @for ($m = 1; $m <= 12; $m++)
+                        <option value="{{ $m }}" @selected((int) old('birth_month', $profile->birth_month) === $m)>{{ $m }} 月</option>
+                    @endfor
+                </select>
+            </div>
+            <div>
+                <label for="birth_day">日</label>
+                <select id="birth_day" name="birth_day" @error('birth_day') aria-invalid="true" aria-describedby="birth_day-error" @enderror>
+                    <option value="">—</option>
+                    @for ($d = 1; $d <= 31; $d++)
+                        <option value="{{ $d }}" @selected((int) old('birth_day', $profile->birth_day) === $d)>{{ $d }} 日</option>
+                    @endfor
+                </select>
+            </div>
+        </div>
+        @error('birth_month')<p id="birth_month-error" class="field-error">{{ $message }}</p>@enderror
+        @error('birth_day')<p id="birth_day-error" class="field-error">{{ $message }}</p>@enderror
+    </fieldset>
+
     @foreach ([['intro', '自我介紹', 2000, $profile->intro], ['hope', '期待認識的人', 1000, $profile->hope]] as [$key, $label, $max, $value])
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>

@@ -26,6 +26,7 @@
     @endif
 </section>
 
+@include('partials.occasions')
 @include('partials.welcome-new')
 
 <section aria-labelledby="wall-title">
