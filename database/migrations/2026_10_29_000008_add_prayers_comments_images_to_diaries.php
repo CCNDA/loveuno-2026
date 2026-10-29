@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::table('diaries', function (Blueprint $table) {
             $table->boolean('is_prayer')->default(false)->after('visibility'); // 作者標成「代禱」
             $table->string('image_path', 100)->nullable()->after('is_prayer');  // 在 avatars 磁碟裡的路徑（亂數檔名）
-            $table->string('image_status', 10)->default('')->after('image_path'); // ''／pending／approved／rejected，跟大頭照一樣要審核
+            $table->string('image_status', 10)->default('')->after('image_path'); // 0.14.0 原本要審核；0.15.1 起不用審核（熊叔叔 10/29「1B」），上傳就是 approved。欄位留著，以後要改回審核不用再改表
             $table->timestamp('image_updated_at')->nullable()->after('image_status');
             $table->index('image_status');
         });

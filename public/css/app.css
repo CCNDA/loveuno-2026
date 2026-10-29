@@ -279,7 +279,6 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .tag-prayer { background: #cdeaf3; color: #05678a; font-weight: 700; } /* 設計稿 #0893c1 字對 #cdeaf3 只有 2.8:1，加深到 5.0:1 */
 .diary-image { display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: var(--radius); }
 .diary-image-thumb { max-width: 240px; }
-.review-diary { object-fit: contain; background: #efe7dc; }
 .diary-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .diary-actions form { margin: 0; }
 .action-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; text-decoration: none; cursor: pointer; }
@@ -310,7 +309,15 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 /* 日記牆卡片上的留言（設計稿 DiaryWall CommentZone） */
 .wall-comments { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .wall-comment-form { display: flex; gap: 8px; align-items: center; }
-.wall-comment-form input { flex: 1; min-width: 0; min-height: 44px; }
+.wall-comment-form input { flex: 1; min-width: 0; min-height: 44px; border: 1px solid transparent; border-radius: 20px; background: #f1eee8; padding: 6px 10px 6px 20px; }
+.wall-comment-form input:focus { border-color: var(--brand); }
+/* 設計稿提示字 #999 對 #f1eee8 只有 2.5:1，加深到 5.3:1 */
+.wall-comment-form input::placeholder { color: #6b5f57; opacity: 1; }
+/* 設計稿 CommentText：灰底圓角泡泡；字色 PRIMARY_BROWN #A46246 對 #f2f2f2 只有 4.25:1，加深到 #965a40（4.9:1） */
+.comment-bubble { display: inline-block; max-width: 100%; border-radius: 20px; padding: 10px 16px; background: #f2f2f2; color: #965a40; }
+.comment-bubble .comment-head a { color: #965a40; }
+.comment-bubble .comment-body { margin: 2px 0 0; }
+.comment-time { display: block; margin-top: 8px; font-size: .85rem; color: var(--brand); }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
 .wall-comments .comment-list { margin-top: 8px; }
 .wall-comments .comment-item:first-child { border-top: 0; }

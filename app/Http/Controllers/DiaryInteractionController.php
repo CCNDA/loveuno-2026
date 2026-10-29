@@ -43,7 +43,7 @@ class DiaryInteractionController extends Controller
             'body' => ['required', 'string', 'max:500'],
         ], [], ['body' => '留言']);
         if ($v->fails()) {
-            $to = $fromWall ? rtrim(route('home'), '/') . '/#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
+            $to = $fromWall ? $this->wallUrl() . '#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
 
             return redirect()->to($to)->withErrors($v, $fromWall ? 'comment' . $diary->id : 'default')->withInput();
         }
@@ -51,7 +51,7 @@ class DiaryInteractionController extends Controller
         $comment = new DiaryComment(['body' => $v->validated()['body']]);
         $comment->forceFill(['diary_id' => $diary->id, 'user_id' => $request->user()->id])->save();
 
-        $to = $fromWall ? rtrim(route('home'), '/') . '/#d' . $diary->id : route('diaries.show', $diary) . '#comment-' . $comment->id;
+        $to = $fromWall ? $this->wallUrl() . '#d' . $diary->id : route('diaries.show', $diary) . '#comment-' . $comment->id;
 
         return redirect()->to($to)->with('status', '留言送出了。');
     }
@@ -90,11 +90,17 @@ class DiaryInteractionController extends Controller
     {
         $page = max(1, (int) $request->input('page', 1));
         $url = match ($request->input('from')) {
-            'wall' => rtrim(route('home'), '/') . '/', // route('home') 是「https://網域」沒有結尾的 /，補上才是「/#d1」
+            'wall' => $this->wallUrl(),
             'list' => route('diaries.index', $page > 1 ? ['page' => $page] : []),
             default => route('diaries.show', $diary),
         };
 
         return redirect()->to($url . '#d' . $diary->id)->with('status', $status);
+    }
+
+    // route('home') 是「https://網域」沒有結尾的 /，補上才是「/#d1」
+    private function wallUrl(): string
+    {
+        return rtrim(route('home'), '/') . '/';
     }
 }

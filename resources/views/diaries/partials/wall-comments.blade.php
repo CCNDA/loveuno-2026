@@ -22,17 +22,17 @@
                 <li class="comment-item">
                     @include('partials.avatar', ['user' => $c->user, 'size' => 'sm'])
                     <div class="comment-main">
-                        <p class="comment-head">
-                            <a href="{{ route('members.show', $c->user) }}">{{ $c->user->name }}</a>
-                            <time class="meta" datetime="{{ $c->created_at->toIso8601String() }}">{{ $c->ago() }}</time>
-                        </p>
-                        <p class="comment-body">{!! nl2br(e($c->body)) !!}</p>
+                        <div class="comment-bubble">
+                            <p class="comment-head"><a href="{{ route('members.show', $c->user) }}">{{ $c->user->name }}</a></p>
+                            <p class="comment-body">{!! nl2br(e($c->body)) !!}</p>
+                        </div>
+                        <time class="comment-time" datetime="{{ $c->created_at->toIso8601String() }}">{{ $c->ago() }}</time>
                     </div>
                 </li>
             @endforeach
         </ol>
     @endif
-    @if ($d->comments->count() > 3)
-        <p><a href="{{ route('diaries.show', $d) }}#comments-title">看全部 {{ $d->comments->count() }} 則留言<span class="visually-hidden">（〈{{ $d->title }}〉）</span></a></p>
+    @if ($d->comments_count > 3)
+        <p><a href="{{ route('diaries.show', $d) }}#comments-title">看全部 {{ $d->comments_count }} 則留言<span class="visually-hidden">（〈{{ $d->title }}〉）</span></a></p>
     @endif
 </div>
