@@ -30,6 +30,9 @@
                         </li>
                     @else
                         <li><a href="{{ route('login') }}" @if(request()->routeIs('login')) aria-current="page" @endif>登入</a></li>
+                        @if (config('loveuno.registration_open'))
+                            <li><a href="{{ route('register') }}" @if(request()->routeIs('register')) aria-current="page" @endif>加入會員</a></li>
+                        @endif
                     @endauth
                 </ul>
             </nav>

@@ -66,6 +66,7 @@ class ImportLegacyAccounts extends Command
                 $user->password = $plain; // casts 'hashed'：存進去的是雜湊
                 // 從測試庫來的都是測試帳號，跟示範資料一樣在正式開放前要刪掉
                 $user->is_demo = true;
+                $user->email_verified_at ??= now(); // 舊站已經是會員，不用再驗證
                 $user->save();
 
                 $year = $row->birthday ? (int) substr((string) $row->birthday, 0, 4) : 0;
