@@ -6,6 +6,26 @@
     <div><dt>註冊日期</dt><dd>{{ $user->created_at?->format('Y/n/j') }}</dd></div>
 </dl>
 
+@php($ebag = $errors->getBag('email'))
+<form method="POST" action="{{ route('email.change') }}" class="form" aria-labelledby="email-change-title" novalidate>
+    @csrf
+    <h3 id="email-change-title">修改 E-mail</h3>
+    <p id="new_email-hint" class="hint">目前：{{ $user->email }}。輸入新的電子郵件和密碼，我們會寄確認信到新信箱，點了才會換。</p>
+    <div class="field">
+        <label for="new_email">新的電子郵件</label>
+        <input id="new_email" name="new_email" type="email" inputmode="email" autocomplete="email" maxlength="100" value="{{ $ebag->any() ? old('new_email') : '' }}"
+               aria-describedby="new_email-hint{{ $ebag->has('new_email') ? ' new_email-error' : '' }}" @if ($ebag->has('new_email')) aria-invalid="true" @endif>
+        @if ($ebag->has('new_email'))<p id="new_email-error" class="field-error" role="alert">{{ $ebag->first('new_email') }}</p>@endif
+    </div>
+    <div class="field">
+        <label for="email_current_password">目前的密碼</label>
+        <input id="email_current_password" name="current_password" type="password" autocomplete="current-password"
+               @if ($ebag->has('current_password')) aria-invalid="true" aria-describedby="email_current_password-error" @endif>
+        @if ($ebag->has('current_password'))<p id="email_current_password-error" class="field-error" role="alert">{{ $ebag->first('current_password') }}</p>@endif
+    </div>
+    <button type="submit" class="button">寄確認信到新信箱</button>
+</form>
+
 <form method="POST" action="{{ route('settings.update') }}" class="form" aria-labelledby="settings-title" novalidate>
     @csrf
     @method('PUT')

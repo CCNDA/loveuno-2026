@@ -29,7 +29,7 @@
                              width="{{ $kind === 'photo' ? 160 : 300 }}" height="{{ $kind === 'photo' ? 160 : 100 }}">
                         <div>
                             <p class="member-name"><a href="{{ route('members.show', $p->user) }}">{{ $p->user->name }}</a></p>
-                            <p class="meta">上傳時間 {{ $p->{$kind . '_updated_at'}?->format('Y/n/j H:i') }}</p>
+                            <p class="meta">上傳時間 {{ $p->{$kind . '_updated_at'}?->shown()->format('Y/n/j H:i') }}</p>
                             <form method="POST" action="{{ route('admin.photos.decide', $p) }}" class="review-actions">
                                 @csrf
                                 <input type="hidden" name="kind" value="{{ $kind }}">
@@ -57,7 +57,7 @@
                     <img src="{{ route('album.show', $ph) }}" alt="{{ $ph->user->name }} 的相簿照片" class="review-album" width="200" height="200">
                     <div>
                         <p class="member-name"><a href="{{ route('members.show', $ph->user) }}">{{ $ph->user->name }}</a></p>
-                        <p class="meta">上傳時間 {{ $ph->created_at?->format('Y/n/j H:i') }}</p>
+                        <p class="meta">上傳時間 {{ $ph->created_at?->shown()->format('Y/n/j H:i') }}</p>
                         <form method="POST" action="{{ route('admin.album.decide', $ph) }}" class="review-actions">
                             @csrf
                             <button type="submit" name="decision" value="approve" class="button">通過</button>

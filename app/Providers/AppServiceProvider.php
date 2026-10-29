@@ -40,6 +40,12 @@ class AppServiceProvider extends ServiceProvider
             ->line('如果這不是您申請的，請不用理會這封信，您的密碼不會改變。')
             ->salutation('愛諾園 CCNDA'));
 
+        // 畫面上顯示幾點幾分時用 ->shown()：換成會員所在的時區（DisplayTimezone；熊叔叔 10/29「直接偵測」）
+        \Illuminate\Support\Carbon::macro('shown', function () {
+            /** @var \Illuminate\Support\Carbon $this */
+            return $this->copy()->setTimezone(app()->bound('display_tz') ? app('display_tz') : config('app.timezone'));
+        });
+
         // 頁尾版本號（熊叔叔 10/23 通則：每站都要有版本資訊），來源是根目錄 VERSION
         $file = base_path('VERSION');
         View::share('appVersion', is_readable($file) ? trim((string) file_get_contents($file)) : 'dev');

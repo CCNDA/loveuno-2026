@@ -47,7 +47,7 @@
                         <li class="note {{ $mine ? 'note-mine' : 'note-theirs' }}">
                             <p class="note-who visually-hidden">{{ $mine ? '我' : $other->name }}：</p>
                             <div class="note-body">{!! nl2br(e($n->body)) !!}</div>
-                            <p class="note-time"><time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->format('n/j H:i') }}</time>@if($mine && $n->read_at)・已讀@endif</p>
+                            <p class="note-time"><time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->shown()->format('n/j H:i') }}</time>@if($mine && $n->read_at)・已讀@endif</p>
                         </li>
                     @endforeach
                 </ol>

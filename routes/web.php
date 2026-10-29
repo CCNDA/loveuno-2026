@@ -14,6 +14,7 @@ use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryInteractionController;
 use App\Http\Controllers\DiaryWriteController;
+use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\GiftController;
 use App\Http\Controllers\LoveHistoryController;
@@ -106,6 +107,8 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     // 帳號設定（設計稿 PageMemberSettings）
     Route::put('/center/settings', [SettingsController::class, 'update'])->middleware('throttle:30,60,settings-save')->name('settings.update');
     Route::get('/center/network', [SettingsController::class, 'network'])->name('settings.network');
+    Route::post('/center/email', [EmailChangeController::class, 'request'])->middleware('throttle:10,60,email-change')->name('email.change');
+    Route::get('/email/change/{user}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('user')->middleware('signed')->name('email.change.confirm');
     Route::get('/center/delete', [SettingsController::class, 'confirmDestroy'])->name('settings.delete');
     Route::delete('/center/account', [SettingsController::class, 'destroy'])->middleware('throttle:5,60,account-delete')->name('settings.destroy');
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');

@@ -22,7 +22,7 @@
                             <dt>檢舉人</dt>
                             <dd>@if ($r->reporter){{ $r->reporter->name }}（#{{ $r->reporter->id }}）@else（帳號已刪除）@endif</dd>
                             <dt>時間</dt>
-                            <dd><time datetime="{{ $r->created_at->toIso8601String() }}">{{ $r->created_at->format('Y/n/j H:i') }}</time></dd>
+                            <dd><time datetime="{{ $r->created_at->toIso8601String() }}">{{ $r->created_at->shown()->format('Y/n/j H:i') }}</time></dd>
                         </dl>
                         <p class="prose">{!! nl2br(e($r->description)) !!}</p>
                         @if ($r->screenshot_path)

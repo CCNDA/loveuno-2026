@@ -23,7 +23,7 @@
                             <dt>會員資料</dt><dd>{{ collect([$v->user->profile?->genderLabel(), $v->user->profile?->ageGroup(), $v->user->profile?->real_name ? '真實姓名 ' . $v->user->profile->real_name : null, $v->kind === 'church' ? '教會 ' . $v->user->profile?->church : null])->filter()->implode('・') }}</dd>
                             <dt>照片</dt><dd><a href="{{ route('admin.verifications.photo', $v) }}" target="_blank" rel="noopener">看照片<span class="visually-hidden">（{{ $v->user->name }}，開新視窗）</span></a></dd>
                         @endif
-                        <dt>送出時間</dt><dd>{{ $v->updated_at->format('Y/n/j H:i') }}</dd>
+                        <dt>送出時間</dt><dd>{{ $v->updated_at->shown()->format('Y/n/j H:i') }}</dd>
                     </dl>
                     @php($bag = $errors->getBag('v' . $v->id))
                     <form method="POST" action="{{ route('admin.verifications.decide', $v) }}" class="form" novalidate>
