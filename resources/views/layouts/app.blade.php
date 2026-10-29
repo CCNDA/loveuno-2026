@@ -56,7 +56,7 @@
         {{-- 手機底部選單（照 loveuno-web 切版：日記牆／寫日記／認識朋友／傳紙條／我的檔案） --}}
         <nav class="bottom-nav" aria-label="手機快速選單">
             <ul>
-                <li><a href="{{ route('diaries.index') }}" @if(request()->routeIs('diaries.index', 'diaries.show')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">📖</span>日記牆</a></li>
+                <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">📖</span>日記牆</a></li>
                 <li><a href="{{ route('diaries.create') }}" @if(request()->routeIs('diaries.create')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">✏️</span>寫日記</a></li>
                 <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">👥</span>認識朋友</a></li>
                 <li><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif><span class="bn-icon" aria-hidden="true">💌</span>傳紙條@if($unreadNotes > 0)<span class="badge bn-badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>

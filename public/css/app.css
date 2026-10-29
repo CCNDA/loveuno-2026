@@ -249,3 +249,18 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .blocked-item { display: flex; align-items: center; gap: 12px; min-height: 44px; }
 .inline-form { display: inline; margin: 0; }
 .blocked-item .link-button { color: var(--brand); text-decoration: underline; }
+
+/* 日記牆（登入後的首頁，照 loveuno-web 版型：好友推薦一排、日記卡片） */
+.suggest-row { display: flex; gap: 12px; list-style: none; padding: 4px 0 12px; margin: 0; overflow-x: auto; }
+.suggest-item { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 72px; text-decoration: none; color: var(--text); }
+.suggest-name { font-size: .85rem; text-align: center; overflow-wrap: anywhere; }
+.wall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.wall-head h2 { margin: 0; }
+.wall-list { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 16px; }
+.wall-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: 0 1px 3px rgba(61, 42, 34, .08); }
+.wall-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.wall-author { margin: 0; font-weight: 700; font-size: 1.05rem; }
+.wall-author a { text-decoration: none; color: var(--text); }
+.wall-title { margin: 4px 0; font-size: 1.15rem; }
+.wall-title a { text-decoration: none; }
+.wall-title a:hover { text-decoration: underline; }

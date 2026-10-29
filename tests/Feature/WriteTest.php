@@ -142,6 +142,9 @@ class WriteTest extends TestCase
         // 底部選單裡「寫日記」標成目前頁，「認識朋友」沒有
         $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">✏️</span>寫日記#u', $html);
         $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">👥</span>認識朋友#u', $html);
+        // 日記牆＝首頁
+        $home = $this->actingAs($u)->get('/')->getContent();
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="bn-icon" aria-hidden="true">📖</span>日記牆#u', $home);
     }
 
     public function test_guest_cannot_write(): void

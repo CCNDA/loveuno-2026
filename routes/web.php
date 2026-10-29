@@ -8,13 +8,15 @@ use App\Http\Controllers\BlockController;
 use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DiaryController;
 use App\Http\Controllers\DiaryWriteController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'home')->name('home');
+// 沒登入：介紹頁；登入後：日記牆（好友推薦＋日記卡片）
+Route::get('/', HomeController::class)->name('home');
 Route::view('/rules', 'rules')->name('rules');
 
 Route::middleware('guest')->group(function () {
