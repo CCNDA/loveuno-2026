@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
     'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place'])]
+// 生日月日只拿來算「生日快到了」，轉成陣列／JSON 時不輸出（熊叔叔 10/29「3A」：不顯示日期）
+#[Hidden(['birth_month', 'birth_day'])]
 class Profile extends Model
 {
     protected $primaryKey = 'user_id';

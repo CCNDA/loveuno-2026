@@ -57,7 +57,8 @@ class OccasionTest extends TestCase
         $start = strpos($page, 'id="occasion-title"');
         $html = substr($page, $start, strpos($page, '</section>', $start) - $start);
         $this->assertStringContainsString('今天生日的</a>
-                            今天生日！', $html);
+                            生日快到了！', $html); // 當天也不說「今天」，免得知道是哪一天
+        $this->assertStringNotContainsString('今天生日！', $html);
         $this->assertStringContainsString('快生日的</a>
                             生日快到了！', $html);
         $this->assertStringNotContainsString('還早的', $html);
@@ -78,6 +79,30 @@ class OccasionTest extends TestCase
         $list = Occasions::for($me);
         $this->assertCount(1, $list);
         $this->assertSame(['anniversary', 3, 4], [$list[0]['type'], $list[0]['years'], $list[0]['in_days']]); // 跨年：2024/1/2 → 2027/1/2 滿 3 年，還有 4 天
+    }
+
+    public function test_feb_29_birthday_in_non_leap_year(): void
+    {
+        Carbon::setTestNow('2027-02-25 10:00:00'); // 2027 不是閏年：算 2/28
+        $me = $this->member('我');
+        $f = $this->member('二月二十九', ['birth_month' => 2, 'birth_day' => 29]);
+        Friendship::raise($me, $f, 1);
+        $list = Occasions::for($me);
+        $this->assertSame(['birthday', 3], [$list[0]['type'], $list[0]['in_days']]);
+    }
+
+    public function test_birthday_never_leaks(): void
+    {
+        $u = $this->member('有生日的', ['birth_month' => 7, 'birth_day' => 19]);
+        $this->assertArrayNotHasKey('birth_month', $u->profile->toArray());
+        $this->assertArrayNotHasKey('birth_day', $u->profile->toArray());
+        $other = $this->member('別人');
+        foreach (["/members/{$u->id}", '/members', '/'] as $url) {
+            $html = $this->actingAs($other)->get($url)->getContent();
+            $this->assertStringNotContainsString('7 月', $html);
+            $this->assertStringNotContainsString('19 日', $html);
+            $this->assertStringNotContainsString('7/19', $html);
+        }
     }
 
     public function test_blocked_friend_not_listed(): void

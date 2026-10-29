@@ -9,7 +9,7 @@
                     @if ($o['type'] === 'birthday')
                         <img src="{{ asset('images/brand/cake.svg') }}" alt="" width="25" height="25">
                         <p>你的好友 <a href="{{ route('members.show', $o['friend']) }}">{{ $o['friend']->name }}</a>
-                            {{ $o['in_days'] === 0 ? '今天生日！' : '生日快到了！' }}
+                            生日快到了！
                             <a href="{{ route('gifts.create', $o['friend']) }}">送份禮物<span class="visually-hidden">給 {{ $o['friend']->name }}</span></a></p>
                     @else
                         <img src="{{ asset('images/brand/fireworks.svg') }}" alt="" width="25" height="25">

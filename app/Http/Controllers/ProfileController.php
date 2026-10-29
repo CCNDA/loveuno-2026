@@ -6,6 +6,7 @@ use App\Models\Profile;
 use App\Support\Points;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 // 編輯自己的個人檔案（年底開放要用；11/8 示範帳號也要自己填自介，熊叔叔 10/29「直接建檔註冊」）
@@ -43,7 +44,7 @@ class ProfileController extends Controller
         ]);
         // 2/30、4/31 這種日子不存在（用閏年 2000 檢查，2/29 可以）
         if (! empty($data['birth_month']) && ! checkdate((int) $data['birth_month'], (int) $data['birth_day'], 2000)) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['birth_day' => sprintf('%d 月沒有 %d 日。', $data['birth_month'], $data['birth_day'])]);
+            throw ValidationException::withMessages(['birth_day' => sprintf('%d 月沒有 %d 日。', $data['birth_month'], $data['birth_day'])]);
         }
 
         $user = $request->user();

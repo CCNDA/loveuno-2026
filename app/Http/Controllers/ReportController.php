@@ -28,8 +28,9 @@ class ReportController extends Controller
     {
         $this->authorizeTarget($request, $user);
         $data = $request->validate([
-            'reason' => ['required', 'in:' . implode(',', array_keys(Report::REASONS))],
+            // 順序跟畫面上的欄位一樣，錯誤摘要才會照順序（小布 0.15.0 複測建議）
             'description' => ['required', 'string', 'max:500'],
+            'reason' => ['required', 'in:' . implode(',', array_keys(Report::REASONS))],
             'screenshot' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
         ], [
             'reason.required' => '請選擇檢舉原因。',

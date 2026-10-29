@@ -12,7 +12,7 @@ class Occasions
 {
     public const DAYS_AHEAD = 7;
 
-    // 回傳 [['type' => 'birthday'|'anniversary', 'friend' => User, 'years' => int, 'in_days' => int], ...]，近的在前
+    // 回傳 [['type' => 'birthday'|'anniversary', 'friend' => User, 'in_days' => int, 'years' => int（只有週年）], ...]，近的在前
     public static function for(User $me): array
     {
         $rows = Friendship::where(fn ($q) => $q->where('user_id', $me->id)->orWhere('friend_id', $me->id))->get();
@@ -33,16 +33,17 @@ class Occasions
             if ($p && $p->birth_month && $p->birth_day) {
                 $days = self::daysUntil($today, (int) $p->birth_month, (int) $p->birth_day);
                 if ($days !== null && $days <= self::DAYS_AHEAD) {
-                    $out[] = ['type' => 'birthday', 'friend' => $friend, 'years' => 0, 'in_days' => $days];
+                    $out[] = ['type' => 'birthday', 'friend' => $friend, 'in_days' => $days];
                 }
             }
             if ($f->created_at) {
                 $since = $f->created_at->copy()->startOfDay();
                 $days = self::daysUntil($today, (int) $since->month, (int) $since->day);
-                $next = $today->copy()->addDays((int) $days);
-                $years = $next->year - $since->year;
-                if ($days !== null && $days <= self::DAYS_AHEAD && $years >= 1) {
-                    $out[] = ['type' => 'anniversary', 'friend' => $friend, 'years' => $years, 'in_days' => $days];
+                if ($days !== null && $days <= self::DAYS_AHEAD) {
+                    $years = $today->copy()->addDays($days)->year - $since->year;
+                    if ($years >= 1) {
+                        $out[] = ['type' => 'anniversary', 'friend' => $friend, 'years' => $years, 'in_days' => $days];
+                    }
                 }
             }
         }

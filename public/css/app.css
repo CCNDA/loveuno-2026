@@ -369,5 +369,6 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .occasion-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); }
 .occasion-item p { margin: 0; }
 .occasion-item a { display: inline-flex; align-items: center; min-height: 44px; }
-.occasion-birthday { background: #fdf3ec; }
-.occasion-anniversary { background: #f1eee8; }
+.occasion-birthday { background: #6fdaed; color: #1f1a17; } /* 設計稿 BLUE；白字只有 1.6:1，改深色字 */
+.occasion-anniversary { background: #ff8964; color: #1f1a17; } /* 設計稿 BRIGHT_ORANGE；白字只有 2.3:1，改深色字 */
+.occasion-item a { color: #1f1a17; text-decoration: underline; font-weight: 700; }
