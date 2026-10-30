@@ -18,6 +18,8 @@ use Throwable;
 // - 密碼在匯出時就已經雜湊，這裡直接存雜湊
 // - 照片照上傳的規矩重做成 600×600 JPEG（拿掉 EXIF）；狀態是 pending，要管理員審核才給其他會員看
 // - 不是示範資料（is_demo=false），重種示範資料不會刪到；email 已驗證（舊站會員）
+// - 舊站狀態（熊叔叔 10/30「3都搬」）：2 交友會員、4 社群會員、6 特約作者 → 一般會員；1／3／5 還沒啟用 → 要重新驗證 email；
+//   其他（負數停權、0、9）→ 停權（suspended_at、is_active = false，不能登入）。export.json 沒有 status（舊版匯出）就當 2。
 // - 手機（熊叔叔 10/29「2d手機號碼一起搬」）：舊站認證過的號碼和認證日一起搬，超過 12 個月的登入時要重新認證；
 //   舊站沒有認證過的要在新版認證。同一支手機已經在別的帳號就不搬（一支手機一個帳號，「2c」），印編號。
 //   export.json 沒有 phone 欄位（舊版匯出、或唯讀帳號沒有 certification 權限）就照以前：先當作已認證。
@@ -76,7 +78,17 @@ class ImportLegacyExport extends Command
                 }
                 $user->save();
                 // 直接寫雜湊（不經過 hashed cast，避免被再雜湊一次）
-                DB::table('users')->where('id', $user->id)->update(['password' => $hash, 'email_verified_at' => $user->email_verified_at ?? now()]);
+                $status = (int) ($m['status'] ?? 2);
+                $kind = self::statusKind($status);
+                DB::table('users')->where('id', $user->id)->update([
+                    'password' => $hash,
+                    'legacy_status' => $status,
+                    // 未啟用的不幫他驗證（舊站本來就還沒啟用）；新版已經驗證過的不改回去
+                    'email_verified_at' => $kind === 'unverified' ? $user->email_verified_at : ($user->email_verified_at ?? now()),
+                ]);
+                if ($kind === 'suspended') {
+                    DB::table('users')->where('id', $user->id)->whereNull('suspended_at')->update(['suspended_at' => now(), 'is_active' => false]);
+                }
                 if (! array_key_exists('phone', $m)) {
                     DB::table('users')->where('id', $user->id)->whereNull('phone_verified_at')->update(['phone_verified_at' => now()]);
                 } elseif ($user->phone === null) { // 新版已經認證過號碼的不蓋掉
@@ -144,5 +156,15 @@ class ImportLegacyExport extends Command
         } catch (Throwable) {
             return [null, null];
         }
+    }
+
+    // 舊站 basic.status → active（一般會員）／unverified（還沒啟用）／suspended（停權，或不明的值）
+    public static function statusKind(int $status): string
+    {
+        return match (true) {
+            in_array($status, [2, 4, 6], true) => 'active',
+            in_array($status, [1, 3, 5], true) => 'unverified',
+            default => 'suspended',
+        };
     }
 }
