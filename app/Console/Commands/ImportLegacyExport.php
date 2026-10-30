@@ -47,6 +47,7 @@ class ImportLegacyExport extends Command
         $skipped = [];
         $phoneSkipped = [];
         $existing = 0;
+        $placeholder = \Illuminate\Support\Facades\Hash::make(Str::random(40));
         foreach ($data['members'] as $m) {
             $id = (int) ($m['legacy_id'] ?? 0);
             $hash = (string) ($m['password_hash'] ?? '');
@@ -73,7 +74,7 @@ class ImportLegacyExport extends Command
                 continue;
             }
 
-            DB::transaction(function () use ($m, $id, $email, $hash, $dir, &$phoneSkipped) {
+            DB::transaction(function () use ($m, $id, $email, $hash, $dir, $placeholder, &$phoneSkipped) {
                 $user = User::firstOrNew(['legacy_id' => $id]);
                 if ($user->deleted_at !== null) {
                     return; // 會員自己註銷了：不要再匯回來
@@ -83,7 +84,9 @@ class ImportLegacyExport extends Command
                 $user->email = $email;
                 $user->is_demo = false;
                 if (! $user->exists) {
-                    $user->password = Str::random(64); // 欄位不能空，先放亂數，下一行換成匯出的雜湊
+                    // 欄位不能空，先放一個佔位的雜湊，下一行換成匯出的雜湊。佔位雜湊整批只算一次：
+                    // 原本每位都 Hash::make(亂數)，bcrypt 一位 0.2 秒，演練 1,203 位要 242 秒、2 萬位要一個多小時（10/31 演練發現）
+                    $user->password = $placeholder;
                 }
                 $user->save();
                 // 直接寫雜湊（不經過 hashed cast，避免被再雜湊一次）
