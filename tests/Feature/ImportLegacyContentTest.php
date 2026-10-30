@@ -97,4 +97,70 @@ class ImportLegacyContentTest extends TestCase
         $this->artisan('legacy:import-content', ['dir' => $this->dir, '--dry-run' => true])->expectsOutputToContain('可以匯入 1')->assertSuccessful();
         $this->assertSame(0, Diary::count());
     }
+
+    public function test_imports_friends_guestbook_album_dates_testimonies(): void
+    {
+        $a = User::factory()->create(['legacy_id' => 1000001]);
+        $b = User::factory()->create(['legacy_id' => 1000002]);
+        foreach ([[$a, '男'], [$b, '女']] as [$u, $g]) {
+            \App\Models\Profile::create(['user_id' => $u->id, 'gender' => $g, 'birth_year' => 1990]);
+        }
+        $jpg = function (string $name) {
+            $img = imagecreatetruecolor(800, 600);
+            ob_start();
+            imagejpeg($img);
+            file_put_contents("{$this->dir}/images/{$name}.img", ob_get_clean());
+        };
+        foreach (range(1, 10) as $n) {
+            $jpg("album_{$n}");
+        }
+        $jpg('testi_1');
+
+        $this->jsonl('friend', [['legacy_id' => 1, 'a' => 1000002, 'b' => 1000001, 'level' => 2], ['legacy_id' => 2, 'a' => 1000001, 'b' => 1999999, 'level' => 1]]);
+        $this->jsonl('guestbook', [
+            ['legacy_id' => 1, 'from' => 1000001, 'to' => 1000002, 'body' => '你好', 'at' => '2018-01-01 10:00:00', 'private' => false, 'reply' => '你好呀', 'reply_at' => '2018-01-02 10:00:00'],
+            ['legacy_id' => 2, 'from' => 1000002, 'to' => 1000001, 'body' => '私密', 'at' => '2018-01-03 10:00:00', 'private' => true, 'reply' => '', 'reply_at' => null],
+        ]);
+        $this->jsonl('album', array_map(fn ($n) => ['legacy_id' => $n, 'owner' => 1000001, 'image' => "images/album_{$n}.img"], range(1, 10)));
+        $this->jsonl('date', [
+            ['legacy_id' => 1, 'from' => 1000001, 'to' => 1000002, 'date' => '2019-03-03', 'time' => '9:30 AM', 'place' => '台北靈糧堂 台北市大安區', 'activity' => '主日聚會', 'single' => '希望你單獨參加', 'message' => '一起去', 'at' => '2019-03-01 10:00:00', 'result' => 3, 'result_at' => '2019-03-04 10:00:00', 'result_msg' => '很開心'],
+            ['legacy_id' => 2, 'from' => 1000002, 'to' => 1000001, 'date' => '2019-04-04', 'time' => '2:00 PM', 'place' => '', 'activity' => '奇怪的', 'single' => '歡迎邀請家人朋友一起', 'message' => '', 'at' => '2019-04-01 10:00:00', 'result' => -1, 'result_at' => '2019-04-02 10:00:00', 'result_msg' => '那天有事'],
+        ]);
+        $this->jsonl('testi', [['legacy_id' => 1, 'owner' => 1000001, 'male' => 1000001, 'female' => 1000002, 'status' => 1, 'title' => '我們結婚了', 'body' => '感謝主', 'at' => '2020-06-01 10:00:00', 'image' => 'images/testi_1.img']]);
+
+        $this->artisan('legacy:import-content', ['dir' => $this->dir])->expectsOutputToContain('相簿滿了（9 張） 1')->assertSuccessful();
+
+        $this->assertSame(2, \App\Models\Friendship::between($a, $b)->level);
+        $this->assertSame(1, DB::table('friendships')->count());
+        $notes = DB::table('notes')->orderBy('created_at')->get();
+        $this->assertSame([[$a->id, $b->id, '你好'], [$b->id, $a->id, '你好呀'], [$b->id, $a->id, '私密']], $notes->map(fn ($n) => [$n->sender_id, $n->recipient_id, $n->body])->all());
+        $this->assertNotNull($notes[0]->read_at);
+        $this->assertSame(9, DB::table('album_photos')->where('user_id', $a->id)->where('status', 'approved')->count());
+
+        $m1 = \App\Models\Meetup::where('legacy_id', 1)->sole();
+        $this->assertSame(['attended', '09:30', 'sunday', 'alone', '很開心'], [$m1->status, $m1->meet_time, $m1->activity, $m1->company, $m1->closing_note]);
+        $m2 = \App\Models\Meetup::where('legacy_id', 2)->sole();
+        $this->assertSame(['declined', '14:00', 'special', 'friends', '那天有事', '（舊站沒有填）'], [$m2->status, $m2->meet_time, $m2->activity, $m2->company, $m2->reply, $m2->place]);
+
+        $story = \App\Models\LoveStory::sole();
+        $this->assertSame(['approved', $a->id, $b->id], [$story->status, $story->male_id, $story->female_id]);
+        $this->assertNotNull($story->photo_path);
+
+        // 重跑不重複
+        $before = [DB::table('notes')->count(), DB::table('album_photos')->count(), DB::table('meetups')->count(), DB::table('love_stories')->count(), DB::table('friendships')->count()];
+        $this->artisan('legacy:import-content', ['dir' => $this->dir])->assertSuccessful();
+        $this->assertSame($before, [DB::table('notes')->count(), DB::table('album_photos')->count(), DB::table('meetups')->count(), DB::table('love_stories')->count(), DB::table('friendships')->count()]);
+
+        // 新版畫面看得到
+        $this->actingAs($b)->get('/notes/' . $a->id)->assertOk()->assertSee('你好呀');
+        $this->get('/love-stories/' . $story->id)->assertOk()->assertSee('感謝主');
+    }
+
+    public function test_time_and_activity_conversion(): void
+    {
+        $t = fn ($s) => \App\Console\Commands\ImportLegacyContent::time24($s);
+        $this->assertSame(['00:00', '12:00', '12:30', '23:30', '09:30', '10:00'], [$t('12:00 AM'), $t('12:00 PM'), $t('12:45 PM'), $t('11:30 PM'), $t('9:30 am'), $t('亂寫')]);
+        $k = fn ($s) => \App\Console\Commands\ImportLegacyContent::activityKey($s);
+        $this->assertSame(['group', 'evangelism', 'agape', 'special'], [$k('小組聚會'), $k('佈道會'), $k('愛宴'), $k('')]);
+    }
 }

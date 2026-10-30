@@ -3,9 +3,9 @@
 // 熊叔叔 2026-10-30 TG「3都搬」。對照表在 docs/legacy-migration.md。Asana 1215470856990770。
 //
 // 用法（ubuntu 身分）：
-//   php legacy_export_content.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_content --kind=diary,pray [--images]
+//   php legacy_export_content.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_content --kind=diary,pray,friend,guestbook,album,date,testi [--images]
 //
-// 每一種寫一個 JSONL（一行一筆）：diary.jsonl、diary_reply.jsonl、pray.jsonl、pray_reply.jsonl
+// 每一種寫一個 JSONL（一行一筆）：diary／diary_reply／pray／pray_reply／friend／guestbook／album／date／testi.jsonl
 // - 文字照舊站存法還原：emoji_decode（用舊站自己的 h2019/emoji_lib.php）、<br> → 換行、&lt; &gt; 等還原、‵ → '
 //   新版畫面一律 escape，所以還原成純文字是安全的
 // - status -1（後台隱藏）的也匯出，帶 status，匯入端決定怎麼處理
@@ -16,9 +16,9 @@ declare(strict_types=1);
 
 $opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'web::', 'r2::', 'db::']);
 $kinds = array_filter(explode(',', (string) ($opts['kind'] ?? '')));
-$known = ['diary', 'pray'];
+$known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi'];
 if (empty($opts['cnf']) || empty($opts['out']) || ! $kinds || array_diff($kinds, $known)) {
-    fwrite(STDERR, "用法：php legacy_export_content.php --cnf=<唯讀設定檔> --out=<輸出目錄> --kind=diary,pray [--images]\n");
+    fwrite(STDERR, "用法：php legacy_export_content.php --cnf=<唯讀設定檔> --out=<輸出目錄> --kind=" . implode(',', $known) . " [--images]\n");
     exit(2);
 }
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
@@ -65,6 +65,27 @@ function legacy_text(?string $s): string
     $s = str_replace("\r", '', $s);
 
     return trim($s);
+}
+
+// 從本機或 R2 讀一個舊站檔案，是圖片才存進 images/<name>.img；回傳相對路徑或 null
+function legacy_image(string $sub, string $file, bool $isR2, string $name): ?string
+{
+    global $withImages, $web, $r2, $out;
+    $file = ltrim($file, '/');
+    if (! $withImages || $file === '' || str_contains($file, '..')) {
+        return null;
+    }
+    $bytes = ($isR2 && $r2 !== '')
+        ? @file_get_contents("{$r2}/{$sub}/" . str_replace('%2F', '/', rawurlencode($file)))
+        : @file_get_contents("{$web}/{$sub}/{$file}");
+    if ($bytes === false || ! @getimagesizefromstring($bytes)) {
+        return null;
+    }
+    $rel = "images/{$name}.img";
+    file_put_contents("{$out}/{$rel}", $bytes);
+    chmod("{$out}/{$rel}", 0600);
+
+    return $rel;
 }
 
 function legacy_time(?string $t): ?string
@@ -126,6 +147,46 @@ if (in_array('pray', $kinds, true)) {
     $write('pray_reply', $pdo->query('SELECT id, ownerid, prayid, status, msg, timestamp FROM pray_reply ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'parent' => (int) $r['prayid'], 'owner' => (int) $r['ownerid'],
             'status' => (int) $r['status'], 'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp'])]);
+}
+
+if (in_array('friend', $kinds, true)) {
+    // 舊站 relationship 一對一列（data/relationship.php）；0＝陌生人不搬
+    $write('friend', $pdo->query('SELECT id, sender, sendee, relationship FROM relationship WHERE relationship > 0 ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'a' => (int) $r['sender'], 'b' => (int) $r['sendee'], 'level' => (int) $r['relationship']]);
+}
+
+if (in_array('guestbook', $kinds, true)) {
+    // 個人頁留言板：sender 留言給 sendee（頁主），reply_msg 是頁主的回覆（10/29「留言板＝傳紙條」）
+    $write('guestbook', $pdo->query('SELECT id, sender, sendee, msg, timestamp, privatemsg, reply_msg, reply_timestamp FROM guestbook ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'from' => (int) $r['sender'], 'to' => (int) $r['sendee'],
+            'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp']), 'private' => (int) $r['privatemsg'] === 1,
+            'reply' => legacy_text($r['reply_msg']), 'reply_at' => legacy_time($r['reply_timestamp'])]);
+}
+
+if (in_array('album', $kinds, true)) {
+    // 大頭照（mainshow 1／2）以外的就是相簿（舊站一人最多 10 張，含大頭照）；-1 是大頭照審核失敗，也當相簿
+    $write('album', $pdo->query('SELECT id, ownerid, filename, is_r2 FROM photo WHERE mainshow NOT IN (1, 2) ORDER BY ownerid, id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'],
+            'image' => legacy_image('member_photo/image', (string) $r['filename'], (int) $r['is_r2'] === 1, "album_{$r['id']}")]);
+}
+
+if (in_array('date', $kinds, true)) {
+    // 舊站 private_date.result：0 等回覆、1 準備參加、-1 婉拒、-2 取消／沒參加、2 過期、3 已參加
+    $write('date', $pdo->query('SELECT id, sender, sendee, date, time, place, church_address, activity, single, msg, timestamp, result, result_timestamp, result_msg FROM private_date ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'from' => (int) $r['sender'], 'to' => (int) $r['sendee'],
+            'date' => legacy_time($r['date']), 'time' => (string) $r['time'],
+            'place' => trim(legacy_text($r['place']) . ' ' . legacy_text($r['church_address'])),
+            'activity' => legacy_text($r['activity']), 'single' => legacy_text($r['single']), 'message' => legacy_text($r['msg']),
+            'at' => legacy_time($r['timestamp']), 'result' => (int) $r['result'], 'result_at' => legacy_time($r['result_timestamp']),
+            'result_msg' => legacy_text($r['result_msg'])]);
+}
+
+if (in_array('testi', $kinds, true)) {
+    // 愛的見證：status 0 待審核、1 顯示、-1 隱藏；pic 在 member_photo/testi_pic/
+    $write('testi', $pdo->query('SELECT id, ownerid, boyid, girlid, status, subject, content, pic, timestamp, is_r2 FROM testi ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'], 'male' => (int) $r['boyid'], 'female' => (int) $r['girlid'],
+            'status' => (int) $r['status'], 'title' => legacy_text($r['subject']), 'body' => legacy_text($r['content']), 'at' => legacy_time($r['timestamp']),
+            'image' => legacy_image('member_photo/testi_pic', (string) $r['pic'], (int) $r['is_r2'] === 1, "testi_{$r['id']}")]);
 }
 
 file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
