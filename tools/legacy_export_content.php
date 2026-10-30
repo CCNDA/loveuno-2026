@@ -28,6 +28,8 @@ $withImages = isset($opts['images']);
 
 if (is_file("{$web}/h2019/emoji_lib.php")) {
     require_once "{$web}/h2019/emoji_lib.php"; // 舊站自己的 emoji_decode，照它存的方式解回來
+} else {
+    fwrite(STDERR, "⚠️ 找不到 {$web}/h2019/emoji_lib.php：emoji 會留著 \\uXXXX 沒有還原（--web 指到舊站根目錄）\n");
 }
 
 $cnf = parse_ini_file($opts['cnf'], true, INI_SCANNER_RAW);
@@ -47,9 +49,12 @@ if (! is_dir($out) && ! mkdir($out, 0700, true)) {
     exit(1);
 }
 chmod($out, 0700);
-if ($withImages && ! is_dir("{$out}/images") && ! mkdir("{$out}/images", 0700)) {
-    fwrite(STDERR, "建不了 images 目錄\n");
-    exit(1);
+if ($withImages) {
+    if (! is_dir("{$out}/images") && ! mkdir("{$out}/images", 0700)) {
+        fwrite(STDERR, "建不了 images 目錄\n");
+        exit(1);
+    }
+    chmod("{$out}/images", 0700);
 }
 
 // 舊站存法 → 純文字
@@ -112,20 +117,10 @@ $write = function (string $name, iterable $rows, callable $map) use ($out, &$cou
 if (in_array('diary', $kinds, true)) {
     $imgCount = 0;
     $write('diary', $pdo->query('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary ORDER BY id'),
-        function (array $r) use ($withImages, $web, $r2, $out, &$imgCount): array {
-            $image = null;
+        function (array $r) use (&$imgCount): array {
             $pic = ltrim((string) $r['pic'], '/');
-            if ($withImages && $pic !== '' && ! str_contains($pic, '..')) {
-                $bytes = ((int) $r['is_r2'] === 1 && $r2 !== '')
-                    ? @file_get_contents($r2 . '/diary_pic/' . str_replace('%2F', '/', rawurlencode($pic)))
-                    : @file_get_contents("{$web}/diary_pic/{$pic}");
-                if ($bytes !== false && @getimagesizefromstring($bytes)) {
-                    $image = "images/diary_{$r['id']}.img";
-                    file_put_contents("{$out}/{$image}", $bytes);
-                    chmod("{$out}/{$image}", 0600);
-                    $imgCount++;
-                }
-            }
+            $image = legacy_image('diary_pic', $pic, (int) $r['is_r2'] === 1, "diary_{$r['id']}");
+            $imgCount += $image ? 1 : 0;
 
             return [
                 'legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'],
@@ -164,8 +159,8 @@ if (in_array('guestbook', $kinds, true)) {
 }
 
 if (in_array('album', $kinds, true)) {
-    // 大頭照（mainshow 1／2）以外的就是相簿（舊站一人最多 10 張，含大頭照）；-1 是大頭照審核失敗，也當相簿
-    $write('album', $pdo->query('SELECT id, ownerid, filename, is_r2 FROM photo WHERE mainshow NOT IN (1, 2) ORDER BY ownerid, id'),
+    // mainshow 0（一般照片）就是相簿（舊站一人最多 10 張，含大頭照）；1／2 是大頭照（帳號那邊匯）；-1 是管理員退件的大頭照，不搬
+    $write('album', $pdo->query('SELECT id, ownerid, filename, is_r2 FROM photo WHERE mainshow = 0 ORDER BY ownerid, id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'],
             'image' => legacy_image('member_photo/image', (string) $r['filename'], (int) $r['is_r2'] === 1, "album_{$r['id']}")]);
 }

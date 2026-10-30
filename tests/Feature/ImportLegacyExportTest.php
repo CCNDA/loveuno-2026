@@ -67,10 +67,13 @@ class ImportLegacyExportTest extends TestCase
         Storage::disk('avatars')->assertExists($u->profile->photo_path);
         $this->assertSame(600, getimagesizefromstring(Storage::disk('avatars')->get($u->profile->photo_path))[0]);
 
-        // 重跑不會多一筆，舊照片換掉
+        // 重跑不會多一筆；已經搬過的不動（照片也不換）
         $old = $u->profile->photo_path;
         $this->artisan('legacy:import-export', ['dir' => $this->dir])->assertSuccessful();
         $this->assertSame(1, User::where('legacy_id', 1000014)->count());
+        Storage::disk('avatars')->assertExists($old);
+        // --refresh（切換前演練）才照匯出檔重寫，舊照片換掉
+        $this->artisan('legacy:import-export', ['dir' => $this->dir, '--refresh' => true])->assertSuccessful();
         Storage::disk('avatars')->assertMissing($old);
 
         // 可以用舊密碼登入
@@ -147,10 +150,14 @@ class ImportLegacyExportTest extends TestCase
         $this->assertNotNull($u(1000102)->email_verified_at); // 社群會員也是一般會員
         $this->assertNull($u(1000103)->email_verified_at);    // 未啟用：要重新驗證
         $this->assertNull($u(1000103)->suspended_at);
-        foreach ([1000104, 1000105] as $id) {                  // 停權、不明的值
-            $this->assertNotNull($u($id)->suspended_at);
-            $this->assertFalse((bool) $u($id)->is_active);
-        }
+        $this->assertNotNull($u(1000104)->suspended_at);       // 負數：停權
+        $this->assertFalse((bool) $u(1000104)->is_active);
+        $this->assertNull($u(1000105)->suspended_at);          // 9：舊站 member/login.php 可以登入 → 一般會員
+
+        // 重跑：會員在新版改過的不被蓋回去
+        $u(1000101)->forceFill(['name' => '新版改的名字'])->save();
+        $this->artisan('legacy:import-export', ['dir' => $this->dir])->expectsOutputToContain('已經搬過、沒動 6 位')->assertSuccessful();
+        $this->assertSame('新版改的名字', $u(1000101)->name);
         $this->assertSame(2, $u(1000106)->legacy_status); // 舊版匯出沒有 status：當 2
         $this->assertNull($u(1000106)->suspended_at);
 

@@ -12,7 +12,7 @@
 //   手機（熊叔叔 10/29「2d手機號碼一起搬」）要讀 certification；讀不到就不匯手機、印一行提醒，其他照常
 // - 舊站密碼是明文：在這台就先 password_hash，明文不寫進任何檔案、不離開這台
 // - 只匯命令列給的編號（或 --all）；不是數字的參數直接拒絕
-// - 照片只取主照（mainshow=1，沒有就取第一張），檔案從本機 member_photo/image 或 R2 公開網址讀
+// - 大頭照只取 mainshow 2（通過）或 1（審核中）；沒有就不匯大頭照（一般照片是相簿，由 legacy_export_content.php --kind=album 匯）
 // - 輸出目錄權限 700，用完請刪掉
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
     $st->execute($batch);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
-    $ph = $pdo->prepare("SELECT ownerid, filename, is_r2 FROM photo WHERE ownerid IN ({$in}) ORDER BY ownerid, mainshow DESC, id");
+    $ph = $pdo->prepare("SELECT ownerid, filename, is_r2 FROM photo WHERE ownerid IN ({$in}) AND mainshow IN (1, 2) ORDER BY ownerid, mainshow DESC, id");
     $ph->execute($batch);
     $main = [];
     foreach ($ph->fetchAll(PDO::FETCH_ASSOC) as $p) {

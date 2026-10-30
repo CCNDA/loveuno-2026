@@ -19,14 +19,16 @@ use Throwable;
 // - 照片照上傳的規矩重做成 600×600 JPEG（拿掉 EXIF）；狀態是 pending，要管理員審核才給其他會員看
 // - 不是示範資料（is_demo=false），重種示範資料不會刪到；email 已驗證（舊站會員）
 // - 舊站狀態（熊叔叔 10/30「3都搬」）：2 交友會員、4 社群會員、6 特約作者 → 一般會員；1／3／5 還沒啟用 → 要重新驗證 email；
-//   其他（負數停權、0、9）→ 停權（suspended_at、is_active = false，不能登入）。export.json 沒有 status（舊版匯出）就當 2。
+//   負數 → 停權（suspended_at、is_active = false，不能登入）；0、9 等其他值照舊站 member/login.php 可以登入 → 一般會員。
+//   export.json 沒有 status（舊版匯出）就當 2。
+// - 已經搬過的會員（同一個 legacy_id）不再改：會員在新版改過的名字、email、密碼、檔案都不會被蓋回去（要重搬用 --refresh）
 // - 手機（熊叔叔 10/29「2d手機號碼一起搬」）：舊站認證過的號碼和認證日一起搬，超過 12 個月的登入時要重新認證；
 //   舊站沒有認證過的要在新版認證。同一支手機已經在別的帳號就不搬（一支手機一個帳號，「2c」），印編號。
 //   export.json 沒有 phone 欄位（舊版匯出、或唯讀帳號沒有 certification 權限）就照以前：先當作已認證。
 // 不印 email、密碼，只印編號與筆數。
 class ImportLegacyExport extends Command
 {
-    protected $signature = 'legacy:import-export {dir : legacy_export.php 的輸出目錄} {--dry-run : 只檢查，不寫入}';
+    protected $signature = 'legacy:import-export {dir : legacy_export.php 的輸出目錄} {--dry-run : 只檢查，不寫入} {--refresh : 已經搬過的也照匯出檔重寫（只在正式切換前演練用）}';
 
     protected $description = '匯入在舊站匯出的指定會員（帳號、個人檔案、主照）';
 
@@ -44,6 +46,7 @@ class ImportLegacyExport extends Command
         $done = [];
         $skipped = [];
         $phoneSkipped = [];
+        $existing = 0;
         foreach ($data['members'] as $m) {
             $id = (int) ($m['legacy_id'] ?? 0);
             $hash = (string) ($m['password_hash'] ?? '');
@@ -55,6 +58,12 @@ class ImportLegacyExport extends Command
             }
             if (User::where('email', $email)->where(fn ($w) => $w->whereNull('legacy_id')->orWhere('legacy_id', '<>', $id))->exists()) {
                 $skipped[] = "{$id}（email 已被別的帳號用了）";
+
+                continue;
+            }
+            // 已經搬過的：會員可能在新版改過名字、email、密碼，不要蓋回舊站的（審查 10/30）
+            if (! $this->option('refresh') && User::withoutGlobalScopes()->where('legacy_id', $id)->exists()) {
+                $existing++;
 
                 continue;
             }
@@ -129,7 +138,8 @@ class ImportLegacyExport extends Command
             $done[] = $id;
         }
 
-        $this->info(sprintf('%s %d 位：%s', $this->option('dry-run') ? '可以匯入' : '已匯入', count($done), implode(', ', $done)));
+        $this->info(sprintf('%s %d 位%s；已經搬過、沒動 %d 位', $this->option('dry-run') ? '可以匯入' : '已匯入', count($done),
+            count($done) <= 50 ? '：' . implode(', ', $done) : '', $existing));
         if ($skipped) {
             $this->warn(sprintf('略過 %d 位：%s', count($skipped), implode('；', $skipped)));
         }
@@ -162,9 +172,9 @@ class ImportLegacyExport extends Command
     public static function statusKind(int $status): string
     {
         return match (true) {
-            in_array($status, [2, 4, 6], true) => 'active',
             in_array($status, [1, 3, 5], true) => 'unverified',
-            default => 'suspended',
+            $status < 0 => 'suspended',
+            default => 'active', // 2、4、6，還有 0、9 這類舊站也能登入的
         };
     }
 }

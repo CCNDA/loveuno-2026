@@ -14,20 +14,21 @@ use Throwable;
 // 匯入 tools/legacy_export_content.php 的輸出（第二階段：日記、日記回覆、代禱、代禱回覆、好友、留言板、相簿、約會、愛的見證）。
 // 對照表在 docs/legacy-migration.md；熊叔叔 10/30「3都搬」。Asana 1215470856990770。
 // - 會員要先用 legacy:import-export 搬進來（用 users.legacy_id 對）；作者沒搬進來的那筆略過、印筆數
-// - 舊站 status -1（後台隱藏）→ 只有作者自己看得到（private）；回覆的 -1 不搬
+// - 舊站 status -1（後台隱藏）→ 只有作者自己看得到（private，🟠 暫定，等熊叔叔確認）；回覆的 -1 不搬；回覆不截斷（欄位是 text）
 // - 舊站「彼此代禱」→ 標成代禱的日記（新版代禱是日記的一種）
 // - 用 legacy_source＋legacy_id 對，重跑不會重複、也不會蓋掉會員在新版改過的內容
 // - 日記照片重新轉成 JPEG（最長邊 1200，拿掉 EXIF），不用審核（跟新版一樣）
-// - 好友：等級一樣（1 普通、2 聊天、3 真實），一對一列；已經有的取比較高的等級
+// - 好友：等級一樣（1 普通、2 聊天、3 真實），一對一列；新版已經有這一對就不動（會員在新版解除或升降過，以新版為準）
 // - 留言板 → 紙條（10/29「留言板＝傳紙條」）：留言一張（留言者 → 頁主），有回覆再一張（頁主 → 留言者）；都標已讀
 // - 相簿：舊站大頭照以外的照片，一人最多 9 張（新版上限），不用審核（10/29「1不用」）
-// - 約會：舊站 result 0 等回覆、1／2 準備參加（日期過了新版自己算成「等確認」）、-1 婉拒、-2 取消、3 已參加
+// - 約會：舊站 result 0 等回覆、1／2 準備參加（日期過了新版自己算成「等確認」）、-1 婉拒、3 已參加；
+//   -2 有兩種：「超過約會時間未收到答覆」（data/check_if_expire.php 寫的）→ 等回覆（日期過了新版自己算成「超過約會時間」），其他 → 取消
 // - 愛的見證：1 公開、0 待審核、-1 不公開
 class ImportLegacyContent extends Command
 {
     protected $signature = 'legacy:import-content {dir : legacy_export_content.php 的輸出目錄} {--dry-run : 只算筆數}';
 
-    protected $description = '匯入舊站的日記、日記回覆、代禱、代禱回覆';
+    protected $description = '匯入舊站的日記、回覆、代禱、好友、留言板（變紙條）、相簿、約會、愛的見證';
 
     private array $users = [];
 
@@ -44,20 +45,20 @@ class ImportLegacyContent extends Command
         $this->users = DB::table('users')->whereNotNull('legacy_id')->pluck('id', 'legacy_id')->all();
 
         // 先日記、代禱，再回覆（回覆要對到上面那一層）
-        $this->posts($dir, 'diary', false);
-        $this->posts($dir, 'pray', true);
-        $this->replies($dir, 'diary_reply', 'diary');
-        $this->replies($dir, 'pray_reply', 'pray');
-        $this->friends($dir);
-        $this->guestbook($dir);
-        $this->album($dir);
-        $this->dates($dir);
-        $this->testimonies($dir);
+        // 每一種包一個交易：一筆一筆 insert 快很多；中途失敗那一種整個退回，重跑會補（已經有的會跳過）
+        foreach ([
+            fn () => $this->posts($dir, 'diary', false), fn () => $this->posts($dir, 'pray', true),
+            fn () => $this->replies($dir, 'diary_reply', 'diary'), fn () => $this->replies($dir, 'pray_reply', 'pray'),
+            fn () => $this->friends($dir), fn () => $this->guestbook($dir), fn () => $this->album($dir),
+            fn () => $this->dates($dir), fn () => $this->testimonies($dir),
+        ] as $step) {
+            DB::transaction($step);
+        }
 
         foreach ($this->stats as $kind => $s) {
             $this->info(sprintf('%s：%s %d、已經有 %d、略過 %d（%s）%s', $kind, $this->option('dry-run') ? '可以匯入' : '匯入',
                 $s['new'], $s['exists'], array_sum($s['skip']), $this->skipText($s['skip']),
-                empty($s['truncated']) ? '' : sprintf('；超過 500 字截斷 %d', $s['truncated'])));
+                ''));
         }
 
         return self::SUCCESS;
@@ -65,8 +66,8 @@ class ImportLegacyContent extends Command
 
     private function posts(string $dir, string $kind, bool $prayer): void
     {
-        $this->stats[$kind] = ['new' => 0, 'exists' => 0, 'skip' => []];
-        $have = DB::table('diaries')->where('legacy_source', $kind)->pluck('legacy_id')->flip()->all();
+        $this->start($kind);
+        $have = $this->have('diaries', $kind);
         foreach ($this->rows("{$dir}/{$kind}.jsonl") as $r) {
             $id = (int) $r['legacy_id'];
             if (isset($have[$id])) {
@@ -93,8 +94,8 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
-            $image = $this->image($dir, $r['image'] ?? null);
-            DB::table('diaries')->insert([
+            $image = $this->image($dir, (string) ($r['image'] ?? ''));
+            $this->insertOrDropFile('diaries', [
                 'legacy_source' => $kind, 'legacy_id' => $id, 'user_id' => $user,
                 'title' => mb_substr($title !== '' ? $title : mb_substr($body, 0, 30), 0, 150),
                 'body' => $body !== '' ? $body : $title,
@@ -102,16 +103,16 @@ class ImportLegacyContent extends Command
                 'is_prayer' => $prayer,
                 'image_path' => $image, 'image_status' => $image ? 'approved' : '', 'image_updated_at' => $image ? now() : null,
                 'published_on' => $at->toDateString(), 'created_at' => $at, 'updated_at' => $at,
-            ]);
+            ], $image);
             $this->stats[$kind]['new']++;
         }
     }
 
     private function replies(string $dir, string $kind, string $parentKind): void
     {
-        $this->stats[$kind] = ['new' => 0, 'exists' => 0, 'skip' => []];
+        $this->start($kind);
         $parents = DB::table('diaries')->where('legacy_source', $parentKind)->pluck('id', 'legacy_id')->all();
-        $have = DB::table('diary_comments')->where('legacy_source', $kind)->pluck('legacy_id')->flip()->all();
+        $have = $this->have('diary_comments', $kind);
         foreach ($this->rows("{$dir}/{$kind}.jsonl") as $r) {
             $id = (int) $r['legacy_id'];
             if (isset($have[$id])) {
@@ -132,9 +133,6 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
-            if (mb_strlen($body) > 500) {
-                $this->stats[$kind]['truncated'] = ($this->stats[$kind]['truncated'] ?? 0) + 1; // 新版留言 500 字
-            }
             if ($this->option('dry-run')) {
                 $this->stats[$kind]['new']++;
 
@@ -143,7 +141,7 @@ class ImportLegacyContent extends Command
             $at = $this->time($r['at'] ?? null) ?? now();
             DB::table('diary_comments')->insert([
                 'legacy_source' => $kind, 'legacy_id' => $id, 'diary_id' => $diary, 'user_id' => $user,
-                'body' => mb_substr($body, 0, 500), 'created_at' => $at, 'updated_at' => $at,
+                'body' => $body, 'created_at' => $at, 'updated_at' => $at,
             ]);
             $this->stats[$kind]['new']++;
         }
@@ -172,17 +170,14 @@ class ImportLegacyContent extends Command
                 continue;
             }
             [$low, $high] = [min($a, $b), max($a, $b)];
-            $row = DB::table('friendships')->where('user_id', $low)->where('friend_id', $high)->first();
-            if ($row && $row->level >= $level) {
+            if (DB::table('friendships')->where('user_id', $low)->where('friend_id', $high)->exists()) {
                 $this->stats['friend']['exists']++;
 
                 continue;
             }
             if (! $this->option('dry-run')) {
-                $row
-                    ? DB::table('friendships')->where('id', $row->id)->update(['level' => $level, 'updated_at' => now()])
-                    // 舊站沒有成為好友的日期，用搬家這天（好友週年會從這天算）
-                    : DB::table('friendships')->insert(['user_id' => $low, 'friend_id' => $high, 'level' => $level, 'leveled_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
+                // 舊站沒有成為好友的日期，用搬家這天（好友週年會從這天算）
+                DB::table('friendships')->insert(['user_id' => $low, 'friend_id' => $high, 'level' => $level, 'leveled_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
             }
             $this->stats['friend']['new']++;
         }
@@ -204,7 +199,9 @@ class ImportLegacyContent extends Command
                 continue;
             }
             $at = $this->time($r['at'] ?? null) ?? now();
-            foreach ([['guestbook', $have, $from, $to, $r['body'] ?? '', $at], ['guestbook_reply', $haveReply, $to, $from, $r['reply'] ?? '', $this->time($r['reply_at'] ?? null) ?? $at]] as [$src, $seen, $s_, $t_, $body, $when]) {
+            // 留言：留言者 → 頁主；回覆：頁主 → 留言者
+            $parts = [['guestbook', $have, $from, $to, $r['body'] ?? '', $at], ['guestbook_reply', $haveReply, $to, $from, $r['reply'] ?? '', $this->time($r['reply_at'] ?? null) ?? $at]];
+            foreach ($parts as [$src, $seen, $sender, $recipient, $body, $when]) {
                 $body = trim((string) $body);
                 if ($body === '') {
                     continue;
@@ -214,7 +211,7 @@ class ImportLegacyContent extends Command
 
                     continue;
                 }
-                $batch[] = ['legacy_source' => $src, 'legacy_id' => $id, 'sender_id' => $s_, 'recipient_id' => $t_, 'body' => $body,
+                $batch[] = ['legacy_source' => $src, 'legacy_id' => $id, 'sender_id' => $sender, 'recipient_id' => $recipient, 'body' => $body,
                     'read_at' => $when, 'created_at' => $when, 'updated_at' => $when];
                 $this->stats['guestbook']['new']++;
             }
@@ -260,16 +257,13 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
-            try {
-                $jpeg = AvatarImage::fit("{$dir}/{$rel}", 1200);
-            } catch (RuntimeException) {
+            $path = $this->image($dir, $rel, 'album/');
+            if (! $path) {
                 $this->skip('album', '照片讀不出來');
 
                 continue;
             }
-            $path = 'album/' . Str::random(40) . '.jpg';
-            Storage::disk('avatars')->put($path, $jpeg);
-            DB::table('album_photos')->insert(['legacy_source' => 'photo', 'legacy_id' => $id, 'user_id' => $user, 'path' => $path, 'status' => 'approved', 'created_at' => now(), 'updated_at' => now()]);
+            $this->insertOrDropFile('album_photos', ['legacy_source' => 'photo', 'legacy_id' => $id, 'user_id' => $user, 'path' => $path, 'status' => 'approved', 'created_at' => now(), 'updated_at' => now()], $path);
             $count[$user] = ($count[$user] ?? 0) + 1;
             $this->stats['album']['new']++;
         }
@@ -294,7 +288,9 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
-            $status = match ((int) $r['result']) { 1, 2 => 'accepted', -1 => 'declined', -2 => 'cancelled', 3 => 'attended', default => 'pending' };
+            $msg = trim((string) ($r['result_msg'] ?? ''));
+            $expired = (int) $r['result'] === -2 && str_contains($msg, '超過約會時間未收到答覆');
+            $status = match ((int) $r['result']) { 1, 2 => 'accepted', -1 => 'declined', -2 => $expired ? 'pending' : 'cancelled', 3 => 'attended', default => 'pending' };
             if ($this->option('dry-run')) {
                 $this->stats['date']['new']++;
 
@@ -302,7 +298,6 @@ class ImportLegacyContent extends Command
             }
             $at = $this->time($r['at'] ?? null) ?? $on;
             $resultAt = $this->time($r['result_at'] ?? null);
-            $msg = trim((string) ($r['result_msg'] ?? ''));
             DB::table('meetups')->insert([
                 'legacy_source' => 'private_date', 'legacy_id' => $id, 'sender_id' => $from, 'recipient_id' => $to,
                 'meet_on' => $on->toDateString(), 'meet_time' => self::time24((string) ($r['time'] ?? '')),
@@ -345,23 +340,15 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
-            $path = null;
-            $rel = (string) ($r['image'] ?? '');
-            if ($status !== 'rejected' && preg_match('#^images/testi_\d+\.img$#', $rel) && is_file("{$dir}/{$rel}")) {
-                try {
-                    $path = 'love/' . Str::random(40) . '.jpg';
-                    Storage::disk('avatars')->put($path, AvatarImage::fit("{$dir}/{$rel}", 1200));
-                } catch (RuntimeException) {
-                    $path = null;
-                }
-            }
+            // 隱藏的（-1）照片也搬，管理員以後要重新公開時才有照片
+            $path = $this->image($dir, (string) ($r['image'] ?? ''), 'love/');
             $at = $this->time($r['at'] ?? null) ?? now();
-            DB::table('love_stories')->insert([
+            $this->insertOrDropFile('love_stories', [
                 'legacy_source' => 'testi', 'legacy_id' => $id,
                 'submitter_id' => $this->users[(int) $r['owner']] ?? null, 'male_id' => $this->users[(int) $r['male']] ?? null, 'female_id' => $this->users[(int) $r['female']] ?? null,
                 'title' => mb_substr(trim((string) ($r['title'] ?? '')) ?: '愛的見證', 0, 50), 'body' => $body, 'photo_path' => $path,
                 'status' => $status, 'approved_at' => $status === 'approved' ? $at : null, 'created_at' => $at, 'updated_at' => $at,
-            ]);
+            ], $path);
             $this->stats['testi']['new']++;
         }
     }
@@ -415,9 +402,10 @@ class ImportLegacyContent extends Command
         fclose($fh);
     }
 
-    private function image(string $dir, ?string $rel): ?string
+    // 匯出檔裡的照片 → 重新轉成 JPEG（最長邊 1200、拿掉 EXIF）放進 avatars 磁碟；不是 images/xxx_數字.img 或讀不出來就 null
+    private function image(string $dir, string $rel, string $prefix = ''): ?string
     {
-        if (! $rel || ! preg_match('#^images/diary_\d+\.img$#', $rel) || ! is_file("{$dir}/{$rel}")) {
+        if (! preg_match('#^images/[a-z]+_\d+\.img$#', $rel) || ! is_file("{$dir}/{$rel}")) {
             return null;
         }
         try {
@@ -425,10 +413,23 @@ class ImportLegacyContent extends Command
         } catch (RuntimeException) {
             return null;
         }
-        $path = Str::random(40) . '.jpg';
+        $path = $prefix . Str::random(40) . '.jpg';
         Storage::disk('avatars')->put($path, $jpeg);
 
         return $path;
+    }
+
+    // 寫資料失敗（例如同時跑兩次撞到唯一索引）就把剛存的照片刪掉，不留沒人用的檔案
+    private function insertOrDropFile(string $table, array $row, ?string $path): void
+    {
+        try {
+            DB::table($table)->insert($row);
+        } catch (Throwable $e) {
+            if ($path) {
+                Storage::disk('avatars')->delete($path);
+            }
+            throw $e;
+        }
     }
 
     private function time(?string $t): ?Carbon

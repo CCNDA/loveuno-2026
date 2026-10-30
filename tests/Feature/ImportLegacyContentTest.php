@@ -74,7 +74,7 @@ class ImportLegacyContentTest extends TestCase
         $this->assertSame(0, Diary::where('legacy_id', 13)->count());
 
         $this->assertSame(2, DB::table('diary_comments')->where('diary_id', $d->id)->count()); // 101、104（102 隱藏、103 日記沒搬）
-        $this->assertSame(500, mb_strlen(DB::table('diary_comments')->where('legacy_id', 104)->value('body')));
+        $this->assertSame(600, mb_strlen(DB::table('diary_comments')->where('legacy_id', 104)->value('body'))); // 不截斷
 
         $p = Diary::where('legacy_source', 'pray')->sole();
         $this->assertTrue((bool) $p->is_prayer);
@@ -125,6 +125,8 @@ class ImportLegacyContentTest extends TestCase
         $this->jsonl('date', [
             ['legacy_id' => 1, 'from' => 1000001, 'to' => 1000002, 'date' => '2019-03-03', 'time' => '9:30 AM', 'place' => '台北靈糧堂 台北市大安區', 'activity' => '主日聚會', 'single' => '希望你單獨參加', 'message' => '一起去', 'at' => '2019-03-01 10:00:00', 'result' => 3, 'result_at' => '2019-03-04 10:00:00', 'result_msg' => '很開心'],
             ['legacy_id' => 2, 'from' => 1000002, 'to' => 1000001, 'date' => '2019-04-04', 'time' => '2:00 PM', 'place' => '', 'activity' => '奇怪的', 'single' => '歡迎邀請家人朋友一起', 'message' => '', 'at' => '2019-04-01 10:00:00', 'result' => -1, 'result_at' => '2019-04-02 10:00:00', 'result_msg' => '那天有事'],
+            ['legacy_id' => 3, 'from' => 1000001, 'to' => 1000002, 'date' => '2019-05-05', 'time' => '10:00 AM', 'place' => 'x', 'activity' => '愛宴', 'single' => '', 'message' => '', 'at' => '2019-05-01 10:00:00', 'result' => -2, 'result_at' => '2019-05-06 03:00:00', 'result_msg' => '超過約會時間未收到答覆'],
+            ['legacy_id' => 4, 'from' => 1000001, 'to' => 1000002, 'date' => '2019-06-06', 'time' => '10:00 AM', 'place' => 'x', 'activity' => '愛宴', 'single' => '', 'message' => '', 'at' => '2019-06-01 10:00:00', 'result' => -2, 'result_at' => '2019-06-02 03:00:00', 'result_msg' => '臨時出差'],
         ]);
         $this->jsonl('testi', [['legacy_id' => 1, 'owner' => 1000001, 'male' => 1000001, 'female' => 1000002, 'status' => 1, 'title' => '我們結婚了', 'body' => '感謝主', 'at' => '2020-06-01 10:00:00', 'image' => 'images/testi_1.img']]);
 
@@ -142,6 +144,8 @@ class ImportLegacyContentTest extends TestCase
         $m2 = \App\Models\Meetup::where('legacy_id', 2)->sole();
         $this->assertSame(['declined', '14:00', 'special', 'friends', '那天有事', '（舊站沒有填）'], [$m2->status, $m2->meet_time, $m2->activity, $m2->company, $m2->reply, $m2->place]);
 
+        $this->assertSame('expired', \App\Models\Meetup::where('legacy_id', 3)->sole()->state()); // 舊站過期沒回 → 新版「超過約會時間」
+        $this->assertSame('cancelled', \App\Models\Meetup::where('legacy_id', 4)->sole()->status);
         $story = \App\Models\LoveStory::sole();
         $this->assertSame(['approved', $a->id, $b->id], [$story->status, $story->male_id, $story->female_id]);
         $this->assertNotNull($story->photo_path);
