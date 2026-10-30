@@ -10,11 +10,13 @@
 //   新版畫面一律 escape，所以還原成純文字是安全的
 // - status -1（後台隱藏）的也匯出，帶 status，匯入端決定怎麼處理
 // - --images：日記照片從本機 diary_pic/ 或 R2 讀出來放進 images/，匯入端重新轉檔
+// - --images-after=album:31000,diary:50000,testi:15：只抓編號比這個大的照片檔（資料列照樣全部匯出）。
+//   照片「切換前先搬」：前幾天先整批匯出轉檔，切換當天只補之後新增的（匯入端已經有的會跳過）
 // - 只用唯讀帳號；輸出目錄 700、檔案 600，用完請刪掉
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'web::', 'r2::', 'db::']);
+$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'web::', 'r2::', 'db::']);
 $kinds = array_filter(explode(',', (string) ($opts['kind'] ?? '')));
 $known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi'];
 if (empty($opts['cnf']) || empty($opts['out']) || ! $kinds || array_diff($kinds, $known)) {
@@ -25,6 +27,16 @@ $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'
 $web = rtrim($opts['web'] ?? '/home/loveuno', '/');
 $r2 = rtrim($opts['r2'] ?? '', '/');
 $withImages = isset($opts['images']);
+$imagesAfter = [];
+if (isset($opts['images-after']) && $opts['images-after'] !== false && $opts['images-after'] !== '') {
+    foreach (explode(',', (string) $opts['images-after']) as $pair) {
+        if (! preg_match('/^(diary|album|testi):(\d+)$/', trim($pair), $m)) {
+            fwrite(STDERR, "--images-after 要寫成 album:31000,diary:50000（種類：diary、album、testi）\n");
+            exit(2);
+        }
+        $imagesAfter[$m[1]] = (int) $m[2];
+    }
+}
 
 if (is_file("{$web}/h2019/emoji_lib.php")) {
     require_once "{$web}/h2019/emoji_lib.php"; // 舊站自己的 emoji_decode，照它存的方式解回來
@@ -75,9 +87,13 @@ function legacy_text(?string $s): string
 // 從本機或 R2 讀一個舊站檔案，是圖片才存進 images/<name>.img；回傳相對路徑或 null
 function legacy_image(string $sub, string $file, bool $isR2, string $name): ?string
 {
-    global $withImages, $web, $r2, $out;
+    global $withImages, $imagesAfter, $web, $r2, $out;
     $file = ltrim($file, '/');
     if (! $withImages || $file === '' || str_contains($file, '..')) {
+        return null;
+    }
+    // $name 是「種類_編號」：--images-after 給了那一種的門檻，就只抓編號比門檻大的
+    if (preg_match('/^([a-z]+)_(\d+)$/', $name, $m) && isset($imagesAfter[$m[1]]) && (int) $m[2] <= $imagesAfter[$m[1]]) {
         return null;
     }
     $bytes = ($isR2 && $r2 !== '')
