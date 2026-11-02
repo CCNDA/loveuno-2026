@@ -108,6 +108,15 @@ class Profile extends Model
         return ['男' => '弟兄', '女' => '姊妹'][$this->gender] ?? '';
     }
 
+    // 用出生年篩年齡（跟 ageGroup() 同一種算法）：認識朋友的條件搜尋、日記牆的好友推薦共用
+    public function scopeAgeBetween(\Illuminate\Database\Eloquent\Builder $q, ?int $min, ?int $max): \Illuminate\Database\Eloquent\Builder
+    {
+        $year = (int) now()->format('Y');
+
+        return $q->when($min, fn ($w) => $w->where('birth_year', '<=', $year - $min))
+            ->when($max, fn ($w) => $w->where('birth_year', '>=', $year - $max));
+    }
+
     // 只顯示年齡層，不顯示生日（舊站直接秀出生日與真實姓名，新版不這樣做）
     public function ageGroup(): ?string
     {

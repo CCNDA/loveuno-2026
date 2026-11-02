@@ -79,12 +79,7 @@ class HomeController extends Controller
             if ($pref?->pref_place) {
                 $p->where('live_place', $pref->pref_place);
             }
-            if ($pref?->pref_age_min) {
-                $p->where('birth_year', '<=', $now - $pref->pref_age_min);
-            }
-            if ($pref?->pref_age_max) {
-                $p->where('birth_year', '>=', $now - $pref->pref_age_max);
-            }
+            $p->ageBetween($pref?->pref_age_min, $pref?->pref_age_max);
         };
     }
 
