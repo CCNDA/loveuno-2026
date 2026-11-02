@@ -26,8 +26,6 @@ class AdminAction extends Model
         'super_off' => '取消最高管理員',
     ];
 
-    protected $guarded = [];
-
     protected function casts(): array
     {
         return ['detail' => 'array', 'created_at' => 'datetime'];
@@ -40,7 +38,10 @@ class AdminAction extends Model
 
     public static function record(User $admin, User $user, string $action, array $detail): self
     {
-        return self::create(['admin_id' => $admin->id, 'user_id' => $user->id, 'action' => $action, 'detail' => $detail]);
+        $a = new self;
+        $a->forceFill(['admin_id' => $admin->id, 'user_id' => $user->id, 'action' => $action, 'detail' => $detail])->save();
+
+        return $a;
     }
 
     public function label(): string

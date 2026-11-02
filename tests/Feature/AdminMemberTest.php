@@ -200,7 +200,7 @@ class AdminMemberTest extends TestCase
         $this->actingAs($super)->get("/admin/members/{$m->id}")->assertSee('改管理員權限')->assertSee('設為最高管理員');
 
         // 亂送的值不收
-        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'root'])->assertSessionHasErrors('change');
+        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'root'])->assertSessionHasErrors('change', null, 'role');
     }
 
     public function test_role_guards_self_last_and_suspended(): void
@@ -236,6 +236,49 @@ class AdminMemberTest extends TestCase
         $this->artisan('user:admin', ['email' => 'bear@example.com', '--off' => true])->assertSuccessful();
         $this->assertFalse($m->fresh()->is_admin);
         $this->assertFalse($m->fresh()->is_super_admin);
+    }
+
+    // 兩面審查 11/2：已婚是管理員設的，會員自己改個人資料時要能原樣存回去；沒結婚的人不能自己選已婚
+    public function test_married_member_can_still_save_own_profile(): void
+    {
+        $admin = $this->admin();
+        $m = $this->member('已婚的人');
+        $this->actingAs($admin)->post("/admin/members/{$m->id}/marital", ['marital' => '已婚']);
+        $this->actingAs($m->fresh())->get('/me/edit')->assertOk()->assertSee('<option value="已婚"', false);
+        $this->actingAs($m->fresh())->put('/me', $this->profileForm(['marital' => '已婚']))->assertSessionHasNoErrors();
+        $this->assertSame('已婚', $m->profile->fresh()->marital);
+
+        $single = $this->member('單身的人');
+        $this->actingAs($single)->get('/me/edit')->assertDontSee('<option value="已婚"', false);
+        $this->actingAs($single)->put('/me', $this->profileForm(['marital' => '已婚']))->assertSessionHasErrors('marital');
+    }
+
+    public function test_phone_search_ignores_dashes_and_spaces(): void
+    {
+        $admin = $this->admin();
+        $this->member('有手機的人', ['phone' => '0912345678']);
+        $this->member('別人');
+        foreach (['0912-345-678', '0912 345 678', '345678'] as $q) {
+            $this->actingAs($admin)->get('/admin/members?q=' . urlencode($q))->assertSee('有手機的人')->assertDontSee('別人');
+        }
+    }
+
+    public function test_admin_cannot_adjust_own_points(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->post("/admin/members/{$admin->id}/points", ['amount' => 100, 'reason' => '自己加'])->assertStatus(422);
+        // 不看餘額（每日登入會 +1），看有沒有「管理員調整」的紀錄
+        $this->assertSame(0, DB::table("point_transactions")->where("user_id", $admin->id)->where("type", "admin")->count());
+        $this->actingAs($admin)->get("/admin/members/{$admin->id}")->assertSee('不能幫自己加減點');
+    }
+
+    public function test_deleted_super_admin_loses_super(): void
+    {
+        $super = $this->member('要註銷的最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+        $this->actingAs($super)->delete(route('settings.destroy'), ['current_password' => 'password', 'reason' => '測試註銷的時候要把權限拿掉', 'confirm' => '1']);
+        $this->assertNotNull($super->fresh()->deleted_at);
+        $this->assertFalse($super->fresh()->is_admin);
+        $this->assertFalse($super->fresh()->is_super_admin);
     }
 
     public function test_nickname_never_goes_into_confirm_script(): void

@@ -33,7 +33,7 @@ class ProfileController extends Controller
             'birth_month' => ['nullable', 'integer', 'between:1,12', 'required_with:birth_day'],
             'birth_day' => ['nullable', 'integer', 'between:1,31', 'required_with:birth_month'],
             'faith' => ['required', $in(Opt::FAITH)],
-            'marital' => ['required', $in(Opt::MARITAL)],
+            'marital' => ['required', $in(Opt::maritalFor((string) $request->user()->profile?->marital))],
             'children' => ['required', $in(Opt::CHILDREN)],
             'education' => ['required', $in(Opt::EDUCATION)],
             'blood_type' => ['required', $in(Opt::BLOOD)],

@@ -106,7 +106,7 @@ class SettingsController extends Controller
                 'password' => Str::random(64),
                 'remember_token' => Str::random(60),
                 'phone' => null, 'phone_pending' => null, 'phone_code_hash' => null,
-                'is_active' => false, 'notify_email' => false, 'points' => 0, 'is_admin' => false,
+                'is_active' => false, 'notify_email' => false, 'points' => 0, 'is_admin' => false, 'is_super_admin' => false,
                 'deleted_at' => now(),
             ])->save();
         });

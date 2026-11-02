@@ -52,6 +52,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // 別人看得到的會員：沒暫停、沒註銷（註銷的 is_active 也是 false）。暫停／註銷要擋的地方都用這個，免得漏掉
+    // 管理員權限的說法（後台列表、會員頁、user:admin 指令共用）
+    public function roleLabel(): string
+    {
+        return $this->is_super_admin ? '最高管理員' : ($this->is_admin ? '管理員' : '一般會員');
+    }
+
     public function scopeActive(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
     {
         return $q->where('is_active', true);

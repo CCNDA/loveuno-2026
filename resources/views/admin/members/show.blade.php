@@ -8,6 +8,7 @@
 
 <section aria-labelledby="basic-title">
     <h2 id="basic-title">帳號</h2>
+    @include('partials.avatar', ['user' => $member, 'size' => 'lg'])
     <dl class="report-meta">
         <dt>狀態</dt><dd>@include('admin.members.status', ['m' => $member])</dd>
         @if ($member->suspended_at)<dt>停權時間</dt><dd>{{ $member->suspended_at->shown()->format('Y/n/j H:i') }}</dd>@endif
@@ -101,7 +102,9 @@
         </div>
         <div class="field">
             <label for="marital-note">說明（可以不填）</label>
-            <input id="marital-note" name="note" type="text" maxlength="200" value="{{ old('note') }}">
+            <input id="marital-note" name="note" type="text" maxlength="200" value="{{ old('note') }}"
+                   @if ($bag->has('note')) aria-invalid="true" aria-describedby="marital-note-error" @endif>
+            @if ($bag->has('note'))<p id="marital-note-error" class="field-error" role="alert">{{ $bag->first('note') }}</p>@endif
         </div>
         <button type="submit" class="button">改婚姻狀況</button>
     </form>
@@ -112,6 +115,9 @@
 <section aria-labelledby="points-title">
     <h2 id="points-title">加減愛諾積點</h2>
     @php($bag = $errors->getBag('points'))
+    @if ($member->is(auth()->user()))
+    <p class="meta">不能幫自己加減點，請另一位管理員處理。</p>
+    @else
     <form method="POST" action="{{ route('admin.members.points', $member) }}" class="form" novalidate>
         @csrf
         <div class="field">
@@ -130,6 +136,7 @@
         </div>
         <button type="submit" class="button">送出</button>
     </form>
+    @endif
     @if ($points->isNotEmpty())
         <h3>最近 10 筆積點紀錄</h3>
         <ul class="plain-list">
@@ -158,7 +165,9 @@
 
 <section aria-labelledby="role-title">
     <h2 id="role-title">管理員權限</h2>
-    <p>現在：{{ $member->is_super_admin ? '最高管理員（可以設定別人當管理員）' : ($member->is_admin ? '管理員' : '一般會員') }}。</p>
+    <p>現在：{{ $member->roleLabel() }}{{ $member->is_super_admin ? '（可以設定別人當管理員）' : '' }}。</p>
+    @php($rbag = $errors->getBag('role'))
+    @if ($rbag->has('change'))<p id="role-change-error" class="field-error" role="alert">{{ $rbag->first('change') }}</p>@endif
     @if (! auth()->user()->is_super_admin)
         <p class="meta">只有最高管理員可以改。</p>
     @elseif ($member->is(auth()->user()))

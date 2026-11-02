@@ -26,7 +26,7 @@ class SetAdmin extends Command
             'is_admin' => ! $off,
             'is_super_admin' => ! $off && ($this->option('super') || $user->is_super_admin),
         ])->save();
-        $this->info(sprintf('帳號 #%d 現在%s。', $user->id, $user->is_super_admin ? '是最高管理員' : ($user->is_admin ? '是管理員' : '不是管理員')));
+        $this->info(sprintf('帳號 #%d 現在是%s。', $user->id, $user->roleLabel()));
 
         return self::SUCCESS;
     }

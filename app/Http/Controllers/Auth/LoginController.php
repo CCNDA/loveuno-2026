@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\LogoutSuspended;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +52,7 @@ class LoginController extends Controller
         // 後台停權的帳號不能登入（密碼對了才說，跟舊站一樣；熊叔叔 11/2 TG「只做停權」）
         if ($request->user()->suspended_at !== null) {
             Auth::logout();
-            throw ValidationException::withMessages(['email' => \App\Http\Middleware\LogoutSuspended::MESSAGE]);
+            throw ValidationException::withMessages(['email' => LogoutSuspended::MESSAGE]);
         }
         $request->session()->regenerate();
         $request->user()->forceFill(['last_login_at' => now()])->save();

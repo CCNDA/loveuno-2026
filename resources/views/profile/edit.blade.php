@@ -61,7 +61,7 @@
 
     @php($O = \App\Support\ProfileOptions::class)
     @include('partials.select-field', ['name' => 'faith', 'label' => '信仰（必填）', 'required' => true, 'options' => $O::FAITH, 'value' => $profile->faith])
-    @include('partials.select-field', ['name' => 'marital', 'label' => '婚姻狀況（必填）', 'required' => true, 'options' => $O::MARITAL, 'value' => $profile->marital])
+    @include('partials.select-field', ['name' => 'marital', 'label' => '婚姻狀況（必填）', 'required' => true, 'options' => $O::maritalFor((string) $profile->marital), 'value' => $profile->marital])
     @include('partials.select-field', ['name' => 'children', 'label' => '子女人數（必填）', 'required' => true, 'options' => $O::CHILDREN, 'value' => $profile->children])
     @include('partials.select-field', ['name' => 'education', 'label' => '教育程度（必填）', 'required' => true, 'options' => $O::EDUCATION, 'value' => $profile->education])
     @include('partials.select-field', ['name' => 'blood_type', 'label' => '血型（必填）', 'required' => true, 'options' => $O::BLOOD, 'value' => $profile->blood_type])

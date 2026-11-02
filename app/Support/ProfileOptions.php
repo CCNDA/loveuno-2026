@@ -11,6 +11,15 @@ class ProfileOptions
 
     public const MARITAL = ['未婚', '離婚', '喪偶'];
 
+    // 「已婚」只有管理員能設（愛的見證通過後；檢測表 D-16），會員自己的選單沒有
+    public const MARITAL_ADMIN = ['已婚'];
+
+    // 會員自己改個人資料時能選的婚姻狀況：管理員設成已婚的，要能原樣存回去（兩面審查 11/2：不然一改資料就存不了）
+    public static function maritalFor(string $current): array
+    {
+        return in_array($current, self::MARITAL_ADMIN, true) ? array_merge(self::MARITAL, [$current]) : self::MARITAL;
+    }
+
     public const CHILDREN = ['0', '1', '2', '3', '4', '超過4個', '保留'];
 
     public const EDUCATION = ['小學', '中學', '高中', '高職', '五專', '二專', '大學', '碩士', '博士', '保留'];
