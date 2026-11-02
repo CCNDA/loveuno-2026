@@ -35,7 +35,46 @@
             @endforeach
         </select>
     </div>
-    <button type="submit" class="button">篩選</button>
+    <details class="more-filters"@if($moreOpen) open @endif>
+        <summary>更多條件</summary>
+        <fieldset class="field">
+            <legend>年齡</legend>
+            <label for="age_min">從</label>
+            <input id="age_min" name="age_min" type="number" min="18" max="99" inputmode="numeric" value="{{ $filters['age_min'] ?? '' }}">
+            <label for="age_max">到</label>
+            <input id="age_max" name="age_max" type="number" min="18" max="99" inputmode="numeric" value="{{ $filters['age_max'] ?? '' }}"> 歲
+        </fieldset>
+        @foreach (['marital' => ['婚姻狀況', \App\Support\ProfileOptions::MARITAL], 'faith' => ['信仰', \App\Support\ProfileOptions::FAITH]] as $key => [$label, $options])
+            <div class="field">
+                <label for="{{ $key }}">{{ $label }}</label>
+                <select id="{{ $key }}" name="{{ $key }}">
+                    <option value="">不限</option>
+                    @foreach ($options as $o)
+                        <option value="{{ $o }}" @selected(($filters[$key] ?? '') === $o)>{{ $o }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endforeach
+        <div class="field">
+            <label for="name">暱稱裡有</label>
+            <input id="name" name="name" type="search" maxlength="20" value="{{ $filters['name'] ?? '' }}">
+        </div>
+        <div class="field-check">
+            <input id="photo" name="photo" type="checkbox" value="1" @checked(! empty($filters['photo']))>
+            <label for="photo">只看有大頭照的</label>
+        </div>
+        <fieldset class="field">
+            <legend>通過這些認證的</legend>
+            @foreach (['job' => '職業認證', 'id' => '身分認證', 'church' => '教會認證'] as $kind => $label)
+                <div class="field-check">
+                    <input id="verified-{{ $kind }}" name="verified[]" type="checkbox" value="{{ $kind }}" @checked(in_array($kind, $filters['verified'] ?? [], true))>
+                    <label for="verified-{{ $kind }}">{{ $label }}</label>
+                </div>
+            @endforeach
+        </fieldset>
+    </details>
+    <button type="submit" class="button">搜尋</button>
+    @if (collect($filters)->filter()->isNotEmpty())<a href="{{ route('members.index') }}">清除條件</a>@endif
 </form>
 
 <p class="meta" role="status">共 {{ $members->total() }} 位</p>
