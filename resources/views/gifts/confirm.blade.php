@@ -24,4 +24,5 @@
     <button type="submit" name="step" value="send" class="button">確定送出</button>
     <button type="submit" name="step" value="edit" class="button button-light">回去修改</button>
 </form>
+<p><a href="{{ route('members.show', $member) }}">← 不送了，回 {{ $member->name }} 的檔案</a></p>
 @endsection

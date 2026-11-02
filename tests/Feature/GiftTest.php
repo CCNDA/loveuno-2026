@@ -183,7 +183,8 @@ class GiftTest extends TestCase
             ->assertSee('<strong>沒有寫</strong>', false)
             ->assertSee('會用 3 點（送出後剩 8 點）')
             ->assertSee('name="step" value="send"', false)->assertSee('name="step" value="edit"', false)
-            ->assertSee('name="item" value="3"', false);
+            ->assertSee('name="item" value="3"', false)
+            ->assertSee(route('members.show', $you), false);
         $this->assertSame(0, Gift::count());
         $this->assertSame(11, $this->balance($me));
 
@@ -206,8 +207,14 @@ class GiftTest extends TestCase
             ->assertRedirect("/members/{$you->id}/gift");
         $this->actingAs($me)->get("/members/{$you->id}/gift")->assertOk()
             ->assertSee('value="想認識你"', false)
+            ->assertSee('autofocus', false)
             ->assertSee('id="item-7" name="item" type="radio" value="7" class="gift-radio"' . "\n" . '                           checked', false);
         $this->assertSame(0, Gift::count());
+
+        // 沒驗證過的長簡訊不整段放進 session；一般進表單不會 autofocus
+        $this->actingAs($me)->post("/members/{$you->id}/gift", ['step' => 'edit', 'item' => 7, 'message' => str_repeat('字', 500)]);
+        $this->actingAs($me)->get("/members/{$you->id}/gift")->assertSee('value="' . str_repeat('字', 20) . '"', false);
+        $this->actingAs($me)->get("/members/{$you->id}/gift")->assertDontSee('autofocus', false);
     }
 
     public function test_confirm_step_still_checks_sent_today(): void

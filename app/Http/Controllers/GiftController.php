@@ -58,7 +58,10 @@ class GiftController extends Controller
         $this->authorizeRecipient($me, $user);
         // 確認頁按「回去修改」：帶著剛剛選的回到表單
         if ($request->input('step') === 'edit') {
-            return redirect()->route('gifts.create', $user)->withInput($request->only('item', 'message'));
+            return redirect()->route('gifts.create', $user)->with('gift_edit', true)->withInput([
+                'item' => (int) $request->input('item'),
+                'message' => mb_substr((string) $request->input('message'), 0, 20), // 還沒驗證，先截到 20 字再放進 session
+            ]);
         }
         $data = $request->validate([
             'item' => ['required', 'integer', 'in:' . implode(',', array_keys(Gift::ITEMS))],

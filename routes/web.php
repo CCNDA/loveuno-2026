@@ -170,7 +170,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::get('/members/{user}/date', [\App\Http\Controllers\MeetupController::class, 'create'])->whereNumber('user')->name('meetups.create');
     Route::post('/members/{user}/date', [\App\Http\Controllers\MeetupController::class, 'store'])->whereNumber('user')->middleware('throttle:10,1440,date-send')->name('meetups.store');
     Route::get('/members/{user}/gift', [GiftController::class, 'create'])->whereNumber('user')->name('gifts.create');
-    Route::post('/members/{user}/gift', [GiftController::class, 'store'])->whereNumber('user')->middleware('throttle:30,60,gift-send')->name('gifts.store');
+    Route::post('/members/{user}/gift', [GiftController::class, 'store'])->whereNumber('user')->middleware('throttle:90,60,gift-send')->name('gifts.store'); // 一份禮物要按 2～3 次（確認頁、回去修改），90 次約等於原本的 30 份
     // 好友：我的朋友、解除關係
     Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
     Route::get('/members/{user}/unfriend', [FriendController::class, 'confirmDestroy'])->whereNumber('user')->name('friends.confirm');
