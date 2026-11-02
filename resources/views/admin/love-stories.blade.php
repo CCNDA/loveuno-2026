@@ -19,6 +19,10 @@
             </dl>
             <form method="POST" action="{{ route('admin.love-stories.decide', $s) }}" class="review-actions">
                 @csrf
+                <div class="field-check">
+                    <input id="married-{{ $s->id }}" name="set_married" type="checkbox" value="1" checked>
+                    <label for="married-{{ $s->id }}">通過時，同時把{{ $s->male?->name }}、{{ $s->female?->name }}的婚姻狀況改成「已婚」（就不會出現在認識朋友）</label>
+                </div>
                 <button type="submit" name="decision" value="approve" class="button">通過（公開）<span class="visually-hidden">「{{ $s->title }}」</span></button>
                 <button type="submit" name="decision" value="reject" class="button button-secondary">不通過<span class="visually-hidden">「{{ $s->title }}」</span></button>
             </form>
