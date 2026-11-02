@@ -36,6 +36,7 @@
                         <li class="nav-dup"><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif>傳紙條@if($unreadNotes > 0) <span class="badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
+                            <li><a href="{{ route('admin.members') }}" @if(request()->routeIs('admin.members*')) aria-current="page" @endif>會員管理</a></li>
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
                             <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
                             <li><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>

@@ -79,6 +79,25 @@ class Points
         });
     }
 
+    // 管理員加減點（上線前檢測表 D-05 簡單版：單一會員＋原因）。會員的積點紀錄會看到「管理員調整：原因」。
+    // 扣到變負的就丟 NotEnoughPoints（不扣）。ref 每次不一樣，不會被「同一筆不重複給」擋掉
+    public static function adjust(User $user, int $amount, string $reason): void
+    {
+        DB::transaction(function () use ($user, $amount, $reason) {
+            $balance = (int) DB::table('users')->where('id', $user->id)->lockForUpdate()->value('points');
+            if ($balance + $amount < 0) {
+                throw new NotEnoughPoints('積點不夠扣');
+            }
+            DB::table('point_transactions')->insert([
+                'user_id' => $user->id, 'type' => 'admin', 'ref' => 'admin-' . now()->format('YmdHisu') . '-' . bin2hex(random_bytes(3)),
+                'amount' => $amount, 'label' => '管理員調整：' . $reason,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('users')->where('id', $user->id)->increment('points', $amount);
+            $user->points = $balance + $amount;
+        });
+    }
+
     // 檢查四個任務，做到的就給點（重複呼叫沒關係）
     public static function checkTasks(User $user): void
     {

@@ -218,6 +218,14 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::get('/love-stories', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'index'])->name('admin.love-stories');
         Route::post('/love-stories/{story}', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'decide'])->whereNumber('story')->name('admin.love-stories.decide');
         Route::get('/dates', [\App\Http\Controllers\Admin\MeetupAdminController::class, 'index'])->name('admin.meetups');
+        // 會員搜尋與管理（上線前檢測表 D-02）
+        Route::get('/members', [\App\Http\Controllers\Admin\MemberAdminController::class, 'index'])->name('admin.members');
+        Route::get('/members/{user}', [\App\Http\Controllers\Admin\MemberAdminController::class, 'show'])->whereNumber('user')->name('admin.members.show');
+        Route::post('/members/{user}/suspend', [\App\Http\Controllers\Admin\MemberAdminController::class, 'suspend'])->whereNumber('user')->name('admin.members.suspend');
+        Route::post('/members/{user}/unsuspend', [\App\Http\Controllers\Admin\MemberAdminController::class, 'unsuspend'])->whereNumber('user')->name('admin.members.unsuspend');
+        Route::post('/members/{user}/marital', [\App\Http\Controllers\Admin\MemberAdminController::class, 'marital'])->whereNumber('user')->name('admin.members.marital');
+        Route::post('/members/{user}/points', [\App\Http\Controllers\Admin\MemberAdminController::class, 'points'])->whereNumber('user')->name('admin.members.points');
+        Route::post('/members/{user}/rename', [\App\Http\Controllers\Admin\MemberAdminController::class, 'rename'])->whereNumber('user')->name('admin.members.rename');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

@@ -45,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'notify_email' => 'boolean',
             'is_active' => 'boolean',
             'deleted_at' => 'datetime',
+            'suspended_at' => 'datetime', // 後台停權（見 2026_11_02_000001）
+            'suspend_prev_active' => 'boolean',
         ];
     }
 

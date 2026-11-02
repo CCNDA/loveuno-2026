@@ -1,0 +1,194 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\AdminAction;
+use App\Models\Diary;
+use App\Models\User;
+use App\Support\NotEnoughPoints;
+use App\Support\Points;
+use App\Support\ProfileOptions;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+
+// 後台：會員搜尋與管理（上線前檢測表 D-02；舊站 admin/member_search、list_member）。
+// 熊叔叔 11/2 TG：有問題的帳號「只做停權」（不能登入、別人看不到、資料留著、可以解除）；垃圾帳號也用停權、原因寫「垃圾帳號」。
+// 每個動作都寫進 admin_actions。
+class MemberAdminController extends Controller
+{
+    // 停權原因的快速選項（也可以自己寫）
+    public const SUSPEND_REASONS = ['垃圾帳號', '騷擾其他會員', '假冒身分', '廣告或詐騙'];
+
+    // 管理員才能設的婚姻狀況：會員自己只能選 ProfileOptions::MARITAL（未婚、離婚、喪偶）；
+    // 「已婚」是見證通過後由管理員改（檢測表 D-16）
+    public const ADMIN_MARITAL = ['已婚'];
+
+    public function index(Request $request): View
+    {
+        $q = trim((string) $request->query('q', ''));
+        $filter = (string) $request->query('filter', '');
+        $users = User::query()->with('profile');
+
+        if ($q !== '') {
+            $like = '%' . addcslashes($q, '\\%_') . '%';
+            $users->where(function ($w) use ($q, $like) {
+                if (ctype_digit($q)) {
+                    // 數字：會員編號（新站、舊站）或手機
+                    $w->where('id', (int) $q)->orWhere('legacy_id', (int) $q)->orWhere('phone', 'like', $like);
+                }
+                $w->orWhere('email', 'like', $like)->orWhere('name', 'like', $like);
+            });
+        }
+        if ($filter === 'suspended') {
+            $users->whereNotNull('suspended_at');
+        } elseif ($filter === 'deleted') {
+            $users->whereNotNull('deleted_at');
+        } elseif ($filter === 'unverified') {
+            $users->whereNull('deleted_at')->where(fn ($w) => $w->whereNull('email_verified_at')->orWhereNull('phone_verified_at'));
+        }
+
+        return view('admin.members.index', [
+            'users' => $users->orderByDesc('id')->paginate(30)->withQueryString(),
+            'q' => $q,
+            'filter' => $filter,
+            'suspendedCount' => User::whereNotNull('suspended_at')->count(),
+        ]);
+    }
+
+    public function show(User $user): View
+    {
+        $user->load(['profile', 'verifications']);
+
+        return view('admin.members.show', [
+            'member' => $user,
+            'counts' => [
+                '日記' => Diary::where('user_id', $user->id)->count(),
+                '傳出的紙條' => DB::table('notes')->where('sender_id', $user->id)->count(),
+                '收到的紙條' => DB::table('notes')->where('recipient_id', $user->id)->count(),
+                '送出的禮物' => DB::table('gifts')->where('sender_id', $user->id)->count(),
+                '好友' => DB::table('friendships')->where('user_id', $user->id)->count(),
+                '被檢舉' => DB::table('reports')->where('reported_id', $user->id)->count(),
+            ],
+            'points' => DB::table('point_transactions')->where('user_id', $user->id)->orderByDesc('id')->limit(10)->get(),
+            'actions' => AdminAction::with('admin')->where('user_id', $user->id)->orderByDesc('id')->get(),
+            'suspendReasons' => self::SUSPEND_REASONS,
+            'maritalOptions' => array_merge(ProfileOptions::MARITAL, self::ADMIN_MARITAL),
+        ]);
+    }
+
+    public function suspend(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validateWithBag('suspend', [
+            'reason' => ['required', 'string', 'max:200'],
+        ], [], ['reason' => '停權原因']);
+        abort_if($user->is_admin, 422, '管理員的帳號不能停權。');
+        abort_if($user->deleted_at !== null, 422, '已註銷的帳號不用停權。');
+        if ($user->suspended_at !== null) {
+            return $this->back($user, '這個帳號已經是停權中了。');
+        }
+
+        $reason = trim($data['reason']);
+        DB::transaction(function () use ($request, $user, $reason) {
+            $prev = (bool) $user->is_active;
+            $user->forceFill([
+                'suspended_at' => now(), 'suspended_reason' => $reason,
+                'suspend_prev_active' => $prev, 'is_active' => false,
+            ])->save();
+            AdminAction::record($request->user(), $user, 'suspend', ['reason' => $reason, 'prev_active' => $prev]);
+        });
+
+        return $this->back($user, sprintf('%s（#%d）已經停權：不能登入，別人也看不到。', $user->name, $user->id));
+    }
+
+    public function unsuspend(Request $request, User $user): RedirectResponse
+    {
+        if ($user->suspended_at === null) {
+            return $this->back($user, '這個帳號沒有停權。');
+        }
+        DB::transaction(function () use ($request, $user) {
+            $active = $user->suspend_prev_active ?? true; // 停權前會員自己有沒有關「啟用帳號」
+            AdminAction::record($request->user(), $user, 'unsuspend', ['was_reason' => $user->suspended_reason, 'restore_active' => $active]);
+            $user->forceFill([
+                'suspended_at' => null, 'suspended_reason' => '', 'suspend_prev_active' => null, 'is_active' => $active,
+            ])->save();
+        });
+
+        $msg = sprintf('%s（#%d）已經解除停權，可以登入了。', $user->name, $user->id);
+        if (! $user->is_active) {
+            $msg .= '（停權前會員自己關掉了「啟用帳號」，所以別人還是看不到，要等他自己打開。）';
+        }
+
+        return $this->back($user, $msg);
+    }
+
+    public function marital(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->profile === null, 422, '這位會員還沒有個人檔案。');
+        $data = $request->validateWithBag('marital', [
+            'marital' => ['required', Rule::in(array_merge(ProfileOptions::MARITAL, self::ADMIN_MARITAL))],
+            'note' => ['nullable', 'string', 'max:200'],
+        ], [], ['marital' => '婚姻狀況', 'note' => '說明']);
+
+        $before = (string) $user->profile->marital;
+        if ($before === $data['marital']) {
+            return $this->back($user, '婚姻狀況沒有變。');
+        }
+        DB::transaction(function () use ($request, $user, $before, $data) {
+            $user->profile->forceFill(['marital' => $data['marital']])->save();
+            AdminAction::record($request->user(), $user, 'marital', ['from' => $before, 'to' => $data['marital'], 'note' => trim((string) ($data['note'] ?? ''))]);
+        });
+
+        return $this->back($user, sprintf('婚姻狀況改成「%s」了。', $data['marital']));
+    }
+
+    public function points(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->deleted_at !== null, 422, '已註銷的帳號不能加減點。');
+        $data = $request->validateWithBag('points', [
+            'amount' => ['required', 'integer', 'between:-1000,1000', 'not_in:0'],
+            'reason' => ['required', 'string', 'min:2', 'max:50'],
+        ], ['amount.not_in' => '點數不能是 0。'], ['amount' => '點數', 'reason' => '原因']);
+
+        $amount = (int) $data['amount'];
+        $reason = trim($data['reason']);
+        try {
+            DB::transaction(function () use ($request, $user, $amount, $reason) {
+                Points::adjust($user, $amount, $reason);
+                AdminAction::record($request->user(), $user, 'points', ['amount' => $amount, 'reason' => $reason, 'balance' => $user->points]);
+            });
+        } catch (NotEnoughPoints) {
+            return back()->withErrors(['amount' => sprintf('積點不夠扣：現在只有 %d 點。', $user->fresh()->points)], 'points')->withInput();
+        }
+
+        return $this->back($user, sprintf('%s %d 點了，現在是 %d 點。', $amount > 0 ? '加' : '扣', abs($amount), $user->points));
+    }
+
+    public function rename(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->deleted_at !== null, 422, '已註銷的帳號不能改暱稱。');
+        $data = $request->validateWithBag('rename', [
+            'name' => ['required', 'string', 'max:20'], // 跟註冊頁一樣
+        ], [], ['name' => '暱稱']);
+
+        $name = trim($data['name']);
+        $before = $user->name;
+        if ($before === $name) {
+            return $this->back($user, '暱稱沒有變。');
+        }
+        DB::transaction(function () use ($request, $user, $before, $name) {
+            $user->forceFill(['name' => $name])->save();
+            AdminAction::record($request->user(), $user, 'rename', ['from' => $before, 'to' => $name]);
+        });
+
+        return $this->back($user, sprintf('暱稱從「%s」改成「%s」了。', $before, $name));
+    }
+
+    private function back(User $user, string $status): RedirectResponse
+    {
+        return redirect()->route('admin.members.show', $user)->with('status', $status);
+    }
+}

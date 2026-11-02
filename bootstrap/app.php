@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['tz']);
         $middleware->web(append: [\App\Http\Middleware\DisplayTimezone::class]);
 
+        // 後台停權的帳號：已經登入的下一個請求就登出（要排在每日登入給點前面）
+        $middleware->web(append: [\App\Http\Middleware\LogoutSuspended::class]);
+
         // 每日登入 +1 愛諾積點（記住我直接進來的也算）
         $middleware->web(append: [\App\Http\Middleware\AwardDailyLogin::class]);
 

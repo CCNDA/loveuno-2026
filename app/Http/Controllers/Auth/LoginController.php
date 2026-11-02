@@ -48,6 +48,11 @@ class LoginController extends Controller
         }
 
         RateLimiter::clear($key);
+        // 後台停權的帳號不能登入（密碼對了才說，跟舊站一樣；熊叔叔 11/2 TG「只做停權」）
+        if ($request->user()->suspended_at !== null) {
+            Auth::logout();
+            throw ValidationException::withMessages(['email' => \App\Http\Middleware\LogoutSuspended::MESSAGE]);
+        }
         $request->session()->regenerate();
         $request->user()->forceFill(['last_login_at' => now()])->save();
         $request->session()->put('script', $request->user()->script ?: 'hant'); // 帳號設定的「顯示語言」
