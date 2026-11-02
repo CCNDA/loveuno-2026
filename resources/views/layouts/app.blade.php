@@ -103,8 +103,8 @@
                 <li><a href="{{ route('love-stories.index') }}">愛的見證</a></li>
                 <li><a href="{{ route('faq') }}">常見問題</a></li>
                 <li><a href="{{ route('contact') }}">聯絡我們</a></li>
-                {{-- 回報問題／建議（熊叔叔 11/2 fb-A）：帶著現在這一頁，送出後回來；在回報頁本身就不放 --}}
-                @if (auth()->check() && ! request()->routeIs('feedback.*'))<li><a href="{{ route('feedback.create', ['from' => request()->getRequestUri()]) }}">回報問題／建議</a></li>@endif
+                {{-- 回報問題／建議（熊叔叔 11/2 fb-A）：每一頁都有（沒登入也有），帶著現在這一頁；開新分頁，原頁寫到一半的不會不見；回報頁本身不放 --}}
+                @unless (request()->routeIs('feedback.*'))<li><a href="{{ route('feedback.create', ['from' => request()->getRequestUri()]) }}" target="_blank" rel="noopener">回報問題／建議<span class="visually-hidden">（開新分頁）</span></a></li>@endunless
                 <li><a href="{{ route('terms') }}">網站服務條款</a></li>
                 <li><a href="{{ route('privacy') }}">隱私權政策</a></li>
                 <li><a href="https://www.ccnda.org/devote/online" rel="noopener">奉獻支持</a></li>

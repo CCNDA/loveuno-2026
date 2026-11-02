@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AlbumPhoto;
 use App\Models\Diary;
+use App\Models\Feedback;
 use App\Models\Verification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,7 @@ class SettingsController extends Controller
             AlbumPhoto::where('user_id', $user->id)->pluck('path')->all(),
             Diary::where('user_id', $user->id)->pluck('image_path')->all(),
             Verification::where('user_id', $user->id)->pluck('file_path')->all(),
+            Feedback::where('user_id', $user->id)->pluck('screenshot_path')->all(), // 回報的截圖可能有別人的資料
         ));
 
         DB::transaction(function () use ($user, $data) {
@@ -98,6 +100,7 @@ class SettingsController extends Controller
             DB::table('friendships')->where('user_id', $user->id)->orWhere('friend_id', $user->id)->delete();
             DB::table('meetups')->where('sender_id', $user->id)->orWhere('recipient_id', $user->id)->delete(); // 舊站 delete_profile_final.php 也刪
             DB::table('point_transactions')->where('user_id', $user->id)->delete();
+            Feedback::where('user_id', $user->id)->delete(); // 回報問題／建議（user_id 是 nullOnDelete，帳號列沒刪所以要自己刪）
             $user->profile()->delete();
             $user->forceFill([
                 'name' => '已註銷會員',

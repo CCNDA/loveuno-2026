@@ -12,12 +12,15 @@ return new class extends Migration
     {
         Schema::create('feedback', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            // 沒登入也能送（登入頁、錯誤頁最常卡住；兩面審查 11/2）。會員註銷時由 SettingsController::destroy 刪掉他的回報和截圖
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('email', 100)->default('');      // 沒登入的人想要回覆可以留
             $table->string('kind', 10);                     // problem／idea／other
             $table->text('body');
             $table->string('page', 300)->default('');       // 從哪一頁按的（只存本站的路徑）
             $table->string('user_agent', 300)->default(''); // 瀏覽器、手機或電腦
             $table->string('screen', 20)->default('');      // 畫面大小，例如 390x844
+            $table->string('context', 100)->default('');    // 網站版本、字體大小、繁簡（都會影響版面）
             $table->string('screenshot_path', 100)->nullable(); // 私有磁碟
             $table->string('status', 10)->default('open');  // open／doing／done
             $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();

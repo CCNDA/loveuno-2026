@@ -38,6 +38,10 @@ Route::view('/faq', 'pages.faq')->name('faq');
 Route::view('/terms', 'pages.terms')->name('terms');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::get('/contact', [\App\Http\Controllers\PageController::class, 'contact'])->name('contact');
+// 回報問題／建議（熊叔叔 11/2 TG fb-A）：沒登入也能送——登入頁、註冊、錯誤頁是最常卡住的地方（兩面審查 11/2）。
+// 一小時 30 則（登入的照會員、沒登入的照 IP）：小布、小霏照檢測表逐項回報也夠用
+Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'create'])->name('feedback.create');
+Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:30,60,feedback')->name('feedback.store');
 Route::post('/contact', [\App\Http\Controllers\PageController::class, 'storeContact'])->middleware('throttle:5,60,contact')->name('contact.store');
 // 站務公告、愛的見證（不用登入）
 Route::get('/news', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('news.index');
@@ -86,9 +90,6 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify']
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
-    // 回報問題／建議（熊叔叔 11/2 TG fb-A）：登入了就能送，還沒驗證完的人也可以（註冊卡住的人最需要回報）
-    Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'create'])->name('feedback.create');
-    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:10,60,feedback')->name('feedback.store');
     // 已登入但還沒驗證
     Route::get('/email/verify', [VerifyEmailController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'send'])
@@ -231,6 +232,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::post('/members/{user}/rename', [\App\Http\Controllers\Admin\MemberAdminController::class, 'rename'])->whereNumber('user')->name('admin.members.rename');
         Route::post('/members/{user}/role', [\App\Http\Controllers\Admin\MemberAdminController::class, 'role'])->whereNumber('user')->name('admin.members.role');
         Route::get('/feedback', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'index'])->name('admin.feedback');
+        Route::get('/feedback/export', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'export'])->name('admin.feedback.export');
         Route::post('/feedback/{feedback}/status', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'status'])->whereNumber('feedback')->name('admin.feedback.status');
         Route::get('/feedback/{feedback}/screenshot', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'screenshot'])->whereNumber('feedback')->name('admin.feedback.screenshot');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
