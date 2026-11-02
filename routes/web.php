@@ -82,6 +82,7 @@ Route::middleware('registration.open')->group(function () {
         Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:register')->name('register.store');
     });
     Route::get('/register/sent', [RegisterController::class, 'sent'])->name('register.sent');
+    Route::post('/register/resend', [RegisterController::class, 'resend'])->middleware('throttle:3,10,register-resend')->name('register.resend');
 });
 
 // 驗證信裡的連結：不用登入，靠簽章（60 分鐘）＋email hash

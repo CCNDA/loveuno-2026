@@ -70,12 +70,31 @@ class RegisterController extends Controller
             event(new Registered($user)); // 寄驗證信（User 實作 MustVerifyEmail）
         }
 
+        // 「請到信箱收信」那頁要能直接重寄（小霏 11/2 複測：原本要先登入才找得到重寄）。email 記在 session，不讓人在頁面上自己打：
+        // 不然可以拿來試哪些 email 註冊過
+        $request->session()->put('register_email', $data['email']);
+
         return redirect()->route('register.sent');
     }
 
-    public function sent(): View
+    public function sent(Request $request): View
     {
-        return view('auth.register-sent');
+        return view('auth.register-sent', ['canResend' => $request->session()->has('register_email')]);
+    }
+
+    // 重寄驗證信：只寄給剛剛在這個瀏覽器註冊的 email；不管有沒有這個帳號、驗證過沒有，畫面都一樣
+    public function resend(Request $request): RedirectResponse
+    {
+        $email = (string) $request->session()->get('register_email', '');
+        if ($email === '') {
+            return redirect()->route('register.sent')->with('status', '請到登入頁用剛剛的 Email 和密碼登入，登入後的頁面可以重寄驗證信。');
+        }
+        $user = User::where('email', $email)->first();
+        if ($user && ! $user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+        }
+
+        return redirect()->route('register.sent')->with('status', '驗證信已經重新寄出，請到信箱收信（可能要等一兩分鐘）。');
     }
 
     // 出生年選單：18～80 歲（只用出生年算，生日還沒到的人實際可能 17 歲，先接受這個誤差）
