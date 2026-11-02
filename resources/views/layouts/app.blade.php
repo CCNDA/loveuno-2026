@@ -37,6 +37,8 @@
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
                             <li><a href="{{ route('admin.members') }}" @if(request()->routeIs('admin.members*')) aria-current="page" @endif>會員管理</a></li>
+                            @php($openFeedback = \App\Models\Feedback::where('status', 'open')->count())
+                            <li><a href="{{ route('admin.feedback') }}" @if(request()->routeIs('admin.feedback*')) aria-current="page" @endif>回報@if($openFeedback)（{{ $openFeedback }}<span class="visually-hidden"> 則還沒處理</span>）@endif</a></li>
                             <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
                             <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
                             <li><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
@@ -101,6 +103,8 @@
                 <li><a href="{{ route('love-stories.index') }}">愛的見證</a></li>
                 <li><a href="{{ route('faq') }}">常見問題</a></li>
                 <li><a href="{{ route('contact') }}">聯絡我們</a></li>
+                {{-- 回報問題／建議（熊叔叔 11/2 fb-A）：帶著現在這一頁，送出後回來；在回報頁本身就不放 --}}
+                @if (auth()->check() && ! request()->routeIs('feedback.*'))<li><a href="{{ route('feedback.create', ['from' => request()->getRequestUri()]) }}">回報問題／建議</a></li>@endif
                 <li><a href="{{ route('terms') }}">網站服務條款</a></li>
                 <li><a href="{{ route('privacy') }}">隱私權政策</a></li>
                 <li><a href="https://www.ccnda.org/devote/online" rel="noopener">奉獻支持</a></li>

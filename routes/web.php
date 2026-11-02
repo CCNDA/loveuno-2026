@@ -86,6 +86,9 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify']
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+    // 回報問題／建議（熊叔叔 11/2 TG fb-A）：登入了就能送，還沒驗證完的人也可以（註冊卡住的人最需要回報）
+    Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:10,60,feedback')->name('feedback.store');
     // 已登入但還沒驗證
     Route::get('/email/verify', [VerifyEmailController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'send'])
@@ -227,6 +230,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::post('/members/{user}/points', [\App\Http\Controllers\Admin\MemberAdminController::class, 'points'])->whereNumber('user')->name('admin.members.points');
         Route::post('/members/{user}/rename', [\App\Http\Controllers\Admin\MemberAdminController::class, 'rename'])->whereNumber('user')->name('admin.members.rename');
         Route::post('/members/{user}/role', [\App\Http\Controllers\Admin\MemberAdminController::class, 'role'])->whereNumber('user')->name('admin.members.role');
+        Route::get('/feedback', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'index'])->name('admin.feedback');
+        Route::post('/feedback/{feedback}/status', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'status'])->whereNumber('feedback')->name('admin.feedback.status');
+        Route::get('/feedback/{feedback}/screenshot', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'screenshot'])->whereNumber('feedback')->name('admin.feedback.screenshot');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');
