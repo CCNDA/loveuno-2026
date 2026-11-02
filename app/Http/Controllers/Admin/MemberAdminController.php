@@ -141,6 +141,7 @@ class MemberAdminController extends Controller
 
     public function marital(Request $request, User $user): RedirectResponse
     {
+        $this->guardSuper($request, $user);
         abort_if($user->profile === null, 422, '這位會員還沒有個人檔案。');
         $data = $request->validateWithBag('marital', [
             'marital' => ['required', Rule::in(array_merge(ProfileOptions::MARITAL, ProfileOptions::MARITAL_ADMIN))],
@@ -161,6 +162,7 @@ class MemberAdminController extends Controller
 
     public function points(Request $request, User $user): RedirectResponse
     {
+        $this->guardSuper($request, $user);
         abort_if($user->deleted_at !== null, 422, '已註銷的帳號不能加減點。');
         abort_if($user->is($request->user()), 422, '不能幫自己加減點，請另一位管理員處理。'); // 兩面審查 11/2
         $data = $request->validateWithBag('points', [
@@ -184,6 +186,7 @@ class MemberAdminController extends Controller
 
     public function rename(Request $request, User $user): RedirectResponse
     {
+        $this->guardSuper($request, $user);
         abort_if($user->deleted_at !== null, 422, '已註銷的帳號不能改暱稱。');
         $data = $request->validateWithBag('rename', [
             'name' => ['required', 'string', 'max:20'], // 跟註冊頁一樣
@@ -243,6 +246,12 @@ class MemberAdminController extends Controller
         });
 
         return $this->back($user, $msg);
+    }
+
+    // 最高管理員的資料只有最高管理員能改（熊叔叔 11/2 TG 選「甲 不行」）
+    private function guardSuper(Request $request, User $user): void
+    {
+        abort_if($user->is_super_admin && ! $request->user()->is_super_admin, 403, '最高管理員的資料只有最高管理員能改。');
     }
 
     private function back(User $user, string $status): RedirectResponse

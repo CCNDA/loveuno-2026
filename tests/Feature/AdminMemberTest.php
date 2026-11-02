@@ -281,6 +281,28 @@ class AdminMemberTest extends TestCase
         $this->assertFalse($super->fresh()->is_super_admin);
     }
 
+    // 熊叔叔 11/2 TG 選甲：最高管理員的資料只有最高管理員能改
+    public function test_admin_cannot_edit_super_admin_data(): void
+    {
+        $admin = $this->admin();
+        $super = $this->member('最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+        $this->actingAs($admin)->post("/admin/members/{$super->id}/rename", ['name' => '被改了'])->assertForbidden();
+        $this->actingAs($admin)->post("/admin/members/{$super->id}/points", ['amount' => 10, 'reason' => '亂加'])->assertForbidden();
+        $this->actingAs($admin)->post("/admin/members/{$super->id}/marital", ['marital' => '離婚'])->assertForbidden();
+        $this->assertSame('最高管理員', $super->fresh()->name);
+        $this->actingAs($admin)->get("/admin/members/{$super->id}")->assertOk()->assertSee('只有最高管理員能改')
+            ->assertDontSee('id="rename-name"', false)->assertDontSee('id="points-amount"', false);
+
+        // 另一位最高管理員可以改
+        $super2 = $this->member('第二位最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+        $this->actingAs($super2)->post("/admin/members/{$super->id}/rename", ['name' => '改好了'])->assertRedirect();
+        $this->assertSame('改好了', $super->fresh()->name);
+        // 一般管理員改一般管理員照常可以
+        $other = $this->admin();
+        $this->actingAs($admin)->post("/admin/members/{$other->id}/rename", ['name' => '一般的'])->assertRedirect();
+        $this->assertSame('一般的', $other->fresh()->name);
+    }
+
     public function test_nickname_never_goes_into_confirm_script(): void
     {
         $admin = $this->admin();

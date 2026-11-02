@@ -86,7 +86,11 @@
 </section>
 @endunless
 
-@if ($member->profile && ! $member->deleted_at)
+@php($locked = $member->is_super_admin && ! auth()->user()->is_super_admin) {{-- 熊叔叔 11/2：最高管理員的資料只有最高管理員能改 --}}
+@if ($locked)
+<p class="meta">這位是最高管理員，婚姻狀況、積點、暱稱只有最高管理員能改。</p>
+@endif
+@if ($member->profile && ! $member->deleted_at && ! $locked)
 <section aria-labelledby="marital-title">
     <h2 id="marital-title">婚姻狀況</h2>
     @php($bag = $errors->getBag('marital'))
@@ -111,7 +115,7 @@
 </section>
 @endif
 
-@unless ($member->deleted_at)
+@unless ($member->deleted_at || $locked)
 <section aria-labelledby="points-title">
     <h2 id="points-title">加減愛諾積點</h2>
     @php($bag = $errors->getBag('points'))
