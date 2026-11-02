@@ -52,10 +52,14 @@ class GiftController extends Controller
         ]);
     }
 
-    public function store(Request $request, User $user): RedirectResponse
+    public function store(Request $request, User $user): RedirectResponse|View
     {
         $me = $request->user();
         $this->authorizeRecipient($me, $user);
+        // 確認頁按「回去修改」：帶著剛剛選的回到表單
+        if ($request->input('step') === 'edit') {
+            return redirect()->route('gifts.create', $user)->withInput($request->only('item', 'message'));
+        }
         $data = $request->validate([
             'item' => ['required', 'integer', 'in:' . implode(',', array_keys(Gift::ITEMS))],
             'message' => ['nullable', 'string', 'max:20'],
@@ -67,6 +71,24 @@ class GiftController extends Controller
 
         if ($this->sentToday($me, $user)) {
             throw ValidationException::withMessages(['item' => '今天已經送過禮物給 ' . $user->name . ' 了，明天再送吧。']);
+        }
+
+        // 送出前再確認一次（會員反映誤觸就送出、沒寫到簡訊；熊叔叔 11/2 選 gift_both）：
+        // 第一次送出先看確認頁，在確認頁按「確定送出」（step=send）才真的送、扣點
+        if ($request->input('step') !== 'send') {
+            $balance = (int) $me->fresh()->points;
+            if ($balance < Points::COSTS['gift'][0]) {
+                throw ValidationException::withMessages(['item' => $this->notEnoughPointsMessage()]);
+            }
+
+            return view('gifts.confirm', [
+                'member' => $user,
+                'item' => (int) $data['item'],
+                'itemName' => Gift::ITEMS[(int) $data['item']],
+                'message' => trim((string) ($data['message'] ?? '')),
+                'balance' => $balance,
+                'cost' => Points::COSTS['gift'][0],
+            ]);
         }
 
         try {
@@ -81,7 +103,7 @@ class GiftController extends Controller
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['item' => '今天已經送過禮物給 ' . $user->name . ' 了，明天再送吧。']);
         } catch (NotEnoughPoints) {
-            throw ValidationException::withMessages(['item' => sprintf('愛諾積點不夠（送禮物要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS['gift'][0])]);
+            throw ValidationException::withMessages(['item' => $this->notEnoughPointsMessage()]);
         }
 
         defer(fn () => WebPush::notify($user)); // 有開推播的裝置
@@ -105,6 +127,11 @@ class GiftController extends Controller
     {
         abort_unless(NoteController::canNote($me, $user), 404);
         abort_unless($me->profile()->exists(), 404);
+    }
+
+    private function notEnoughPointsMessage(): string
+    {
+        return sprintf('愛諾積點不夠（送禮物要 %d 點）。可以到「會員中心 → 愛積點」看怎麼得到積點。', Points::COSTS['gift'][0]);
     }
 
     private function sentToday(User $me, User $user): bool

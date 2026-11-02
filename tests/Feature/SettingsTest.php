@@ -63,7 +63,7 @@ class SettingsTest extends TestCase
         $b = $this->member('乙');
         Points::award($a, 'test', 'x', 10, '測試');
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
-        $this->actingAs($a)->post("/members/{$b->id}/gift", ['item' => 1]);
+        $this->actingAs($a)->post("/members/{$b->id}/gift", ['step' => 'send', 'item' => 1]);
         Notification::assertSentToTimes($b, NewActivity::class, 2);
         Notification::assertSentTo($b, NewActivity::class, fn ($n) => ! str_contains(json_encode($n->toMail($b)->toArray(), JSON_UNESCAPED_UNICODE), '甲')); // 信裡沒有暱稱
 
