@@ -10,4 +10,4 @@
 @else
     正常
 @endif
-@if ($m->is_admin)（管理員）@endif
+@if ($m->is_super_admin)（最高管理員）@elseif ($m->is_admin)（管理員）@endif

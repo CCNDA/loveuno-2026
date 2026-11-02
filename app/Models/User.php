@@ -41,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'is_demo' => 'boolean',
             'is_admin' => 'boolean',
+            'is_super_admin' => 'boolean', // 最高管理員：可以在後台設定誰是管理員
             'points' => 'integer',
             'notify_email' => 'boolean',
             'is_active' => 'boolean',

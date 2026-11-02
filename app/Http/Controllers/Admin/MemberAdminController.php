@@ -187,6 +187,45 @@ class MemberAdminController extends Controller
         return $this->back($user, sprintf('暱稱從「%s」改成「%s」了。', $before, $name));
     }
 
+    // 管理員權限（熊叔叔 11/2 TG：只有最高管理員可以設定）。
+    // 不能動自己（免得把自己鎖在外面）；最後一位管理員、最後一位最高管理員不能取消；已註銷、停權中的不能設成管理員。
+    public function role(Request $request, User $user): RedirectResponse
+    {
+        $me = $request->user();
+        abort_unless($me->is_super_admin, 403, '只有最高管理員可以設定管理員。');
+        $data = $request->validate(['change' => ['required', Rule::in(['admin_on', 'admin_off', 'super_on', 'super_off'])]]);
+        abort_if($user->is($me), 422, '不能改自己的權限，請另一位最高管理員幫忙。');
+
+        $change = $data['change'];
+        if (in_array($change, ['admin_on', 'super_on'], true) && ($user->deleted_at !== null || $user->suspended_at !== null)) {
+            return $this->back($user, '已註銷或停權中的帳號不能設成管理員。');
+        }
+        if ($change === 'admin_off' && $user->is_admin && User::where('is_admin', true)->count() <= 1) {
+            return $this->back($user, '這是最後一位管理員，不能取消。');
+        }
+        if (in_array($change, ['admin_off', 'super_off'], true) && $user->is_super_admin && User::where('is_super_admin', true)->count() <= 1) {
+            return $this->back($user, '這是最後一位最高管理員，不能取消。');
+        }
+
+        $before = ['admin' => (bool) $user->is_admin, 'super' => (bool) $user->is_super_admin];
+        $after = match ($change) {
+            'admin_on' => ['admin' => true, 'super' => $before['super']],
+            'admin_off' => ['admin' => false, 'super' => false], // 不是管理員就不會是最高管理員
+            'super_on' => ['admin' => true, 'super' => true],
+            'super_off' => ['admin' => $before['admin'], 'super' => false],
+        };
+        if ($before === $after) {
+            return $this->back($user, '權限沒有變。');
+        }
+        DB::transaction(function () use ($me, $user, $change, $before, $after) {
+            $user->forceFill(['is_admin' => $after['admin'], 'is_super_admin' => $after['super']])->save();
+            AdminAction::record($me, $user, 'role', ['change' => $change, 'from' => $before, 'to' => $after]);
+        });
+
+        return $this->back($user, sprintf('%s（#%d）現在%s。', $user->name, $user->id,
+            $after['super'] ? '是最高管理員' : ($after['admin'] ? '是管理員' : '不是管理員')));
+    }
+
     private function back(User $user, string $status): RedirectResponse
     {
         return redirect()->route('admin.members.show', $user)->with('status', $status);

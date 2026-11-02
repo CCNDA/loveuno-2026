@@ -172,6 +172,72 @@ class AdminMemberTest extends TestCase
             ->assertSee('婚姻狀況')->assertSee('加減愛諾積點');
     }
 
+    // 熊叔叔 11/2 TG：設定管理員要在後台，不能像舊站寫死；只有最高管理員可以設定
+    public function test_only_super_admin_can_change_roles(): void
+    {
+        $super = $this->member('最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+        $admin = $this->admin();
+        $m = $this->member('要當管理員的人');
+
+        // 一般管理員：看得到區塊，但不能改
+        $this->actingAs($admin)->get("/admin/members/{$m->id}")->assertSee('只有最高管理員可以改')->assertDontSee('設為管理員</button>', false);
+        $this->actingAs($admin)->post("/admin/members/{$m->id}/role", ['change' => 'admin_on'])->assertForbidden();
+        $this->assertFalse($m->fresh()->is_admin);
+
+        // 最高管理員：設為管理員 → 可以進後台
+        $this->actingAs($super)->get("/admin/members/{$m->id}")->assertSee('設為管理員</button>', false);
+        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'admin_on'])->assertRedirect(route('admin.members.show', $m));
+        $this->assertTrue($m->fresh()->is_admin);
+        $this->actingAs($m->fresh())->get('/admin/members')->assertOk();
+        // 設為最高管理員、再取消管理員（最高管理員一起拿掉）
+        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'super_on']);
+        $this->assertTrue($m->fresh()->is_super_admin);
+        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'admin_off']);
+        $this->assertFalse($m->fresh()->is_admin);
+        $this->assertFalse($m->fresh()->is_super_admin);
+        $this->actingAs($m->fresh())->get('/admin/members')->assertForbidden();
+        $this->assertSame(3, AdminAction::where('user_id', $m->id)->where('action', 'role')->count());
+        $this->actingAs($super)->get("/admin/members/{$m->id}")->assertSee('改管理員權限')->assertSee('設為最高管理員');
+
+        // 亂送的值不收
+        $this->actingAs($super)->post("/admin/members/{$m->id}/role", ['change' => 'root'])->assertSessionHasErrors('change');
+    }
+
+    public function test_role_guards_self_last_and_suspended(): void
+    {
+        $super = $this->member('唯一的最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+        // 不能改自己
+        $this->actingAs($super)->post("/admin/members/{$super->id}/role", ['change' => 'admin_off'])->assertStatus(422);
+        $this->assertTrue($super->fresh()->is_super_admin);
+        $this->actingAs($super)->get("/admin/members/{$super->id}")->assertSee('不能改自己的權限');
+
+        // 停權中的不能設成管理員
+        $bad = $this->member('停權的人', ['suspended_at' => now(), 'suspended_reason' => '垃圾帳號', 'is_active' => false]);
+        $this->actingAs($super)->post("/admin/members/{$bad->id}/role", ['change' => 'admin_on']);
+        $this->assertFalse($bad->fresh()->is_admin);
+
+        // 有兩位最高管理員時，可以取消另一位；取消後他就不能再改別人。（「最後一位」的檢查是保險：要改別人的人自己一定是最高管理員，正常操作碰不到）
+        $other = $this->member('第二位', ['is_admin' => true, 'is_super_admin' => true]);
+        $this->actingAs($other)->post("/admin/members/{$super->id}/role", ['change' => 'super_off'])->assertRedirect();
+        $this->assertFalse($super->fresh()->is_super_admin); // 還有 $other，可以取消
+        $this->actingAs($super->fresh())->post("/admin/members/{$other->id}/role", ['change' => 'super_off'])->assertForbidden(); // $super 已經不是最高
+        $this->actingAs($other)->post("/admin/members/{$other->id}/role", ['change' => 'super_off'])->assertStatus(422); // 自己
+        $this->assertTrue($other->fresh()->is_super_admin);
+    }
+
+    public function test_set_admin_command_super_option(): void
+    {
+        $m = $this->member('熊叔叔', ['email' => 'bear@example.com']);
+        $this->artisan('user:admin', ['email' => 'bear@example.com', '--super' => true])->assertSuccessful();
+        $this->assertTrue($m->fresh()->is_admin);
+        $this->assertTrue($m->fresh()->is_super_admin);
+        $this->artisan('user:admin', ['email' => 'bear@example.com'])->assertSuccessful(); // 沒帶 --super：不會把最高拿掉
+        $this->assertTrue($m->fresh()->is_super_admin);
+        $this->artisan('user:admin', ['email' => 'bear@example.com', '--off' => true])->assertSuccessful();
+        $this->assertFalse($m->fresh()->is_admin);
+        $this->assertFalse($m->fresh()->is_super_admin);
+    }
+
     public function test_nickname_never_goes_into_confirm_script(): void
     {
         $admin = $this->admin();

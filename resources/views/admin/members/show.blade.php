@@ -156,6 +156,30 @@
 </section>
 @endunless
 
+<section aria-labelledby="role-title">
+    <h2 id="role-title">管理員權限</h2>
+    <p>現在：{{ $member->is_super_admin ? '最高管理員（可以設定別人當管理員）' : ($member->is_admin ? '管理員' : '一般會員') }}。</p>
+    @if (! auth()->user()->is_super_admin)
+        <p class="meta">只有最高管理員可以改。</p>
+    @elseif ($member->is(auth()->user()))
+        <p class="meta">不能改自己的權限，請另一位最高管理員幫忙。</p>
+    @elseif (! $member->deleted_at)
+        <form method="POST" action="{{ route('admin.members.role', $member) }}" class="review-actions" onsubmit="return confirm('確定要改這位會員的管理員權限嗎？')">
+            @csrf
+            @if (! $member->is_admin)
+                @unless ($member->suspended_at)<button type="submit" name="change" value="admin_on" class="button">設為管理員</button>@endunless
+            @else
+                @if ($member->is_super_admin)
+                    <button type="submit" name="change" value="super_off" class="button button-secondary">取消最高管理員</button>
+                @else
+                    <button type="submit" name="change" value="super_on" class="button">設為最高管理員</button>
+                @endif
+                <button type="submit" name="change" value="admin_off" class="button button-secondary">取消管理員</button>
+            @endif
+        </form>
+    @endif
+</section>
+
 <section aria-labelledby="log-title">
     <h2 id="log-title">管理紀錄</h2>
     @if ($actions->isEmpty())
@@ -169,6 +193,7 @@
                         @case('marital')：{{ ($a->detail['from'] ?? '') ?: '沒填' }} → {{ $a->detail['to'] ?? '' }}@if (! empty($a->detail['note']))（{{ $a->detail['note'] }}）@endif @break
                         @case('points')：{{ ($a->detail['amount'] ?? 0) > 0 ? '+' : '' }}{{ $a->detail['amount'] ?? '' }}（{{ $a->detail['reason'] ?? '' }}）@break
                         @case('rename')：{{ $a->detail['from'] ?? '' }} → {{ $a->detail['to'] ?? '' }}@break
+                        @case('role')：{{ \App\Models\AdminAction::ROLE_CHANGES[$a->detail['change'] ?? ''] ?? '' }}@break
                     @endswitch
                 </li>
             @endforeach

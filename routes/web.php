@@ -226,6 +226,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::post('/members/{user}/marital', [\App\Http\Controllers\Admin\MemberAdminController::class, 'marital'])->whereNumber('user')->name('admin.members.marital');
         Route::post('/members/{user}/points', [\App\Http\Controllers\Admin\MemberAdminController::class, 'points'])->whereNumber('user')->name('admin.members.points');
         Route::post('/members/{user}/rename', [\App\Http\Controllers\Admin\MemberAdminController::class, 'rename'])->whereNumber('user')->name('admin.members.rename');
+        Route::post('/members/{user}/role', [\App\Http\Controllers\Admin\MemberAdminController::class, 'role'])->whereNumber('user')->name('admin.members.role');
         Route::get('/reports', [ReportReviewController::class, 'index'])->name('admin.reports');
         Route::post('/reports/{report}/close', [ReportReviewController::class, 'close'])->whereNumber('report')->name('admin.reports.close');
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');

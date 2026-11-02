@@ -16,6 +16,14 @@ class AdminAction extends Model
         'marital' => '改婚姻狀況',
         'points' => '加減積點',
         'rename' => '改暱稱',
+        'role' => '改管理員權限',
+    ];
+
+    public const ROLE_CHANGES = [
+        'admin_on' => '設為管理員',
+        'admin_off' => '取消管理員',
+        'super_on' => '設為最高管理員',
+        'super_off' => '取消最高管理員',
     ];
 
     protected $guarded = [];
