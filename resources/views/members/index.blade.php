@@ -7,20 +7,22 @@
 
 @include('partials.errors', ['title' => '暱稱有問題，先顯示全部'])
 
-{{-- 照交友條件列出（熊叔叔 11/4）：這裡只說明用了哪些條件、連到交友條件去改；年齡顯示放寬後的 5 歲一格 --}}
+{{-- 照交友條件列出（熊叔叔 11/4）：顯示會員自己填的條件；實際年齡以 5 歲一格計（Profile::preferenceFilter），註明一句 --}}
+@php($min = $pref?->pref_age_min)
+@php($max = $pref?->pref_age_max)
 @php($prefParts = collect([
-    $pref['gender'] ? ['男' => '弟兄', '女' => '姊妹'][$pref['gender']] : null,
+    ['男' => '弟兄', '女' => '姊妹'][$pref?->pref_gender] ?? null,
     match (true) {
-        $pref['age_min'] && $pref['age_max'] => $pref['age_min'] . '～' . $pref['age_max'] . ' 歲',
-        (bool) $pref['age_min'] => $pref['age_min'] . ' 歲以上',
-        (bool) $pref['age_max'] => $pref['age_max'] . ' 歲以下',
+        $min && $max => $min . '～' . $max . ' 歲',
+        (bool) $min => $min . ' 歲以上',
+        (bool) $max => $max . ' 歲以下',
         default => null,
     },
-    $pref['place'],
+    $pref?->pref_place ?: null,
 ])->filter())
 <p class="pref-summary">
     @if ($prefParts->isNotEmpty())
-        依您的交友條件列出：<strong>{{ $prefParts->implode('・') }}</strong>
+        依您的交友條件列出：<strong>{{ $prefParts->implode('・') }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
     @else
         您還沒設定交友條件，先列出所有會員。設定之後，這裡就只會列出您想認識的對象。
     @endif
@@ -41,7 +43,7 @@
 
 @if ($members->isEmpty())
     @if (! empty($filters['name']))
-        <p>符合您交友條件的會員裡，沒有暱稱有「{{ $filters['name'] }}」的。</p>
+        <p>符合您交友條件的會員裡，沒有暱稱有「{{ $filters['name'] }}」的。如果要找的人不在您的交友條件裡，可以<a href="{{ route('center.preferences') }}">回去修改交友條件</a>。</p>
     @else
         <p>目前沒有符合您交友條件的會員。可以<a href="{{ route('center.preferences') }}">回去修改交友條件</a>，例如放寬年齡或居住地。</p>
     @endif

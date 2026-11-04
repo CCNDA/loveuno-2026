@@ -41,7 +41,7 @@ class MemberSearchTest extends TestCase
         $this->member('台中三十歲姊妹', ['birth_year' => $y - 30, 'live_place' => '台中市']);
 
         $this->list($me)->assertOk()
-            ->assertSee('依您的交友條件列出')->assertSee('姊妹・25～34 歲・台北市')->assertSee('修改交友條件')
+            ->assertSee('依您的交友條件列出')->assertSee('姊妹・27～31 歲・台北市')->assertSee('年齡以 5 歲一格計')->assertSee('修改交友條件')
             ->assertSee('台北三十歲姊妹')->assertSee('二十六歲姊妹')->assertSee('三十四歲姊妹')
             ->assertDontSee('三十五歲姊妹')->assertDontSee('二十四歲姊妹')
             ->assertDontSee('台北三十歲弟兄')->assertDontSee('台中三十歲姊妹')
@@ -57,12 +57,12 @@ class MemberSearchTest extends TestCase
         $me = $this->member('我', ['gender' => '男', 'pref_age_min' => 41]);
         $this->member('四十歲', ['birth_year' => $y - 40]);
         $this->member('三十九歲', ['birth_year' => $y - 39]);
-        $this->list($me)->assertSee('40 歲以上')->assertSee('四十歲')->assertDontSee('三十九歲');
+        $this->list($me)->assertSee('41 歲以上')->assertSee('四十歲')->assertDontSee('三十九歲');
 
         $me2 = $this->member('我二', ['gender' => '男', 'pref_age_max' => 18]);
         $this->member('十九歲', ['birth_year' => $y - 19]);
         $this->member('二十歲', ['birth_year' => $y - 20]);
-        $this->list($me2)->assertSee('19 歲以下')->assertSee('十九歲')->assertDontSee('二十歲');
+        $this->list($me2)->assertSee('18 歲以下')->assertSee('十九歲')->assertDontSee('二十歲');
     }
 
     public function test_no_preferences_lists_everyone_and_asks_to_set_them(): void
@@ -72,7 +72,8 @@ class MemberSearchTest extends TestCase
         $this->member('一位弟兄', ['gender' => '男']);
         $this->list($me)->assertSee('您還沒設定交友條件')->assertSee('設定交友條件')
             ->assertSee(route('center.preferences'), false)
-            ->assertSee('一位姊妹')->assertSee('一位弟兄');
+            ->assertSee('一位姊妹')->assertSee('一位弟兄')
+            ->assertDontSee('">我</a>', false); // 自己不列
     }
 
     public function test_nobody_matches_asks_to_change_preferences(): void

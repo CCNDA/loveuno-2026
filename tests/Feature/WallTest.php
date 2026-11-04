@@ -52,6 +52,17 @@ class WallTest extends TestCase
         $this->actingAs($me)->get('/')->assertSee('符合的姊妹')->assertDontSee('太年輕')->assertDontSee('別的城市')->assertDontSee('>弟兄<', false);
     }
 
+    // 首頁推薦的年齡跟認識朋友一樣放寬到 5 歲一格：把條件設成 31～31 歲也試不出出生年（11/4 兩面審查）
+    public function test_suggestions_age_widened_to_five_year_groups(): void
+    {
+        $me = $this->member('我', '男', 1990, '台北市');
+        $me->profile->forceFill(['pref_age_min' => 31, 'pref_age_max' => 31])->save();
+        $now = (int) now()->format('Y');
+        $this->member('三十三歲', '女', $now - 33);
+        $this->member('三十五歲', '女', $now - 35);
+        $this->actingAs($me)->get('/')->assertSee('三十三歲')->assertDontSee('三十五歲');
+    }
+
     public function test_suggestions_exclude_too_old_blockers_unverified_and_self(): void
     {
         $me = $this->member('我', '男', 1990, '台北市');

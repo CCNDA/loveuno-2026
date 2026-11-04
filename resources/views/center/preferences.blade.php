@@ -6,7 +6,7 @@
 @include('center.tabs', ['current' => 'preferences'])
 
 <h2>交友條件</h2>
-<p class="hint">寫下您想認識什麼樣的朋友。沒填的就是不限。</p>
+<p class="hint">寫下您想認識什麼樣的朋友。沒填的就是不限。「認識朋友」和首頁的好友推薦，會照這裡的條件列出對象（年齡以 5 歲一格計；設了年齡的話，沒填出生年的會員不會列出來）。</p>
 
 <form method="POST" action="{{ route('center.preferences.update') }}" class="form" novalidate>
     @csrf

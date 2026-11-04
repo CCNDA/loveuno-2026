@@ -132,7 +132,7 @@ class RegisterTest extends TestCase
         $pending = User::factory()->unverified()->create(['name' => '還沒驗證的人']);
         Profile::create(['user_id' => $pending->id, 'gender' => '女']);
 
-        $this->actingAs($viewer)->get('/members')->assertOk()->assertDontSee('還沒驗證的人')->assertSee('共 1 位');
+        $this->actingAs($viewer)->get('/members')->assertOk()->assertDontSee('還沒驗證的人')->assertSee('共 0 位'); // 自己不列（11/4）
     }
 
     public function test_validation_rules(): void

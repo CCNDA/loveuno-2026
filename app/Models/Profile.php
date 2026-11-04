@@ -117,6 +117,33 @@ class Profile extends Model
             ->when($max, fn ($w) => $w->where('birth_year', '>=', $year - $max));
     }
 
+    // 交友條件 → 篩選用的值（認識朋友列表、首頁好友推薦、歡迎新朋友共用）。
+    // 年齡放寬到 5 歲一格（跟卡片的年齡層一樣）：下限往下取到格子開頭（最低 18）、上限往上取到格子結尾。
+    // 交友條件可以填任何整數，不放寬的話，把條件設成 31～31 歲再看誰出現，就試得出別人的出生年（10/29「3A」不公開生日；
+    // 首頁推薦原本就沒放寬，11/4 兩面審查抓到）。
+    public static function preferenceFilter(?self $p): array
+    {
+        $min = $p?->pref_age_min;
+        $max = $p?->pref_age_max;
+
+        return [
+            'gender' => in_array($p?->pref_gender, ['男', '女'], true) ? $p->pref_gender : null,
+            'place' => ($p?->pref_place ?? '') !== '' ? $p->pref_place : null,
+            'age_min' => $min ? max(18, intdiv($min, 5) * 5) : null,
+            'age_max' => $max ? intdiv($max, 5) * 5 + 4 : null,
+        ];
+    }
+
+    // 符合某人交友條件的個人檔案（$pref 是「看的人」的 profile）
+    public function scopeMatchesPreferences(\Illuminate\Database\Eloquent\Builder $q, ?self $pref): \Illuminate\Database\Eloquent\Builder
+    {
+        $f = self::preferenceFilter($pref);
+
+        return $q->when($f['gender'], fn ($w, $g) => $w->where('gender', $g))
+            ->when($f['place'], fn ($w, $pl) => $w->where('live_place', $pl))
+            ->ageBetween($f['age_min'], $f['age_max']);
+    }
+
     // 只顯示年齡層，不顯示生日（舊站直接秀出生日與真實姓名，新版不這樣做）
     public function ageGroup(): ?string
     {

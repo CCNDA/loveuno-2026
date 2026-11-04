@@ -66,21 +66,10 @@ class HomeController extends Controller
             ->get();
     }
 
-    // 好友推薦、歡迎新朋友共用：照我的「交友條件」篩
+    // 好友推薦、歡迎新朋友共用：照我的「交友條件」篩（跟認識朋友同一套，年齡 5 歲一格，見 Profile::preferenceFilter）
     private function matchesPreferences(User $me): \Closure
     {
-        $pref = $me->profile;
-        $now = (int) now()->format('Y');
-
-        return function ($p) use ($pref, $now) {
-            if ($pref?->pref_gender) {
-                $p->where('gender', $pref->pref_gender);
-            }
-            if ($pref?->pref_place) {
-                $p->where('live_place', $pref->pref_place);
-            }
-            $p->ageBetween($pref?->pref_age_min, $pref?->pref_age_max);
-        };
+        return fn ($p) => $p->matchesPreferences($me->profile);
     }
 
     private function suggestions(User $me, array $blocked): Collection

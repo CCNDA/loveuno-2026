@@ -15,41 +15,22 @@ class MemberController extends Controller
     // 認識朋友：照會員自己在「會員中心 → 交友條件」設的對象列出來，另外只能用暱稱找（熊叔叔 11/4 TG：
     // 「認識朋友那邊應該不提供搜尋，頂多搜尋名字，列表應該是他設定的對象」按「留名字搜尋」；
     // 「如果沒有合適的對象，請他回去更改交友條件」）。0.31.0 的條件搜尋（D-01）拿掉。
-    // 年齡：交友條件可以填任何整數，篩選時放寬到 5 歲一格的邊界（跟卡片上的年齡層一樣）——
-    // 不然改幾次交友條件就試得出別人的出生年（10/29「3A」不公開生日；原條件搜尋也是 5 歲一格）。
+    // 年齡放寬到 5 歲一格，見 Profile::preferenceFilter。
     public function index(Request $request): View
     {
         $filters = $request->validate(['name' => ['nullable', 'string', 'max:20']], [], ['name' => '暱稱']);
         $me = $request->user();
-        $pref = self::preferenceFilter($me->profile);
-
         $members = $this->listable($me)
+            ->whereKeyNot($me->id) // 自己不列（首頁推薦也不列自己）
             ->with('profile')
-            ->whereHas('profile', fn ($p) => $p
-                ->when($pref['gender'], fn ($q, $g) => $q->where('gender', $g))
-                ->when($pref['place'], fn ($q, $pl) => $q->where('live_place', $pl))
-                ->ageBetween($pref['age_min'], $pref['age_max']))
+            ->whereHas('profile', fn ($p) => $p->matchesPreferences($me->profile))
             ->when($filters['name'] ?? null, fn ($q, $n) => $q->where('name', 'like', '%' . addcslashes($n, '\%_') . '%'))
             // 最近登入的排前面（舊站 member/search.php 也是）；沒登入過的排最後
             ->orderByRaw('last_login_at IS NULL')->orderByDesc('last_login_at')->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
 
-        return view('members.index', ['members' => $members, 'filters' => $filters, 'pref' => $pref]);
-    }
-
-    // 交友條件 → 列表用的篩選。年齡放寬到 5 歲一格：下限往下取到格子開頭（最低 18）、上限往上取到格子結尾
-    public static function preferenceFilter(?Profile $p): array
-    {
-        $min = $p?->pref_age_min;
-        $max = $p?->pref_age_max;
-
-        return [
-            'gender' => in_array($p?->pref_gender, ['男', '女'], true) ? $p->pref_gender : null,
-            'place' => ($p?->pref_place ?? '') !== '' ? $p->pref_place : null,
-            'age_min' => $min ? max(18, intdiv($min, 5) * 5) : null,
-            'age_max' => $max ? intdiv($max, 5) * 5 + 4 : null,
-        ];
+        return view('members.index', ['members' => $members, 'filters' => $filters, 'pref' => $me->profile]);
     }
 
     // 「認識朋友」列得出來的會員：有個人檔案、email 和手機驗證過、沒暫停或註銷、跟我沒有封鎖關係、沒有結婚

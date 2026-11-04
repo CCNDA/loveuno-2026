@@ -420,9 +420,6 @@ html.fs-large { font-size: 118.75%; }
 .faq-item { border-top: 1px solid var(--line); padding: 4px 0; }
 .faq-item summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 /* 認識朋友的「更多條件」（D-01） */
-.more-filters { margin: 8px 0; }
-.more-filters summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
-.more-filters .field, .more-filters .field-check { margin-top: 12px; }
 .faq-item p { margin: 0 0 12px; }
 .donate { margin-top: 24px; }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
