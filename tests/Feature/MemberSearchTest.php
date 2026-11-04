@@ -76,6 +76,22 @@ class MemberSearchTest extends TestCase
         $this->list($me, ['name' => '姊妹'])->assertSee('請先設定您的交友條件')->assertDontSee('一位姊妹');
     }
 
+    // 小霏 11/4 實測：交友條件頁寫「沒填的就是不限」，四項都不限存檔後要列全部，不能卡在「請先設定」
+    public function test_saving_all_unlimited_counts_as_set(): void
+    {
+        $me = $this->member('我', ['gender' => '男']);
+        $this->member('一位姊妹');
+        $this->member('一位弟兄', ['gender' => '男']);
+        $this->list($me)->assertSee('請先設定您的交友條件');
+        $this->actingAs($me)->put('/center/preferences', ['pref_gender' => '', 'pref_age_min' => '', 'pref_age_max' => '', 'pref_place' => ''])
+            ->assertRedirect('/center/preferences');
+        $me = $me->fresh(); // 測試裡同一個物件，profile 關聯還是存檔前那份；實際每個請求都會重讀
+        $this->list($me)->assertDontSee('請先設定您的交友條件')->assertSee('依您的交友條件列出：<strong>不限</strong>', false)->assertSee('一位姊妹')->assertSee('一位弟兄')->assertSee('用暱稱找');
+        // 之後改回有條件也照條件列
+        $this->actingAs($me)->put('/center/preferences', ['pref_gender' => '女']);
+        $this->list($me->fresh())->assertSee('一位姊妹')->assertDontSee('一位弟兄');
+    }
+
     public function test_self_not_listed(): void
     {
         $me = $this->member('我', ['gender' => '女', 'pref_gender' => '女']);

@@ -95,12 +95,14 @@ class CenterController extends Controller
             'pref_age_max.gte' => '年齡上限不能比下限小。',
         ], ['pref_gender' => '想認識', 'pref_age_min' => '年齡下限', 'pref_age_max' => '年齡上限', 'pref_place' => '居住地']);
 
-        Profile::updateOrCreate(['user_id' => $request->user()->id], [
+        $profile = Profile::updateOrCreate(['user_id' => $request->user()->id], [
             'pref_gender' => $data['pref_gender'] ?? '',
             'pref_age_min' => $data['pref_age_min'] ?? null,
             'pref_age_max' => $data['pref_age_max'] ?? null,
             'pref_place' => trim((string) ($data['pref_place'] ?? '')),
         ]);
+        // 存過就算設了，四項都「不限」也一樣（認識朋友沒存過才請他先設定；小霏 11/4 抓到原本會卡成迴圈）
+        $profile->forceFill(['preferences_saved_at' => now()])->save();
 
         Points::checkTasks($request->user());
 

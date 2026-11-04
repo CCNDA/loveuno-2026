@@ -17,11 +17,13 @@ class MemberController extends Controller
     // 「如果沒有合適的對象，請他回去更改交友條件」）。0.31.0 的條件搜尋（D-01）拿掉。
     // 年齡放寬到 5 歲一格，見 Profile::preferenceFilter。
     // 還沒設交友條件：不列任何人、也不給暱稱搜尋，先請他去設定（熊叔叔 11/4 TG 按「1先請他設定＋2只在條件裡」）。
+    // 「設過」＝按過交友條件的存檔（preferences_saved_at），四項都選「不限」也算設了、列全部——交友條件頁寫「沒填的就是不限」。
+    // 舊資料沒有存檔時間，但條件有填的也算設了。
     public function index(Request $request): View
     {
         $filters = $request->validate(['name' => ['nullable', 'string', 'max:20']], [], ['name' => '暱稱']);
         $me = $request->user();
-        if (! array_filter(Profile::preferenceFilter($me->profile))) {
+        if (! $me->profile?->preferences_saved_at && ! array_filter(Profile::preferenceFilter($me->profile))) {
             return view('members.index', ['members' => null, 'filters' => [], 'pref' => $me->profile]);
         }
         $members = $this->listable($me)

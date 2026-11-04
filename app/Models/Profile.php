@@ -22,6 +22,7 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
+            'preferences_saved_at' => 'datetime',
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
             'height' => 'integer',

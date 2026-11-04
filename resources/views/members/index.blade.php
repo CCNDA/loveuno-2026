@@ -26,7 +26,7 @@
     <p><a class="button" href="{{ route('center.preferences') }}">設定交友條件</a></p>
 @else
 <p class="pref-summary">
-    依您的交友條件列出：<strong>{{ $prefParts->implode('・') }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
+    依您的交友條件列出：<strong>{{ $prefParts->isNotEmpty() ? $prefParts->implode('・') : '不限' }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
     <a href="{{ route('center.preferences') }}">修改交友條件</a>
 </p>
 
