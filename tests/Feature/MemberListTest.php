@@ -34,25 +34,15 @@ class MemberListTest extends TestCase
             ->assertSee('共 2 位');
     }
 
-    public function test_filters_by_gender_and_place(): void
+    // 條件搜尋拿掉後（熊叔叔 11/4：照交友條件列出、只留暱稱），性別／居住地篩選改在 MemberSearchTest 測交友條件。
+    // 這裡留著小布 0.3.0 複測的那條：輸入有錯回到列表時要看得到錯誤（原本沒有任何提示）。
+    public function test_invalid_input_shows_error_on_list(): void
     {
         $viewer = $this->member('看的人', '男', '台北市');
-        $this->member('甲姊妹', '女', '台中市');
-        $this->member('乙姊妹', '女', '高雄市');
-        $this->member('丙弟兄', '男', '台中市');
-
-        $this->actingAs($viewer)->get('/members?gender=女&place=台中市')->assertOk()
-            ->assertSee('甲姊妹')->assertDontSee('乙姊妹')->assertDontSee('丙弟兄')
-            ->assertSee('共 1 位');
-    }
-
-    public function test_invalid_gender_is_rejected(): void
-    {
-        $viewer = $this->member('看的人', '男', '台北市');
-        $this->actingAs($viewer)->from('/members')->get('/members?gender=x')->assertSessionHasErrors('gender');
-        // 回到列表時要看得到錯誤（小布 0.3.0 複測：原本沒有任何提示）
-        $this->actingAs($viewer)->followingRedirects()->from('/members')->get('/members?gender=x')
-            ->assertOk()->assertSee('篩選條件有問題')->assertSee('性別只能選弟兄或姊妹');
+        $long = str_repeat('長', 21);
+        $this->actingAs($viewer)->from('/members')->get('/members?name=' . urlencode($long))->assertSessionHasErrors('name');
+        $this->actingAs($viewer)->followingRedirects()->from('/members')->get('/members?name=' . urlencode($long))
+            ->assertOk()->assertSee('暱稱有問題');
     }
 
     public function test_avatar_is_hidden_from_screen_readers(): void

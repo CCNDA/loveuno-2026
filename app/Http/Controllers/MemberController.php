@@ -8,75 +8,48 @@ use App\Models\User;
 use App\Support\ProfileOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MemberController extends Controller
 {
-    // 認識朋友：會員列表＋條件搜尋（上線前檢測表 D-01：舊站 member/search.php 的條件——性別、年齡、居住地、
-    // 婚姻、信仰、暱稱、只看有照片、職業／身分／教會認證；手機認證新版列出來的都有，所以沒有這個條件）。
-    // 年齡只能選 5 歲一格（跟卡片上的年齡層一樣），不然一歲一歲試就試得出別人的出生年（10/29「3A」不公開生日；兩面審查 11/2）。
-    public const AGE_FROM = [18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
-
-    public const AGE_TO = [19, 24, 29, 34, 39, 44, 49, 54, 59, 64, 69, 74, 79, 84, 89, 94, 99];
-
-    public const VERIFY_KINDS = ['job' => '職業認證', 'id' => '身分認證', 'church' => '教會認證'];
-
+    // 認識朋友：照會員自己在「會員中心 → 交友條件」設的對象列出來，另外只能用暱稱找（熊叔叔 11/4 TG：
+    // 「認識朋友那邊應該不提供搜尋，頂多搜尋名字，列表應該是他設定的對象」按「留名字搜尋」；
+    // 「如果沒有合適的對象，請他回去更改交友條件」）。0.31.0 的條件搜尋（D-01）拿掉。
+    // 年齡：交友條件可以填任何整數，篩選時放寬到 5 歲一格的邊界（跟卡片上的年齡層一樣）——
+    // 不然改幾次交友條件就試得出別人的出生年（10/29「3A」不公開生日；原條件搜尋也是 5 歲一格）。
     public function index(Request $request): View
     {
-        $filters = $request->validate([
-            'gender' => ['nullable', Rule::in(['男', '女'])],
-            'place' => ['nullable', 'string', 'max:20'],
-            'age_min' => ['nullable', 'integer', Rule::in(self::AGE_FROM)],
-            'age_max' => ['nullable', 'integer', Rule::in(self::AGE_TO)],
-            'marital' => ['nullable', Rule::in(ProfileOptions::MARITAL)],
-            'faith' => ['nullable', Rule::in(ProfileOptions::FAITH)],
-            'name' => ['nullable', 'string', 'max:20'],
-            'photo' => ['nullable', 'boolean'],
-            'verified' => ['nullable', 'array'],
-            'verified.*' => [Rule::in(array_keys(self::VERIFY_KINDS))],
-        ], ['gender.in' => '性別只能選弟兄或姊妹。', 'age_min.in' => '年齡請從選單裡選。', 'age_max.in' => '年齡請從選單裡選。'],
-            ['gender' => '性別', 'place' => '居住地', 'age_min' => '年齡（從）', 'age_max' => '年齡（到）', 'marital' => '婚姻狀況', 'faith' => '信仰', 'name' => '暱稱', 'verified.*' => '認證']);
-        // 起訖填反就對調（舊站也是這樣）
-        // 例如「從 40 到 29」→「從 25 到 44」：兩個邊界各自換到對面那一格的頭尾
-        if (! empty($filters['age_min']) && ! empty($filters['age_max']) && $filters['age_min'] > $filters['age_max']) {
-            [$filters['age_min'], $filters['age_max']] = [max(18, intdiv($filters['age_max'], 5) * 5), intdiv($filters['age_min'], 5) * 5 + 4];
-        }
+        $filters = $request->validate(['name' => ['nullable', 'string', 'max:20']], [], ['name' => '暱稱']);
+        $me = $request->user();
+        $pref = self::preferenceFilter($me->profile);
 
-        $members = $this->listable($request->user())
+        $members = $this->listable($me)
             ->with('profile')
-            // 個人資料的條件合成一個子查詢
-            ->whereHas('profile', function ($p) use ($filters) {
-                $p->when($filters['gender'] ?? null, fn ($q, $g) => $q->where('gender', $g))
-                    ->when($filters['place'] ?? null, fn ($q, $pl) => $q->where('live_place', $pl))
-                    ->ageBetween($filters['age_min'] ?? null, $filters['age_max'] ?? null)
-                    ->when($filters['marital'] ?? null, fn ($q, $m) => $q->where('marital', $m))
-                    ->when($filters['faith'] ?? null, fn ($q, $f) => $q->where('faith', $f))
-                    ->when($filters['photo'] ?? false, fn ($q) => $q->where('photo_status', 'approved'));
-            })
+            ->whereHas('profile', fn ($p) => $p
+                ->when($pref['gender'], fn ($q, $g) => $q->where('gender', $g))
+                ->when($pref['place'], fn ($q, $pl) => $q->where('live_place', $pl))
+                ->ageBetween($pref['age_min'], $pref['age_max']))
             ->when($filters['name'] ?? null, fn ($q, $n) => $q->where('name', 'like', '%' . addcslashes($n, '\%_') . '%'))
-            ->when($filters['verified'] ?? [], function ($q, $kinds) {
-                foreach (array_unique($kinds) as $kind) {
-                    $q->whereHas('verifications', fn ($v) => $v->where('kind', $kind)->where('status', 'approved'));
-                }
-            })
             // 最近登入的排前面（舊站 member/search.php 也是）；沒登入過的排最後
             ->orderByRaw('last_login_at IS NULL')->orderByDesc('last_login_at')->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
 
-        // 居住地選單：只列「列得出來的會員」填過的地方（被封鎖、暫停、沒驗證的人填的不放進來）
-        $places = Profile::whereIn('user_id', $this->listable($request->user())->select('id'))
-            ->where('live_place', '<>', '')->distinct()->orderBy('live_place')->pluck('live_place');
+        return view('members.index', ['members' => $members, 'filters' => $filters, 'pref' => $pref]);
+    }
 
-        return view('members.index', [
-            'members' => $members,
-            'places' => $places,
-            'filters' => $filters,
-            'ageFrom' => self::AGE_FROM,
-            'ageTo' => self::AGE_TO,
-            'verifyKinds' => self::VERIFY_KINDS,
-        ]);
+    // 交友條件 → 列表用的篩選。年齡放寬到 5 歲一格：下限往下取到格子開頭（最低 18）、上限往上取到格子結尾
+    public static function preferenceFilter(?Profile $p): array
+    {
+        $min = $p?->pref_age_min;
+        $max = $p?->pref_age_max;
+
+        return [
+            'gender' => in_array($p?->pref_gender, ['男', '女'], true) ? $p->pref_gender : null,
+            'place' => ($p?->pref_place ?? '') !== '' ? $p->pref_place : null,
+            'age_min' => $min ? max(18, intdiv($min, 5) * 5) : null,
+            'age_max' => $max ? intdiv($max, 5) * 5 + 4 : null,
+        ];
     }
 
     // 「認識朋友」列得出來的會員：有個人檔案、email 和手機驗證過、沒暫停或註銷、跟我沒有封鎖關係、沒有結婚
