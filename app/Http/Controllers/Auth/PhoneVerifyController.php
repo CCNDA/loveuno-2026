@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Phone;
+use App\Support\Points;
 use App\Support\Sms;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -127,6 +128,8 @@ class PhoneVerifyController extends Controller
             // 兩個人同時驗證同一支手機：後面那位
             throw ValidationException::withMessages(['code' => '這支手機已經用在別的帳號了。如果是您本人的，請寫信跟我們聯繫。']);
         }
+        // 「完成手機認證 +10」在認證當下就給（原本要等打開愛積點頁才補發，日期也跟著錯；小霏 11/4 帳本看到）
+        Points::checkTasks($user);
 
         return $changing
             ? redirect()->route('verify.index')->with('status', '手機號碼換好了。')

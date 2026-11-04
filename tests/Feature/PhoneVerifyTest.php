@@ -65,6 +65,16 @@ class PhoneVerifyTest extends TestCase
         $this->assertArrayNotHasKey('phone', $u->toArray());
     }
 
+    // 「完成手機認證 +10」在認證當下就入帳，不必等打開愛積點頁（小霏 11/4 帳本：手機 11/2 認證、點數 11/4 才進來）
+    public function test_phone_points_given_at_verification(): void
+    {
+        $u = $this->newMember();
+        $code = $this->sendAndCatchCode($u);
+        $this->assertSame(0, \DB::table('point_transactions')->where('user_id', $u->id)->where('ref', 'once')->where('type', 'phone')->count());
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/diaries');
+        $this->assertSame(1, \DB::table('point_transactions')->where('user_id', $u->id)->where('ref', 'once')->where('type', 'phone')->count());
+    }
+
     public function test_validation_expiry_attempts_and_rate_limit(): void
     {
         $u = $this->newMember();
