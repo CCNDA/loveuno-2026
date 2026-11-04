@@ -61,12 +61,16 @@ class ImportLegacyAccounts extends Command
 
             DB::transaction(function () use ($row, $email, $plain) {
                 $user = User::firstOrNew(['legacy_id' => $row->id]);
+                if ($user->deleted_at !== null) {
+                    return; // 會員自己註銷了：不要再匯回來
+                }
                 $user->name = trim((string) $row->nickname) !== '' ? trim((string) $row->nickname) : '會員' . $row->id;
                 $user->email = $email;
                 $user->password = $plain; // casts 'hashed'：存進去的是雜湊
                 // 從測試庫來的都是測試帳號，跟示範資料一樣在正式開放前要刪掉
                 $user->is_demo = true;
                 $user->email_verified_at ??= now(); // 舊站已經是會員，不用再驗證
+                $user->phone_verified_at ??= now(); // 測試庫沒有 certification 表，號碼搬不過來；測試帳號先當作已認證（正式搬遷看 legacy:import-export）
                 $user->save();
 
                 $year = $row->birthday ? (int) substr((string) $row->birthday, 0, 4) : 0;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\LogoutSuspended;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,15 +48,28 @@ class LoginController extends Controller
             throw ValidationException::withMessages(['email' => '電子郵件或密碼不正確。']);
         }
 
+        // 停權的帳號不能登入：舊站搬來的停權會員（feat/migrate）和後台停權（D-02，熊叔叔 11/2 TG「只做停權」）都是 suspended_at。
+        // 只在密碼對的時候才說，不會被拿來試帳號；訊息跟中途被停權登出（LogoutSuspended）同一句
+        if ($request->user()->suspended_at !== null) {
+            Auth::logout();
+            throw ValidationException::withMessages(['email' => LogoutSuspended::MESSAGE]);
+        }
+
         RateLimiter::clear($key);
         $request->session()->regenerate();
         $request->user()->forceFill(['last_login_at' => now()])->save();
+        $request->session()->put('script', $request->user()->script ?: 'hant'); // 帳號設定的「顯示語言」
 
         return redirect()->intended(route('diaries.index'));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        // 這台裝置在這次登入開的推播：登出就刪掉
+        $ids = (array) $request->session()->get('push_subscription_ids', []);
+        if ($ids && $request->user()) {
+            \App\Models\PushSubscription::whereIn('id', $ids)->where('user_id', $request->user()->id)->delete();
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

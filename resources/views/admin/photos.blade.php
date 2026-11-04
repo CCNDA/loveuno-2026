@@ -29,7 +29,7 @@
                              width="{{ $kind === 'photo' ? 160 : 300 }}" height="{{ $kind === 'photo' ? 160 : 100 }}">
                         <div>
                             <p class="member-name"><a href="{{ route('members.show', $p->user) }}">{{ $p->user->name }}</a></p>
-                            <p class="meta">上傳時間 {{ $p->{$kind . '_updated_at'}?->format('Y/n/j H:i') }}</p>
+                            <p class="meta">上傳時間 {{ $p->{$kind . '_updated_at'}?->shown()->format('Y/n/j H:i') }}</p>
                             <form method="POST" action="{{ route('admin.photos.decide', $p) }}" class="review-actions">
                                 @csrf
                                 <input type="hidden" name="kind" value="{{ $kind }}">
@@ -44,4 +44,5 @@
         @endif
     </section>
 @endforeach
+
 @endsection

@@ -1,0 +1,103 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\AlbumPhoto;
+use App\Models\Profile;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class AlbumTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function member(string $name = '會員', array $over = []): User
+    {
+        $u = User::factory()->create(['name' => $name] + $over);
+        Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990]);
+
+        return $u;
+    }
+
+    public function test_upload_visible_without_review(): void
+    {
+        Storage::fake('avatars');
+        $me = $this->member('我');
+        $other = $this->member('別人');
+        $admin = $this->member('管理員', ['is_admin' => true]);
+
+        $this->actingAs($me)->get('/me/album')->assertOk()->assertSee('相簿照片上限為 9 張')->assertDontSee('審核');
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 2000, 1500)]])
+            ->assertRedirect('/me/album')->assertSessionHas('status', '1 張照片放進相簿了。');
+        $ph = AlbumPhoto::firstOrFail();
+        $this->assertSame('approved', $ph->status);
+        [$w] = getimagesizefromstring(Storage::disk('avatars')->get($ph->path));
+        $this->assertSame(1200, $w);
+
+        // 熊叔叔 10/29「1不用」：不用審核，別人馬上看得到；管理員審核頁沒有相簿
+        $this->actingAs($other)->get("/album/{$ph->id}")->assertOk();
+        $this->actingAs($other)->get("/members/{$me->id}?tab=album")->assertSee(route('album.show', $ph), false);
+        $this->actingAs($admin)->get('/admin/photos')->assertOk()->assertDontSee(route('album.show', $ph), false);
+
+        // 封鎖、暫停帳號就看不到
+        DB::table('blocks')->insert(['blocker_id' => $me->id, 'blocked_id' => $other->id, 'created_at' => now(), 'updated_at' => now()]);
+        $this->actingAs($other)->get("/album/{$ph->id}")->assertNotFound();
+        $third = $this->member('第三人');
+        $this->actingAs($third)->get("/album/{$ph->id}")->assertOk();
+        $me->forceFill(['is_active' => false])->save();
+        $this->actingAs($third)->get("/album/{$ph->id}")->assertNotFound();
+    }
+
+    public function test_max_nine_and_delete(): void
+    {
+        Storage::fake('avatars');
+        $me = $this->member('我');
+        for ($i = 0; $i < AlbumPhoto::MAX; $i++) {
+            $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image("p{$i}.png", 400, 400)]])->assertRedirect();
+        }
+        $this->assertSame(9, AlbumPhoto::count());
+        $this->actingAs($me)->get('/me/album')->assertSee('相簿滿了');
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('x.png', 400, 400)]])
+            ->assertSessionHasErrors(['photos' => '相簿最多 9 張，請先刪掉一張再放。']);
+        $this->assertSame(9, AlbumPhoto::count());
+
+        $ph = AlbumPhoto::first();
+        $other = $this->member('別人');
+        $this->actingAs($other)->delete("/me/album/{$ph->id}")->assertNotFound(); // 不能刪別人的
+        $this->actingAs($me)->delete("/me/album/{$ph->id}")->assertRedirect('/me/album');
+        Storage::disk('avatars')->assertMissing($ph->path);
+        $this->assertSame(8, AlbumPhoto::count());
+    }
+
+    public function test_validation_and_old_rejected_slot(): void
+    {
+        Storage::fake('avatars');
+        $me = $this->member('我');
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->create('a.gif', 10, 'image/gif')]])->assertSessionHasErrors('photos.0');
+        $this->actingAs($me)->post('/me/album', ['photos' => [UploadedFile::fake()->image('a.jpg', 100, 100)]])->assertSessionHasErrors('photos.0'); // 太小
+        $this->assertSame(0, AlbumPhoto::count());
+
+        // 以前審核不通過留下的一格：會員看得到、不佔名額、可以刪掉
+        $ph = new AlbumPhoto;
+        $ph->forceFill(['user_id' => $me->id, 'path' => '', 'status' => 'rejected'])->save();
+        $this->actingAs($me)->get('/me/album')->assertSee('這張沒有通過管理員審核');
+        $this->assertSame(0, AlbumPhoto::countedFor($me->id));
+        $this->actingAs($me)->delete("/me/album/{$ph->id}")->assertRedirect();
+        $this->assertSame(0, AlbumPhoto::count());
+    }
+
+    public function test_upload_several_at_once_within_limit(): void
+    {
+        Storage::fake('avatars');
+        $me = $this->member('我');
+        $files = fn (int $n) => array_map(fn ($i) => UploadedFile::fake()->image("m{$i}.jpg", 400, 400), range(1, $n));
+        $this->actingAs($me)->post('/me/album', ['photos' => $files(7)])->assertSessionHas('status', fn ($s) => str_contains($s, '7 張'));
+        $this->actingAs($me)->post('/me/album', ['photos' => $files(3)])->assertSessionHasErrors(['photos' => '相簿還可以放 2 張，這次選太多了。']);
+        $this->assertSame(7, AlbumPhoto::count());
+        $this->assertCount(7, Storage::disk('avatars')->allFiles('album')); // 失敗的那批沒有留下檔案
+    }
+}

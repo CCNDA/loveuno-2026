@@ -14,22 +14,65 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'legacy_id', 'is_demo'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'phone', 'phone_pending', 'phone_code_hash'])]
 // MustVerifyEmail：新註冊的會員要先驗證 email 才能看會員頁（verified middleware）
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    // 跟資料庫的預設值一樣：剛 create、還沒重新讀過的物件也有這些值（不然 is_active 會是 null，被當成暫停）
+    protected $attributes = [
+        'is_active' => true,
+        'notify_email' => true,
+        'font_size' => 'medium',
+        'font_family' => 'system',
+        'script' => 'hant',
+    ];
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'legacy_status' => 'integer',
+            'phone_code_expires_at' => 'datetime',
+            'phone_code_attempts' => 'integer',
             'password' => 'hashed',
             'is_demo' => 'boolean',
             'is_admin' => 'boolean',
+            'is_super_admin' => 'boolean', // 最高管理員：可以在後台設定誰是管理員
+            'points' => 'integer',
+            'notify_email' => 'boolean',
+            'is_active' => 'boolean',
+            'deleted_at' => 'datetime',
+            'suspended_at' => 'datetime', // 停權：舊站搬來的（2026_10_30_000029）或後台停權（2026_11_02_000001），哪個先跑就由哪個建欄位
+            'suspend_prev_active' => 'boolean',
         ];
+    }
+
+    // 別人看得到的會員：沒暫停、沒註銷（註銷的 is_active 也是 false）。暫停／註銷要擋的地方都用這個，免得漏掉
+    // 管理員權限的說法（後台列表、會員頁、user:admin 指令共用）
+    public function roleLabel(): string
+    {
+        return $this->is_super_admin ? '最高管理員' : ($this->is_admin ? '管理員' : '一般會員');
+    }
+
+    public function scopeActive(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        return $q->where('is_active', true);
+    }
+
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(Verification::class);
+    }
+
+    // 通過的身份認證（職業、身分證明、教會週報）：[kind => Verification]
+    public function approvedVerifications(): \Illuminate\Support\Collection
+    {
+        return $this->verifications->where('status', 'approved')->keyBy('kind');
     }
 
     public function profile(): HasOne
@@ -77,5 +120,46 @@ class User extends Authenticatable implements MustVerifyEmail
     public function blockedEitherWay(User $other): bool
     {
         return in_array((int) $other->id, $this->blockRelatedIds(), true);
+    }
+
+    // 我的好友等級：[對方 id => 1～3]。跟封鎖名單一樣快取在「這一個請求」上（會員列表每張卡片都會問）
+    public function friendLevels(): array
+    {
+        $key = 'friend_levels:' . $this->id;
+        $attrs = request()->attributes;
+        if (! $attrs->has($key)) {
+            $map = [];
+            foreach (Friendship::where('user_id', $this->id)->orWhere('friend_id', $this->id)->get() as $f) {
+                $map[$f->otherThan($this)] = $f->level;
+            }
+            $attrs->set($key, $map);
+        }
+
+        return $attrs->get($key);
+    }
+
+    // 0＝路人甲（Friendship::LEVELS）
+    public function friendLevelWith(User $other): int
+    {
+        return $this->friendLevels()[(int) $other->id] ?? 0;
+    }
+
+    public static function forgetFriendLevels(User ...$users): void
+    {
+        foreach ($users as $u) {
+            request()->attributes->remove('friend_levels:' . $u->id);
+        }
+    }
+
+    // 手機認證還在 12 個月內（熊叔叔 10/29「2b照舊站」）
+    public function hasValidPhone(): bool
+    {
+        return $this->phone_verified_at !== null && $this->phone_verified_at->gte(\App\Support\Phone::cutoff());
+    }
+
+    // 列給別人看的會員：手機認證還在 12 個月內
+    public function scopePhoneVerified(\Illuminate\Database\Eloquent\Builder $q): void
+    {
+        $q->whereNotNull('phone_verified_at')->where('phone_verified_at', '>=', \App\Support\Phone::cutoff());
     }
 }

@@ -3,11 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'gender', 'birth_year', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
-    'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place'])]
+#[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
+    'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place',
+    'real_name', 'home_phone', 'faith', 'marital', 'children', 'education', 'blood_type', 'height', 'weight', 'smoking', 'drinking',
+    'family_planning', 'headline', 'verse_book', 'verse_chapter', 'verse_verse', 'verse_text', 'languages', 'hobbies', 'sports', 'love_history'])]
+// 轉成陣列／JSON 時不輸出：生日月日（只拿來算「生日快到了」，10/29「3A」）、真實姓名與住家電話（只有管理員看得到，10/29「1B」）
+#[Hidden(['birth_month', 'birth_day', 'real_name', 'home_phone'])]
 class Profile extends Model
 {
     protected $primaryKey = 'user_id';
@@ -19,9 +24,47 @@ class Profile extends Model
         return [
             'church_visible' => 'boolean',
             'birth_year' => 'integer',
+            'height' => 'integer',
+            'weight' => 'integer',
+            'verse_chapter' => 'integer',
+            'verse_verse' => 'integer',
+            'languages' => 'array',
+            'hobbies' => 'array',
+            'sports' => 'array',
+            'love_history' => 'array',
             'photo_updated_at' => 'datetime',
             'cover_updated_at' => 'datetime',
         ];
+    }
+
+    // 會員檔案「個人資料」分頁要列的欄位（空的不列）
+    public function detailRows(): array
+    {
+
+        return array_filter([
+            '性別' => $this->gender !== '' ? $this->genderLabel() : null,
+            '年齡' => $this->ageGroup(),
+            '居住地' => $this->live_place,
+            '信仰' => $this->faith,
+            '婚姻狀況' => $this->marital,
+            '子女人數' => $this->children,
+            '教育程度' => $this->education,
+            '職業' => $this->job,
+            '是否喝酒' => $this->drinking,
+            '是否抽菸' => $this->smoking,
+            '血型' => $this->blood_type,
+            '計劃生育' => $this->family_planning,
+            '身高' => $this->height ? $this->height . ' cm' : null,
+            '體重' => $this->weight ? $this->weight . ' kg' : null,
+            '教會' => $this->church_visible ? $this->church : null,
+        ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    // 「自我介紹」分頁有沒有東西可以看
+    public function hasIntroduction(): bool
+    {
+        return ($this->headline ?? '') !== '' || $this->intro || ($this->verse_book ?? '') !== ''
+            || ! empty($this->hobbies) || ! empty($this->sports) || ! empty($this->languages) || $this->hope;
     }
 
     public function user(): BelongsTo
@@ -51,6 +94,9 @@ class Profile extends Model
         if (! $viewer->is_admin && $viewer->id !== $this->user_id && in_array((int) $this->user_id, $viewer->blockRelatedIds(), true)) {
             return false; // 封鎖（任一方）就看不到照片；管理員審核不受影響
         }
+        if (! $viewer->is_admin && $viewer->id !== $this->user_id && ! $this->user->is_active) {
+            return false; // 暫停／註銷的帳號，別人看不到照片
+        }
 
         return $status === 'approved'
             || ($status === 'pending' && ($viewer->id === $this->user_id || $viewer->is_admin));
@@ -60,6 +106,15 @@ class Profile extends Model
     public function genderLabel(): string
     {
         return ['男' => '弟兄', '女' => '姊妹'][$this->gender] ?? '';
+    }
+
+    // 用出生年篩年齡（跟 ageGroup() 同一種算法）：認識朋友的條件搜尋、日記牆的好友推薦共用
+    public function scopeAgeBetween(\Illuminate\Database\Eloquent\Builder $q, ?int $min, ?int $max): \Illuminate\Database\Eloquent\Builder
+    {
+        $year = (int) now()->format('Y');
+
+        return $q->when($min, fn ($w) => $w->where('birth_year', '<=', $year - $min))
+            ->when($max, fn ($w) => $w->where('birth_year', '>=', $year - $max));
     }
 
     // 只顯示年齡層，不顯示生日（舊站直接秀出生日與真實姓名，新版不這樣做）

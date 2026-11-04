@@ -124,7 +124,7 @@ class NoteTest extends TestCase
         for ($i = 0; $i < 30; $i++) {
             $this->actingAs($a)->post("/notes/{$b->id}", ['body' => "第{$i}張"]);
         }
-        $this->actingAs($a)->put('/me', ['name' => '甲'])->assertRedirect("/members/{$a->id}");
+        $this->actingAs($a)->put('/me', $this->profileForm(['name' => '甲']))->assertRedirect("/members/{$a->id}");
         $this->actingAs($a)->put('/center/preferences', [])->assertRedirect('/center/preferences');
     }
 

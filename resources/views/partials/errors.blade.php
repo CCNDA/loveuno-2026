@@ -5,7 +5,8 @@
         <ul>
             @foreach ($errors->messages() as $field => $messages)
                 @foreach ($messages as $message)
-                    <li><a href="#{{ $field }}">{{ $message }}</a></li>
+                    {{-- hobbies.0 這種陣列欄位的錯誤，連到整組（id="hobbies"） --}}
+                    <li><a href="#{{ \Illuminate\Support\Str::before($field, '.') }}">{{ $message }}</a></li>
                 @endforeach
             @endforeach
         </ul>

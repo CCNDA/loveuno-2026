@@ -5,12 +5,13 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 
-// 設定或取消管理員：php artisan user:admin <email>（--off 取消）。不印密碼，只印 id。
+// 設定或取消管理員：php artisan user:admin <email>（--super 設成最高管理員；--off 取消，連最高管理員一起取消）。
+// 平常在後台「會員管理」由最高管理員設定；這支指令用來設第一位最高管理員（熊叔叔）。不印密碼，只印 id。
 class SetAdmin extends Command
 {
-    protected $signature = 'user:admin {email} {--off : 取消管理員}';
+    protected $signature = 'user:admin {email} {--super : 設成最高管理員（可以在後台設定別人當管理員）} {--off : 取消管理員}';
 
-    protected $description = '設定或取消管理員（審核大頭照用）';
+    protected $description = '設定或取消管理員（--super：最高管理員）';
 
     public function handle(): int
     {
@@ -20,8 +21,12 @@ class SetAdmin extends Command
 
             return self::FAILURE;
         }
-        $user->forceFill(['is_admin' => ! $this->option('off')])->save();
-        $this->info(sprintf('帳號 #%d 現在%s管理員。', $user->id, $user->is_admin ? '是' : '不是'));
+        $off = (bool) $this->option('off');
+        $user->forceFill([
+            'is_admin' => ! $off,
+            'is_super_admin' => ! $off && ($this->option('super') || $user->is_super_admin),
+        ])->save();
+        $this->info(sprintf('帳號 #%d 現在是%s。', $user->id, $user->roleLabel()));
 
         return self::SUCCESS;
     }

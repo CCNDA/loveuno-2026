@@ -16,10 +16,13 @@
     {{-- 個人檔案底下的小分頁 --}}
     <nav class="center-subtabs" aria-label="個人檔案">
         <ul>
-            <li><a href="{{ route('profile.edit') }}" @if(($sub ?? '') === 'info') aria-current="page" @endif>個人資料與自我介紹</a></li>
+            <li><a href="{{ route('profile.edit') }}" @if(($sub ?? '') === 'info') aria-current="page" @endif>個人資料</a></li>
+            <li><a href="{{ route('profile.intro') }}" @if(($sub ?? '') === 'intro') aria-current="page" @endif>自我介紹</a></li>
+            <li><a href="{{ route('profile.love') }}" @if(($sub ?? '') === 'love') aria-current="page" @endif>戀愛履歷</a></li>
+            <li><a href="{{ route('album.edit') }}" @if(($sub ?? '') === 'album') aria-current="page" @endif>個人相簿</a></li>
             <li><a href="{{ route('photo.edit') }}" @if(($sub ?? '') === 'photo') aria-current="page" @endif>大頭照</a></li>
             <li><a href="{{ route('cover.edit') }}" @if(($sub ?? '') === 'cover') aria-current="page" @endif>個人化封面</a></li>
-            <li><span class="subtab-soon">身份認證（年底開放前）</span></li>
+            <li><a href="{{ route('verify.index') }}" @if(($sub ?? '') === 'verify') aria-current="page" @endif>身份認證</a></li>
         </ul>
     </nav>
 @endif

@@ -3,18 +3,18 @@
    無障礙：字級 18px 起跳、文字對比 ≥ 4.5:1、焦點外框明顯、觸控目標 ≥ 44px。 */
 
 :root {
-    /* 配色照熊叔叔 10/29 給的 loveuno-web 切版：蜜桃頁首、米白底、磚紅主按鈕、紫褐次按鈕。
+    /* 配色照 CCNDA/loveuno-frontend 的 styles/theme.ts（設計 token，MIT，CCNDA）：BROWN 頁首、PALE_ORANGE 底、PRIMARY_BROWN 主按鈕、BRAND_BROWN 次按鈕。
        每一組文字／底色都算過對比 ≥ 4.5:1（切版的頁首白字對蜜桃底只有約 1.8，改成深褐字）。 */
-    --bg: #fffcf2;          /* 米白底 */
+    --bg: #fffdf4;          /* 米白底（loveuno-web manifest background_color） */
     --surface: #ffffff;
     --text: #2b211d;
     --muted: #5e5049;       /* 對米白約 7:1 */
     --brand: #8a4a32;       /* 連結：對米白約 6.6:1 */
     --brand-dark: #6e3a27;
-    --button: #a3644a;      /* 主按鈕：白字約 4.7:1 */
+    --button: #a46246;      /* PRIMARY_BROWN：白字 4.76:1 */
     --button-dark: #8a4a32;
-    --plum: #644754;        /* 次按鈕：白字約 8.2:1 */
-    --header: #e4bba4;      /* 頁首蜜桃色：深褐字約 7.7:1 */
+    --plum: #664a53;        /* BRAND_BROWN：白字 7.87:1（當頁首文字只有 4.48，所以頁首字不用它） */
+    --header: #e5bba2;      /* 頁首蜜桃色（manifest theme_color）：深褐字 7.7:1 */
     --header-text: #3d2a22;
     --line: #ead9cc;
     --focus: #1d4ed8;
@@ -53,7 +53,8 @@ main:focus { outline: none; }
 
 .site-header { background: var(--header); color: var(--header-text); }
 .header-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-.brand { font-size: 1.4rem; font-weight: 700; text-decoration: none; color: var(--header-text); letter-spacing: .05em; }
+.brand { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.brand img { height: 40px; width: auto; display: block; }
 .nav { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
 .nav a, .link-button {
     display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
@@ -98,7 +99,7 @@ h3 { font-size: 1.1rem; margin: 0 0 .5rem; }
 .field input[aria-invalid="true"], .field select[aria-invalid="true"] { border-color: var(--error); }
 fieldset.field { border: 0; padding: 0; margin: 0 0 16px; }
 fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
-.field-check { display: flex; align-items: center; gap: 8px; }
+.field-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .field-check input { width: 24px; height: 24px; }
 .field-check label { margin: 0; font-weight: 400; }
 .field-error { color: var(--error); margin: 4px 0 0; }
@@ -164,7 +165,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 
 /* 編輯表單 */
 .form-wide { max-width: 40rem; }
-.field input[type="text"], .field textarea {
+.field input[type="text"], .field input[type="number"], .field input[type="tel"], .field input[type="url"], .field textarea {
     width: 100%; min-height: 48px; padding: 8px 12px; font: inherit; font-size: 1rem;
     border: 2px solid #8c857b; border-radius: 8px; background: #fff; color: var(--text);
 }
@@ -186,7 +187,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
         min-height: 60px; font-size: .85rem; color: var(--muted); text-decoration: none;
     }
     .bottom-nav a[aria-current="page"] { color: var(--brand-dark); font-weight: 700; background: #fbefe8; }
-    .bn-icon { font-size: 1.3rem; line-height: 1; }
+    .bn-icon { width: 24px; height: 24px; object-fit: contain; }
     body.has-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     /* 用 Tab 移到頁面下方時，焦點不要被底部選單蓋住 */
     html:has(body.has-bottom-nav) { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
@@ -273,3 +274,178 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 
 /* 繁／简切換 */
 .script-toggle { border: 1px solid var(--header-text); }
+
+/* 日記：代禱標籤、附圖、為你禱告／留言（設計稿 DiaryWall） */
+.tag-prayer { background: #cdeaf3; color: #05678a; font-weight: 700; } /* 設計稿 #0893c1 字對 #cdeaf3 只有 2.8:1，加深到 5.0:1 */
+.diary-image { display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: var(--radius); }
+.diary-image-thumb { max-width: 240px; }
+.diary-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.diary-actions form { margin: 0; }
+.action-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; text-decoration: none; cursor: pointer; }
+.action-button:hover { background: #fdf3ec; }
+.action-button.is-on { border-color: var(--brand); background: #fdf3ec; font-weight: 700; }
+.action-count { font-variant-numeric: tabular-nums; }
+.comments { margin-top: 32px; }
+.comment-form { margin-bottom: 16px; }
+.comment-list { list-style: none; padding: 0; margin: 0; }
+.comment-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.comment-main { flex: 1; min-width: 0; }
+.comment-head { margin: 0; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.comment-head a { font-weight: 700; }
+.comment-body { margin: 4px 0; overflow-wrap: anywhere; }
+.comment-item .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
+.avatar-sm { width: 40px; height: 40px; font-size: 1rem; }
+
+/* 檢舉（管理員） */
+.report-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.report-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.report-item h3 { margin-top: 0; }
+.report-meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0 0 8px; }
+.report-meta dt { font-weight: 700; }
+.report-meta dd { margin: 0; }
+.danger-links { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 8px 32px; }
+.danger-links a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 日記牆卡片上的留言（設計稿 DiaryWall CommentZone） */
+.wall-comments { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.wall-comment-form { display: flex; gap: 8px; align-items: center; }
+.wall-comment-form input { flex: 1; min-width: 0; min-height: 44px; border: 1px solid transparent; border-radius: 20px; background: #f1eee8; padding: 6px 10px 6px 20px; }
+.wall-comment-form input:focus { border-color: var(--brand); }
+/* 設計稿提示字 #999 對 #f1eee8 只有 2.5:1，加深到 5.3:1 */
+.wall-comment-form input::placeholder { color: #6b5f57; opacity: 1; }
+/* 設計稿 CommentText：灰底圓角泡泡；字色 PRIMARY_BROWN #A46246 對 #f2f2f2 只有 4.25:1，加深到 #965a40（4.9:1） */
+.comment-bubble { display: inline-block; max-width: 100%; border-radius: 20px; padding: 10px 16px; background: #f2f2f2; color: #965a40; }
+.comment-bubble .comment-head a { color: #965a40; }
+.comment-bubble .comment-body { margin: 2px 0 0; }
+.comment-time { display: block; margin-top: 8px; font-size: .85rem; color: var(--brand); }
+.icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.wall-comments .comment-list { margin-top: 8px; }
+.wall-comments .comment-item:first-child { border-top: 0; }
+
+/* 好友 */
+.relationship { margin: 8px 0; }
+.relationship a { display: inline-flex; align-items: center; min-height: 44px; }
+.friend-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.friend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.friend-item .member-name { margin: 0; }
+.friend-item .member-name a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 愛積點 */
+.points-balance { font-size: 1.15rem; }
+.points-balance strong { font-size: 1.6rem; color: var(--brand-dark); }
+.points-table { width: 100%; border-collapse: collapse; margin: 8px 0 24px; }
+.points-table th, .points-table td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.points-table thead th { font-size: .9rem; color: var(--muted); }
+.points-table tbody th { font-weight: 400; }
+.points-table td a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 送禮物 */
+.member-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.button-light { background: #fff; color: var(--brand-dark); border: 2px solid var(--brand); display: inline-flex; align-items: center; gap: 6px; }
+.button-light:hover { background: #fdf3ec; color: var(--brand-dark); }
+.gift-grid { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 8px; }
+.gift-radio { position: absolute; opacity: 0; width: 1px; height: 1px; }
+/* 要比 .field label { display: block } 權重高 */
+.field .gift-card { display: flex; font-weight: 400; margin: 0; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border: 2px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; text-align: center; min-height: 44px; }
+.field .gift-radio:checked + .gift-card { border-color: var(--brand); background: #fdf3ec; font-weight: 700; }
+.gift-radio:focus-visible + .gift-card { outline: 3px solid var(--focus, #1a5fb4); outline-offset: 2px; }
+.gift-list { list-style: none; padding: 0; margin: 0; }
+.gift-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.gift-title, .gift-message { margin: 0; }
+.gift-message { padding: 6px 12px; border-radius: 16px; background: #f2f2f2; display: inline-block; margin-top: 4px; }
+.welcome-new { margin-top: 24px; }
+.welcome-list { list-style: none; padding: 0; margin: 0; }
+.welcome-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.welcome-main { flex: 1; min-width: 0; }
+.welcome-main .member-name, .welcome-main .meta { margin: 0; }
+.gift-card img { width: 96px; height: 96px; object-fit: contain; }
+.gift-thumb { width: 56px; height: 56px; object-fit: contain; flex: none; }
+
+/* 生日、特殊節日 */
+.birthday-selects { display: flex; gap: 16px; }
+.birthday-selects label { font-weight: 400; }
+.occasions { margin-top: 24px; }
+.occasion-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.occasion-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); }
+.occasion-item p { margin: 0; }
+.occasion-item a { display: inline-flex; align-items: center; min-height: 44px; }
+.occasion-birthday { background: #6fdaed; color: #1f1a17; } /* 設計稿 BLUE；白字只有 1.6:1，改深色字 */
+.occasion-anniversary { background: #ff8964; color: #1f1a17; } /* 設計稿 BRIGHT_ORANGE；白字只有 2.3:1，改深色字 */
+.occasion-item a { color: #1f1a17; text-decoration: underline; font-weight: 700; }
+
+/* 個人資料、自我介紹、會員檔案分頁 */
+.input-short { max-width: 10rem; }
+.verse-row { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.verse-row .field { margin-bottom: 8px; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 4px 12px; }
+.check-grid .field-check { min-height: 44px; }
+.member-tabs { margin-top: 16px; }
+.headline { font-size: 1.15rem; font-weight: 700; }
+.verse { margin: 0; padding: 12px 16px; border-left: 4px solid var(--brand); background: var(--surface); }
+.verse p { margin: 0 0 4px; }
+.verse footer { color: var(--muted); }
+.tag-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-only { margin-top: 16px; }
+
+/* 個人相簿 */
+.album-grid { list-style: none; padding: 0; margin: 12px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.album-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); display: block; background: #efe7dc; }
+.album-item .meta { margin: 4px 0 0; }
+.album-item .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
+.review-album { object-fit: cover; }
+.album-rejected { margin: 0; padding: 12px; aspect-ratio: 1; display: flex; align-items: center; border: 2px dashed var(--line); border-radius: var(--radius); font-size: .9rem; }
+
+/* 手機認證 */
+.phone-reset { margin-top: 12px; }
+.phone-reset .link-button { color: var(--brand); text-decoration: underline; padding: 0; min-height: 44px; }
+
+/* 身份認證 */
+.verify-card { margin: 16px 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.verify-card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+.verify-status { font-weight: 700; }
+.verified-badge { vertical-align: middle; }
+
+/* 帳號設定：字體大小（html 上的 class，rem 一起變） */
+html.fs-small { font-size: 93.75%; }
+html.fs-medium { font-size: 100%; }
+html.fs-large { font-size: 118.75%; }
+.settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* 公開頁 */
+.footer-links { max-width: 46rem; margin: 0 auto; padding: 0 16px; } /* 跟頁尾其他文字對齊，原本貼著螢幕邊（break-ui 試用 10/30） */
+.footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.policy h2 { font-size: 1.15rem; margin-top: 24px; }
+.faq-group { margin-top: 24px; }
+.faq-item { border-top: 1px solid var(--line); padding: 4px 0; }
+.faq-item summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+/* 認識朋友的「更多條件」（D-01） */
+.more-filters { margin: 8px 0; }
+.more-filters summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.more-filters .field, .more-filters .field-check { margin-top: 12px; }
+.faq-item p { margin: 0 0 12px; }
+.donate { margin-top: 24px; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* 站務公告、愛的見證 */
+.news-table { width: 100%; border-collapse: collapse; }
+.news-table th, .news-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.news-table td a { display: inline-flex; align-items: center; min-height: 44px; }
+.table-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.story-cards { list-style: none; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.story-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.story-card h3, .story-card p { margin: 8px 16px; }
+.story-card p { margin-bottom: 16px; }
+.story-card h3 a { display: inline-flex; align-items: center; min-height: 44px; }
+.story-img { display: block; width: 100%; height: auto; aspect-ratio: 400 / 260; object-fit: cover; }
+.story-couple { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
+.story-couple li { display: flex; align-items: center; gap: 8px; }
+.story-photo { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin: 16px 0; }
+.inline-form { display: inline; }
+.welcome-banner { display: grid; gap: 16px; align-items: center; }
+.welcome-banner img { width: 100%; height: auto; }
+@media (min-width: 48rem) { .welcome-banner { grid-template-columns: 1fr 1fr; } }
+
+/* 約會 */
+.meetup-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.meetup-list a, .notice a { display: inline-flex; align-items: center; min-height: 44px; }

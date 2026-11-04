@@ -1,0 +1,3 @@
+/* 粉圓體：帳號設定選了「粉圓」才載入這個檔（約 5MB，第一次比較慢，之後瀏覽器會記住）。授權見 /fonts/README.txt */
+@font-face { font-family: 'jf-openhuninn'; src: url('../fonts/jf-openhuninn-2.1.ttf') format('truetype'); font-display: swap; }
+html.ff-huninn body, html.ff-huninn button, html.ff-huninn input, html.ff-huninn select, html.ff-huninn textarea { font-family: 'jf-openhuninn', system-ui, sans-serif; }

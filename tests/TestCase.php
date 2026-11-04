@@ -18,4 +18,22 @@ abstract class TestCase extends BaseTestCase
 
         return parent::setUpTraits();
     }
+
+    // PUT /me 的必填欄位（Figma 有「*」的，0.19.0 起）＋ $over
+    protected function profileForm(array $over = []): array
+    {
+        return array_merge([
+            'name' => '會員', 'faith' => '基督徒', 'marital' => '未婚', 'children' => '0', 'education' => '大學',
+            'blood_type' => 'O', 'smoking' => '從來不抽', 'drinking' => '從來不喝',
+        ], $over);
+    }
+
+    // PUT /me/intro 的必填欄位＋ $over
+    protected function introForm(array $over = []): array
+    {
+        return array_merge([
+            'headline' => '一句話介紹自己', 'languages' => ['中文/普通話'], 'hobbies' => ['讀經靈修'],
+            'intro' => '我是測試用的會員，這是一段超過三十個字的自我介紹，用來通過必填的檢查。',
+        ], $over);
+    }
 }
