@@ -20,13 +20,14 @@
     },
     $pref?->pref_place ?: null,
 ])->filter())
+@if ($members === null)
+    {{-- 還沒設交友條件：先請他設定（熊叔叔 11/4 TG），不列人、不給搜尋 --}}
+    <p class="pref-summary">請先設定您的交友條件（想認識弟兄或姊妹、年齡、居住地），這裡就會列出您想認識的對象。</p>
+    <p><a class="button" href="{{ route('center.preferences') }}">設定交友條件</a></p>
+@else
 <p class="pref-summary">
-    @if ($prefParts->isNotEmpty())
-        依您的交友條件列出：<strong>{{ $prefParts->implode('・') }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
-    @else
-        您還沒設定交友條件，先列出所有會員。設定之後，這裡就只會列出您想認識的對象。
-    @endif
-    <a href="{{ route('center.preferences') }}">{{ $prefParts->isNotEmpty() ? '修改交友條件' : '設定交友條件' }}</a>
+    依您的交友條件列出：<strong>{{ $prefParts->implode('・') }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
+    <a href="{{ route('center.preferences') }}">修改交友條件</a>
 </p>
 
 <form method="GET" action="{{ route('members.index') }}" class="filters" role="search" aria-label="用暱稱找會員">
@@ -68,5 +69,6 @@
     </ul>
 
     {{ $members->links('partials.pagination') }}
+@endif
 @endif
 @endsection

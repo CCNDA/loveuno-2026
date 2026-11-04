@@ -65,15 +65,22 @@ class MemberSearchTest extends TestCase
         $this->list($me2)->assertSee('18 歲以下')->assertSee('十九歲')->assertDontSee('二十歲');
     }
 
-    public function test_no_preferences_lists_everyone_and_asks_to_set_them(): void
+    public function test_no_preferences_asks_to_set_them_first(): void
     {
         $me = $this->member('我', ['gender' => '男']);
         $this->member('一位姊妹');
-        $this->member('一位弟兄', ['gender' => '男']);
-        $this->list($me)->assertSee('您還沒設定交友條件')->assertSee('設定交友條件')
+        $this->list($me)->assertOk()->assertSee('請先設定您的交友條件')->assertSee('設定交友條件')
             ->assertSee(route('center.preferences'), false)
-            ->assertSee('一位姊妹')->assertSee('一位弟兄')
-            ->assertDontSee('">我</a>', false); // 自己不列
+            ->assertDontSee('一位姊妹')->assertDontSee('用暱稱找')->assertDontSee('共 ');
+        // 帶暱稱也一樣：條件沒設就不找
+        $this->list($me, ['name' => '姊妹'])->assertSee('請先設定您的交友條件')->assertDontSee('一位姊妹');
+    }
+
+    public function test_self_not_listed(): void
+    {
+        $me = $this->member('我', ['gender' => '女', 'pref_gender' => '女']);
+        $this->member('一位姊妹');
+        $this->list($me)->assertSee('一位姊妹')->assertDontSee('">我</a>', false);
     }
 
     public function test_nobody_matches_asks_to_change_preferences(): void

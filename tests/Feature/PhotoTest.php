@@ -95,6 +95,7 @@ class PhotoTest extends TestCase
 
         $this->assertSame('approved', $p->fresh()->photo_status);
         $this->actingAs($other)->get("/photos/{$owner->id}")->assertOk();
+        $other->profile->forceFill(['pref_gender' => '女'])->save(); // 沒設交友條件不列人（11/4）
         $this->actingAs($other)->get('/members')->assertSee("/photos/{$owner->id}", false);
     }
 

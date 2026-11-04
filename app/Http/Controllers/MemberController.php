@@ -16,10 +16,14 @@ class MemberController extends Controller
     // 「認識朋友那邊應該不提供搜尋，頂多搜尋名字，列表應該是他設定的對象」按「留名字搜尋」；
     // 「如果沒有合適的對象，請他回去更改交友條件」）。0.31.0 的條件搜尋（D-01）拿掉。
     // 年齡放寬到 5 歲一格，見 Profile::preferenceFilter。
+    // 還沒設交友條件：不列任何人、也不給暱稱搜尋，先請他去設定（熊叔叔 11/4 TG 按「1先請他設定＋2只在條件裡」）。
     public function index(Request $request): View
     {
         $filters = $request->validate(['name' => ['nullable', 'string', 'max:20']], [], ['name' => '暱稱']);
         $me = $request->user();
+        if (! array_filter(Profile::preferenceFilter($me->profile))) {
+            return view('members.index', ['members' => null, 'filters' => [], 'pref' => $me->profile]);
+        }
         $members = $this->listable($me)
             ->whereKeyNot($me->id) // 自己不列（首頁推薦也不列自己）
             ->with('profile')

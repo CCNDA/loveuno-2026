@@ -27,6 +27,7 @@ class MemberListTest extends TestCase
     public function test_list_shows_members_with_age_group_not_birth_year(): void
     {
         $viewer = $this->member('看的人', '男', '台北市');
+        $viewer->profile->forceFill(['pref_gender' => '女'])->save(); // 沒設交友條件不列人（11/4）
         $this->member('晨光', '女', '台中市', 1994);
 
         $this->actingAs($viewer)->get('/members')->assertOk()
@@ -39,6 +40,7 @@ class MemberListTest extends TestCase
     public function test_invalid_input_shows_error_on_list(): void
     {
         $viewer = $this->member('看的人', '男', '台北市');
+        $viewer->profile->forceFill(['pref_gender' => '女'])->save(); // 有條件才有暱稱搜尋框
         $long = str_repeat('長', 21);
         $this->actingAs($viewer)->from('/members')->get('/members?name=' . urlencode($long))->assertSessionHasErrors('name');
         $this->actingAs($viewer)->followingRedirects()->from('/members')->get('/members?name=' . urlencode($long))
@@ -50,6 +52,7 @@ class MemberListTest extends TestCase
     public function test_avatar_is_hidden_from_screen_readers(): void
     {
         $viewer = $this->member('看的人', '男', '台北市');
+        $viewer->profile->forceFill(['pref_gender' => '女'])->save();
         $this->member('晨光', '女', '台中市'); // 自己不列，要有別人才有頭像
         $this->actingAs($viewer)->get('/members')->assertSee('class="avatar avatar-md"', false)->assertSee('aria-hidden="true"', false);
     }

@@ -128,7 +128,7 @@ class RegisterTest extends TestCase
     public function test_member_list_hides_unverified_members(): void
     {
         $viewer = User::factory()->create(['name' => '看的人']);
-        Profile::create(['user_id' => $viewer->id, 'gender' => '男']);
+        Profile::create(['user_id' => $viewer->id, 'gender' => '男'])->forceFill(['pref_gender' => '女'])->save(); // 沒設交友條件不列人（11/4）
         $pending = User::factory()->unverified()->create(['name' => '還沒驗證的人']);
         Profile::create(['user_id' => $pending->id, 'gender' => '女']);
 

@@ -29,6 +29,7 @@ class FriendTest extends TestCase
 
         Friendship::raise($you, $me, 1);
         $this->actingAs($me)->get("/members/{$you->id}")->assertSee('與您關係：<strong>普通好友</strong>', false)->assertSee(route('friends.confirm', $you), false);
+        $me->profile->forceFill(['pref_gender' => '女'])->save(); // 沒設交友條件不列人（11/4）
         $this->actingAs($me)->get('/members')->assertSee('<span class="tag">普通好友</span>', false);
     }
 
