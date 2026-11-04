@@ -412,6 +412,7 @@ html.fs-large { font-size: 118.75%; }
 .settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* 公開頁 */
+.footer-links { max-width: 46rem; margin: 0 auto; padding: 0 16px; } /* 跟頁尾其他文字對齊，原本貼著螢幕邊（break-ui 試用 10/30） */
 .footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
 .policy h2 { font-size: 1.15rem; margin-top: 24px; }

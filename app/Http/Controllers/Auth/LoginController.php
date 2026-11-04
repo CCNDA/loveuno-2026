@@ -48,6 +48,12 @@ class LoginController extends Controller
             throw ValidationException::withMessages(['email' => '電子郵件或密碼不正確。']);
         }
 
+        // 停權的帳號（舊站搬來的停權會員）：密碼對了也不能登入。只在密碼對的時候才說，不會被拿來試帳號
+        if ($request->user()->suspended_at !== null) {
+            Auth::logout();
+            throw ValidationException::withMessages(['email' => sprintf('這個帳號已經停權。如果有疑問，請寫信到 %s 跟我們聯繫。', config('loveuno.contact_email'))]);
+        }
+
         RateLimiter::clear($key);
         // 後台停權的帳號不能登入（密碼對了才說，跟舊站一樣；熊叔叔 11/2 TG「只做停權」）
         if ($request->user()->suspended_at !== null) {
