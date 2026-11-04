@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\LogoutSuspended;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -164,7 +165,7 @@ class ImportLegacyExportTest extends TestCase
         // 停權的：密碼對也不能登入，說停權；密碼錯照樣說「不正確」
         $this->post('/login', ['email' => 's1000104@example.com', 'password' => 'wrong'])->assertSessionHasErrors(['email' => '電子郵件或密碼不正確。']);
         $this->post('/login', ['email' => 's1000104@example.com', 'password' => 'old-pass'])
-            ->assertSessionHasErrors(['email' => '這個帳號已經停權。如果有疑問，請寫信到 support@loveuno.com 跟我們聯繫。']);
+            ->assertSessionHasErrors(['email' => LogoutSuspended::MESSAGE]); // 合併 D-02 後，舊站停權和後台停權用同一句
         $this->assertGuest();
         $this->post('/login', ['email' => 's1000101@example.com', 'password' => 'old-pass'])->assertRedirect();
         $this->assertAuthenticated();

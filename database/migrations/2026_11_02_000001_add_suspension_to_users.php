@@ -11,8 +11,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('suspended_at')->nullable()->after('is_active');
+        // suspended_at 也由 2026_10_30_000029（舊站搬家的停權）建：新庫照檔名會先跑那支，已經有就不重建
+        $hasSuspended = Schema::hasColumn('users', 'suspended_at');
+        Schema::table('users', function (Blueprint $table) use ($hasSuspended) {
+            if (! $hasSuspended) {
+                $table->timestamp('suspended_at')->nullable()->after('is_active');
+            }
             $table->string('suspended_reason', 200)->default('')->after('suspended_at');
             $table->boolean('suspend_prev_active')->nullable()->after('suspended_reason');
         });
@@ -21,7 +25,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['suspended_at', 'suspended_reason', 'suspend_prev_active']);
+            $table->dropColumn(['suspended_reason', 'suspend_prev_active']);
+            // 舊站搬家的 legacy_status 還在，表示 suspended_at 也是它要用的，留給它
+            if (! Schema::hasColumn('users', 'legacy_status')) {
+                $table->dropColumn('suspended_at');
+            }
         });
     }
 };

@@ -36,7 +36,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'phone_verified_at' => 'datetime',
-            'suspended_at' => 'datetime',
             'legacy_status' => 'integer',
             'phone_code_expires_at' => 'datetime',
             'phone_code_attempts' => 'integer',
@@ -48,7 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'notify_email' => 'boolean',
             'is_active' => 'boolean',
             'deleted_at' => 'datetime',
-            'suspended_at' => 'datetime', // 後台停權（見 2026_11_02_000001）
+            'suspended_at' => 'datetime', // 停權：舊站搬來的（2026_10_30_000029）或後台停權（2026_11_02_000001），哪個先跑就由哪個建欄位
             'suspend_prev_active' => 'boolean',
         ];
     }
