@@ -880,3 +880,11 @@ input.switch:checked::before { transform: translateX(20px); }
 .error-hero h1, .error-hero h2 { margin: 8px 0; color: #b5452f; font-size: 1.6rem; }
 .error-hero h1 span, .error-hero h2 span { display: block; margin-top: 4px; color: var(--plum); font-size: 1.05rem; font-weight: 400; }
 .error-nomatch img { background: radial-gradient(ellipse at center, #ffeed5 60%, transparent 61%); }
+
+/* 電腦版固定選單：蜜桃色塊跟著整頁往下延伸，不在畫面底部切掉（熊叔叔 11/5「色塊要往下延伸一點，不要直接切到」）。
+   選單改成跟頁面一起捲（absolute、從頁頂到頁底），項目不會被截斷 */
+@media (min-width: 75rem) {
+    body.has-side-menu { position: relative; }
+    .has-side-menu .side-menu, .has-side-menu .side-menu[hidden] { position: absolute; top: 0; bottom: 0; min-height: 100vh; }
+    .has-side-menu .side-menu-panel { height: auto; min-height: 100%; overflow: visible; padding-bottom: 48px; }
+}
