@@ -2,9 +2,11 @@
 
 @section('title', ($mine ?? false) ? '我的日記' : '心情日記')
 
+@section('main_class', 'wrap wrap-wide center-main page-card diary-page')
+
 @section('content')
 <h1>{{ ($mine ?? false) ? '我的日記' : '心情日記' }}</h1>
-<p><a class="button" href="{{ route('diaries.create') }}">寫日記</a></p>
+<p class="diary-page-write"><a class="button pill-submit" href="{{ route('diaries.create') }}" data-write-dialog="0">寫日記</a></p>
 
 @if ($diaries->isEmpty())
     <p>還沒有日記。</p>
