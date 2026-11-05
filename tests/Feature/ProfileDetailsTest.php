@@ -88,15 +88,17 @@ class ProfileDetailsTest extends TestCase
         $this->actingAs($other)->get("/members/{$bare->id}")->assertOk()->assertSee('心情日記');
     }
 
-    // 個人首頁上方輪播（熊叔叔 2026-11-05「每個個人的首頁會輪播 slide」；設計稿 Profile 142:22363）
-    public function test_profile_has_slides_with_text_alternatives(): void
+    // 個人化封面 10 選 1（熊叔叔 2026-11-05「更正個人的封面是在這邊指定」）：沒選是第 1 張；選了就換；超出範圍不收
+    public function test_cover_preset_picked_in_album_shows_on_profile(): void
     {
-        $u = User::factory()->create(['name' => '輪播']);
+        $u = User::factory()->create(['name' => '封面']);
         Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990, 'live_place' => '台北市']);
-        $html = $this->actingAs($u)->get("/members/{$u->id}")->assertOk()->getContent();
-        $this->assertSame(3, substr_count($html, 'aria-roledescription="投影片"'));
-        $this->assertStringContainsString('alt="嚴謹認證，安心交友：多重認證機制，創造優質交友環境"', $html);
-        $this->assertStringContainsString('暫停輪播', $html);
-        $this->assertStringContainsString('台北市', $html);
+        $this->actingAs($u)->get("/members/{$u->id}")->assertOk()->assertSee('images/covers/cover-1.svg', false)->assertSee('台北市');
+        $this->actingAs($u)->get('/me/album')->assertOk()->assertSee('個人化封面')->assertSee('id="cover-10"', false);
+        $this->actingAs($u)->post('/me/cover-preset', ['cover_preset' => 7])->assertRedirect();
+        $this->actingAs($u)->get("/members/{$u->id}")->assertSee('images/covers/cover-7.svg', false)->assertSee('以賽亞書 43:4');
+        $this->actingAs($u)->post('/me/cover-preset', ['cover_preset' => 11])->assertSessionHasErrors('cover_preset');
+        $this->assertSame(7, (int) $u->profile->fresh()->cover_preset);
+        $this->actingAs($u)->get('/me/cover')->assertRedirect('/me/album#cover-title'); // 自己上傳封面拿掉了
     }
 }

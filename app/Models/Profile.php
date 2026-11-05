@@ -16,6 +16,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Hidden(['birth_month', 'birth_day', 'real_name', 'home_phone'])]
 class Profile extends Model
 {
+    // 個人化封面 10 張（設計稿 個人相簿 69:6213，由左到右、由上到下）：插圖上的經文出處，給螢幕閱讀器念
+    public const COVER_PRESETS = [
+        1 => '詩篇 143:8', 2 => '約翰一書 4:16', 3 => '哥林多前書 13:4-5', 4 => '以弗所書 4:2', 5 => '以弗所書 3:16-17',
+        6 => '約翰一書 4:12', 7 => '以賽亞書 43:4', 8 => '箴言 3:3-4', 9 => '以弗所書 5:25-26', 10 => '羅馬書 13:8',
+    ];
+
+    public function coverPreset(): int
+    {
+        return isset(self::COVER_PRESETS[(int) $this->cover_preset]) ? (int) $this->cover_preset : 1;
+    }
+
     protected $primaryKey = 'user_id';
 
     public $incrementing = false;

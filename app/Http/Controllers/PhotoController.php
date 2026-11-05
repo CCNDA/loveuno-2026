@@ -22,7 +22,6 @@ class PhotoController extends Controller
     // 寬、高、最小寬、最小高、名稱、回到哪個編輯頁。封面最小 900×300：再小就會被放大超過 1.33 倍、變模糊
     public const KINDS = [
         'photo' => ['w' => 600, 'h' => 600, 'min_w' => 200, 'min_h' => 200, 'label' => '大頭照', 'edit' => 'photo.edit'],
-        'cover' => ['w' => 1200, 'h' => 400, 'min_w' => 900, 'min_h' => 300, 'label' => '封面', 'edit' => 'cover.edit'],
     ];
 
     public function edit(Request $request): View

@@ -49,7 +49,7 @@ class BlockTest extends TestCase
         $this->actingAs($b)->get('/notes')->assertDontSee('甲</span>', false);
         $this->actingAs($b)->get("/notes/{$a->id}")->assertNotFound();
         // 甲（封鎖的人）看乙的檔案：顯示已封鎖、可以解除
-        $this->actingAs($a)->get("/members/{$b->id}")->assertOk()->assertSee('您已封鎖這位會員')->assertDontSee('pill-note', false)->assertDontSee('/covers/', false); // 封面不給看；輪播的三張是網站介紹圖，照樣顯示
+        $this->actingAs($a)->get("/members/{$b->id}")->assertOk()->assertSee('您已封鎖這位會員')->assertDontSee('pill-note', false)->assertDontSee('pill-gift', false); // 11/5 封面改 10 選 1 插圖，不是個人照片
         // 帳號管理有封鎖名單
         $this->actingAs($a)->get('/center/account')->assertSee('封鎖名單')->assertSee('乙');
     }

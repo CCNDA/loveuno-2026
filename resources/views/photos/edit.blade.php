@@ -10,9 +10,6 @@
     @endif
     <h2>我的{{ $cfg['label'] }}</h2>
 </div>
-@if ($kind === 'cover')
-    @include('partials.cover', ['user' => auth()->user(), 'alt' => '我目前的封面'])
-@endif
 
 @if ($profile->{$kind . '_status'} === 'pending')
     <p class="notice" role="status">您的{{ $cfg['label'] }}正在審核中，通過以前只有您自己看得到。</p>
