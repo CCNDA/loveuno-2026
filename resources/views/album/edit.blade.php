@@ -49,7 +49,7 @@
 
 {{-- 設計稿「其他／個人化封面」：10 張插圖選一張，顯示在個人首頁最上面 --}}
 <h2 id="other-title">其他</h2>
-<form method="POST" action="{{ route('cover.preset') }}" class="cover-presets">
+<form method="POST" action="{{ route('cover.preset') }}" class="cover-presets" data-autosave="{{ route('cover.preset.patch') }}">
     @csrf
     @php($chosen = auth()->user()->profile?->coverPreset() ?? 1)
     <fieldset>

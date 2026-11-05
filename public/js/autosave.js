@@ -50,7 +50,8 @@
             if (!el) { return name; }
             var fs = el.closest('fieldset');
             var lab = el.id ? form.querySelector('label[for="' + el.id + '"]') : null;
-            var text = (el.name.slice(-2) === '[]' && fs) ? fs.querySelector('legend').textContent : (lab ? lab.textContent : name);
+            var grouped = el.name.slice(-2) === '[]' || el.type === 'radio'; // 多選、單選用整組的標題（封面選項的 label 只有圖）
+            var text = (grouped && fs && fs.querySelector('legend')) ? fs.querySelector('legend').textContent : (lab ? lab.textContent : name);
             return text.replace(/（.*?）|\(.*?\)/g, '').trim();
         }
         function fieldBox(name) {
