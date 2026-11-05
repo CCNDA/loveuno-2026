@@ -23,7 +23,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('form[data-autosave]'), function (form) {
         var url = form.getAttribute('data-autosave');
         var groups = (form.getAttribute('data-autosave-groups') || '').split(';').map(function (g) { return g.trim().split(/\s+/).filter(Boolean); });
-        var timers = {}, lastSaved = {};
+        var timers = {}, lastSaved = {}, busy = {}, again = {};
         form.classList.add('is-autosaving'); // CSS 把存檔鈕藏起來
 
         function baseName(el) { return el.name.replace(/\[\]$/, ''); }
@@ -91,6 +91,9 @@
 
         function save(name) {
             var names = whole ? allNames() : groupOf(name), body = {};
+            // 同一組排隊（小鹿 11/6）：上一筆還沒回來就先記著，回來後再拿「當下最新的值」送一次，不會舊的蓋掉新的
+            var qkey = names.join(' ');
+            if (busy[qkey]) { again[qkey] = name; return; }
             names.forEach(function (n) { var v = valueOf(n); if (v !== undefined) { body[n] = v; } });
             // data-autosave-together：這一組要嘛全填、要嘛全空才存（例如經文的書卷、章、節，填到一半不要跳錯誤）
             var together = (form.getAttribute('data-autosave-together') || '').split(/\s+/).filter(Boolean);
@@ -100,6 +103,11 @@
             }
             var key = names.join(' '), sent = JSON.stringify(body);
             if (lastSaved[key] === sent) { return; } // 停手存過、離開欄位又觸發一次：內容一樣就不再送
+            busy[key] = true;
+            function next() {
+                busy[key] = false;
+                if (again[key]) { var n = again[key]; again[key] = null; save(n); }
+            }
             fetch(url, {
                 method: 'PATCH', credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token ? token.content : '' },
@@ -107,6 +115,7 @@
             }).then(function (r) {
                 return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; });
             }).then(function (res) {
+                if (again[key]) { return; } // 這筆回來前又改了：結果不顯示，最後的 next() 會送最新的
                 if (res.ok) {
                     lastSaved[key] = sent;
                     names.forEach(function (n) { setError(n, ''); });
@@ -131,7 +140,7 @@
                     return;
                 }
                 showToast(res.status === 419 ? '登入逾時了，請重新整理頁面再改。' : '沒有存到，網路可能斷了，請再試一次。', true);
-            }).catch(function () { showToast('沒有存到，網路可能斷了，請再試一次。', true); });
+            }).catch(function () { showToast('沒有存到，網路可能斷了，請再試一次。', true); }).then(next);
         }
 
         form.addEventListener('change', function (e) {

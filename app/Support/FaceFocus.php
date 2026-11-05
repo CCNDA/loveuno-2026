@@ -25,8 +25,11 @@ class FaceFocus
 
             return null;
         }
+        if (! $p->isSuccessful()) {
+            return null;
+        }
         $j = json_decode(trim($p->getOutput()), true);
-        if (! is_array($j) || ! isset($j['x'], $j['y'])) {
+        if (! is_array($j) || ! is_numeric($j['x'] ?? null) || ! is_numeric($j['y'] ?? null)) { // 小鹿 11/6：先確認是數字再收
             return null;
         }
 

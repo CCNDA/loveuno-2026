@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 // 帳號設定（設計稿 PageMemberSettings）：通知、啟用帳號、字體大小、顯示語言、網路檢測、註銷帳號。
@@ -59,6 +60,19 @@ class SettingsController extends Controller
     {
         $u = $request->user();
         $before = [$u->font_size, $u->font_family, $request->session()->get('script', $u->script)];
+        // 只送部分欄位時，沒送的從資料庫的現值補進來再整張存（小鹿 11/6：不然單送 font_size 會 422、沒送的 is_active 變 false）
+        $all = ['notify_email', 'is_active', 'font_size', 'font_family', 'script'];
+        if (! array_intersect($all, array_keys($request->all()))) {
+            throw ValidationException::withMessages(['fields' => '沒有可以存的欄位。']);
+        }
+        $fresh = $u->fresh();
+        $fill = [];
+        foreach ($all as $k) {
+            if (! $request->exists($k)) {
+                $fill[$k] = $fresh->{$k};
+            }
+        }
+        $request->merge($fill);
         $this->update($request);
         $request->session()->forget('status'); // update() 留下的提示是給整頁送出用的，即時存檔不要帶到下一頁
         $u->refresh();

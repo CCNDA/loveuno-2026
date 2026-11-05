@@ -116,4 +116,18 @@ class AutosaveTest extends TestCase
         $this->assertSame([30, 45, '基督徒'], [(int) $p->pref_age_min, (int) $p->pref_age_max, $p->pref_faith]);
         $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_max' => 20])->assertStatus(422); // 跟資料庫的下限 30 比
     }
+
+    // 小鹿 11/6 審查：設定只送一欄時，其他設定不能被重設
+    public function test_partial_settings_patch_keeps_other_settings(): void
+    {
+        $u = $this->me();
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['notify_email' => true, 'is_active' => true, 'font_size' => 'large', 'font_family' => 'huninn', 'script' => 'hans'])->assertOk();
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['font_size' => 'small'])->assertOk();
+        $u->refresh();
+        $this->assertSame(['small', 'huninn', 'hans', true, true], [$u->font_size, $u->font_family, $u->script, (bool) $u->notify_email, (bool) $u->is_active]);
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['is_active' => false])->assertOk();
+        $u->refresh();
+        $this->assertSame(['small', 'huninn', false, true], [$u->font_size, $u->font_family, (bool) $u->is_active, (bool) $u->notify_email]);
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['nothing' => 1])->assertStatus(422);
+    }
 }

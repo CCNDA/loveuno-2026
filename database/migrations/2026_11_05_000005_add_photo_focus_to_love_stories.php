@@ -9,21 +9,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('love_stories', 'photo_focus_x')) {
-            return;
+        // x、y 各別檢查（小鹿 11/6：只有一欄的半套狀態也要能補齊）
+        foreach (['photo_focus_x', 'photo_focus_y'] as $col) {
+            if (! Schema::hasColumn('love_stories', $col)) {
+                Schema::table('love_stories', function (Blueprint $table) use ($col) {
+                    $table->unsignedTinyInteger($col)->nullable();
+                });
+            }
         }
-        Schema::table('love_stories', function (Blueprint $table) {
-            $table->unsignedTinyInteger('photo_focus_x')->nullable();
-            $table->unsignedTinyInteger('photo_focus_y')->nullable();
-        });
     }
 
     public function down(): void
     {
-        if (Schema::hasColumn('love_stories', 'photo_focus_x')) {
-            Schema::table('love_stories', function (Blueprint $table) {
-                $table->dropColumn(['photo_focus_x', 'photo_focus_y']);
-            });
+        foreach (['photo_focus_x', 'photo_focus_y'] as $col) {
+            if (Schema::hasColumn('love_stories', $col)) {
+                Schema::table('love_stories', function (Blueprint $table) use ($col) {
+                    $table->dropColumn($col);
+                });
+            }
         }
     }
 };
