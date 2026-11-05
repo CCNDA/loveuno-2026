@@ -2,12 +2,13 @@
 
 @section('title', '投稿愛的見證')
 
+@section('main_class', 'wrap wrap-wide center-main page-card')
 @section('content')
 {{-- 設計稿 PageNewLoveStory：標題、男方會員編號、女方會員編號、見證內容（1000 字）、照片上傳（JPG、PNG 5M） --}}
 <h1>投稿愛的見證</h1>
 <p>請用男方或女方其中一位的帳號投稿。管理員看過、跟兩位確認以後才會公開。</p>
 @php($mine = $me->profile?->gender === '男' ? 'male_id' : ($me->profile?->gender === '女' ? 'female_id' : null))
-<form method="POST" action="{{ route('love-stories.store') }}" enctype="multipart/form-data" class="form form-wide" novalidate>
+<form method="POST" action="{{ route('love-stories.store') }}" enctype="multipart/form-data" class="form form-wide form-grid story-form" novalidate>
     @csrf
     @include('partials.errors', ['title' => '還沒有投稿成功'])
     @foreach ([['title', '標題', 50, null, 'text'], ['male_id', '男方會員編號', 10, $mine === 'male_id' ? $me->id : null, 'numeric'], ['female_id', '女方會員編號', 10, $mine === 'female_id' ? $me->id : null, 'numeric']] as [$key, $label, $max, $default, $mode])

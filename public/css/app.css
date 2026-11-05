@@ -1003,3 +1003,11 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 .page-card > .donate { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; text-align: left; }
 .page-card > .donate p:first-of-type { color: #b5452f; }
 .page-card > .donate .button { display: flex; margin: 0 auto; width: fit-content; min-width: 10rem; justify-content: center; border-radius: 999px; }
+
+/* 我要投稿（設計稿 277:10846）、檢舉（785:11117）：大白卡裡的表單，欄位撐滿，男女方編號兩欄，照片上傳框，送出鈕置中膠囊 */
+.page-card > form.story-form, .page-card > form.report-form { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
+.story-form .field input, .story-form .field textarea, .report-form .field input:not([type=checkbox]):not([type=radio]), .report-form .field textarea, .report-form .field select { width: 100%; box-sizing: border-box; }
+.story-form .field:has(#title), .story-form .field:has(#body), .story-form .field:has(#photo) { grid-column: 1 / -1; }
+.story-form input[type=file], .report-form input[type=file] { padding: 20px; border: 1px dashed #8c857b; border-radius: 6px; background: #fff; }
+.story-form > button[type=submit] { justify-self: center; min-width: 8rem; border-radius: 999px; }
+.report-form > button[type=submit] { display: flex; margin: 16px auto 0; min-width: 8rem; justify-content: center; border-radius: 999px; }
