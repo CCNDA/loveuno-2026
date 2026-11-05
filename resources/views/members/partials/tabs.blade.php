@@ -7,8 +7,10 @@
     </ul>
 </nav>
 
+{{-- 分頁內容放一張白卡，標題看得到（設計稿 Profile：「個人資料」「自我介紹」卡片） --}}
+<div class="card profile-section">
 @if ($tab === 'info')
-    <h2 class="visually-hidden">個人資料</h2>
+    <h2 class="profile-section-title">個人資料</h2>
     @php($rows = $p->detailRows())
     @php($approved = $member->approvedVerifications())
     @php($rows['手機認證'] = $member->hasValidPhone() ? '已認證' : '尚未認證')
@@ -25,7 +27,7 @@
         </dl>
     @endif
 @elseif ($tab === 'intro')
-    <h2 class="visually-hidden">自我介紹</h2>
+    <h2 class="profile-section-title">自我介紹</h2>
     @if ($p->intro)
         <section aria-labelledby="intro-title">
             <h3 id="intro-title">簡介</h3>
@@ -70,7 +72,7 @@
         <p>這位會員還沒有寫自我介紹。</p>
     @endif
 @elseif ($tab === 'diary')
-    <h2 class="visually-hidden">心情日記</h2>
+    <h2 class="profile-section-title">心情日記</h2>
     @if ($diaries->isEmpty())
         <p>還沒有日記。</p>
     @else
@@ -85,6 +87,7 @@
         {{ $diaries->links('partials.pagination') }}
     @endif
 @else
-    <h2 class="visually-hidden">個人相簿</h2>
+    <h2 class="profile-section-title">個人相簿</h2>
     @include('members.partials.album')
 @endif
+</div>
