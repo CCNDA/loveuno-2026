@@ -95,6 +95,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/email/verify', [VerifyEmailController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'send'])
         ->middleware('throttle:3,10,verify-resend')->name('verification.send');
+    // 改 Email：退信的人 email 會變回未驗證，在驗證頁也要能改，所以只要登入（要密碼＋新信箱確認信，不會因此變寬鬆）
+    Route::post('/center/email', [EmailChangeController::class, 'request'])->middleware('throttle:10,60,email-change')->name('email.change');
+    Route::get('/email/change/{user}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('user')->middleware('signed')->name('email.change.confirm');
 });
 
 // 個人檔案與日記都要登入、email 已驗證才能看（舊站 2026-10-28 起也是要登入）
@@ -132,8 +135,6 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:20,60,push-subscribe')->name('push.subscribe');
     Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
     Route::get('/push/summary', [PushController::class, 'summary'])->name('push.summary');
-    Route::post('/center/email', [EmailChangeController::class, 'request'])->middleware('throttle:10,60,email-change')->name('email.change');
-    Route::get('/email/change/{user}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('user')->middleware('signed')->name('email.change.confirm');
     Route::get('/center/delete', [SettingsController::class, 'confirmDestroy'])->name('settings.delete');
     Route::delete('/center/account', [SettingsController::class, 'destroy'])->middleware('throttle:5,60,account-delete')->name('settings.destroy');
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');

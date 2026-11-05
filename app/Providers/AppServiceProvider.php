@@ -19,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // 退信的人重新驗證了原本的信箱 → 清掉退信標記（改信箱的在 EmailChangeController::confirm 清）
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Verified::class, function ($event) {
+            if ($event->user instanceof \App\Models\User) {
+                $event->user->clearEmailBounce();
+            }
+        });
         // 註冊：同一個 IP 一小時最多 5 次（擋灌帳號）
         RateLimiter::for('register', fn ($request) => Limit::perHour(5)->by($request->ip()));
 

@@ -12,7 +12,8 @@
     <dl class="report-meta">
         <dt>狀態</dt><dd>@include('admin.members.status', ['m' => $member])</dd>
         @if ($member->suspended_at)<dt>停權時間</dt><dd>{{ $member->suspended_at->shown()->format('Y/n/j H:i') }}</dd>@endif
-        <dt>Email</dt><dd>{{ $member->email }}@if ($member->email_verified_at)（{{ $member->email_verified_at->shown()->format('Y/n/j') }} 驗證）@endif</dd>
+        <dt>Email</dt><dd>{{ $member->email }}@if ($member->email_verified_at)（{{ $member->email_verified_at->shown()->format('Y/n/j') }} 驗證）@endif
+            @if ($member->email_bounced_at)<br><strong>信箱無效</strong>（{{ $member->email_bounced_at->shown()->format('Y/n/j H:i') }} 退信：{{ $member->email_bounce_reason }}；停寄通知，等他重新驗證或改信箱）@endif</dd>
         <dt>手機</dt><dd>{{ $member->phone ?: '—' }}@if ($member->phone_verified_at)（{{ $member->phone_verified_at->shown()->format('Y/n/j') }} 驗證）@endif</dd>
         @if ($member->legacy_id)<dt>舊站會員編號</dt><dd>{{ $member->legacy_id }}</dd>@endif
         <dt>註冊</dt><dd>{{ $member->created_at?->shown()->format('Y/n/j H:i') }}</dd>

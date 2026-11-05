@@ -34,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_bounced_at' => 'datetime', // 退信（信箱寄不到）：有值就停寄通知，登入後請他重新驗證或改信箱
             'last_login_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'legacy_status' => 'integer',
@@ -57,6 +58,34 @@ class User extends Authenticatable implements MustVerifyEmail
     public function roleLabel(): string
     {
         return $this->is_super_admin ? '最高管理員' : ($this->is_admin ? '管理員' : '一般會員');
+    }
+
+    // 退信：信箱寄不到（硬退）。把 email 改回「未驗證」，登入後就會被帶到驗證頁（verified middleware）；
+    // 有值的時候除了驗證信以外的信都不寄（routeNotificationForMail）。重新驗證或改信箱後清掉。
+    public function markEmailBounced(string $reason): void
+    {
+        $this->forceFill([
+            'email_bounced_at' => now(),
+            'email_bounce_reason' => mb_substr(trim($reason), 0, 200),
+            'email_verified_at' => null,
+        ])->save();
+    }
+
+    public function clearEmailBounce(): void
+    {
+        if ($this->email_bounced_at) {
+            $this->forceFill(['email_bounced_at' => null, 'email_bounce_reason' => ''])->save();
+        }
+    }
+
+    // 退信中只寄驗證信（讓他能重新驗證），其他通知（禮物、紙條、審核結果…）一律不寄：寄了也是退，還會傷到寄件信譽
+    public function routeNotificationForMail($notification = null): ?string
+    {
+        if ($this->email_bounced_at && ! $notification instanceof \Illuminate\Auth\Notifications\VerifyEmail) {
+            return null;
+        }
+
+        return $this->email;
     }
 
     public function scopeActive(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
