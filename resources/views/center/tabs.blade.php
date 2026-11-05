@@ -11,7 +11,7 @@
             'points' => ['愛積點', 'center.points', 'center-points'],
             'preferences' => ['交友條件', 'center.preferences', 'center-prefs'],
         ] as $key => [$label, $route, $icon])
-            <li><a href="{{ route($route) }}" @if($current === $key) aria-current="page" @endif><span class="ui-icon icon-{{ $icon }}" aria-hidden="true"></span>{{ $label }}</a></li>
+            <li><a href="{{ route($route) }}" @if($current === $key) aria-current="page" @endif><span class="ui-icon icon-{{ $icon === 'center-points' && $current === 'preferences' ? 'center-points-heart' : $icon }}" aria-hidden="true"></span>{{ $label }}</a></li>
         @endforeach
     </ul>
 </nav>
