@@ -1084,6 +1084,7 @@ form .field input[type=file].camera-input.photo-pick { position: absolute; width
 .icon-center-profile { --icon: url(../images/icons/center-profile.svg); }
 .icon-center-points { --icon: url(../images/icons/center-points.svg); }
 .icon-center-prefs { --icon: url(../images/icons/center-prefs.svg); }
+.icon-center-points-heart { --icon: url(../images/icons/center-points-heart.svg); } /* 交友條件頁電腦版用（小鹿 11/6：漏了這條，遮罩空掉變實心方塊） */
 .icon-wifi { --icon: url(../images/icons/btn-wifi.svg); }
 .icon-cs { --icon: url(../images/icons/btn-cs.svg); }
 .icon-clear { --icon: url(../images/icons/btn-clear.svg); }
@@ -1201,3 +1202,12 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .section-edit { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: #e5bba2; color: #4f3842; } /* 設計是白色鉛筆，但白對 #e5bba2 只有 1.7:1；圖示要 3:1 → 深梅色 */
 .section-edit svg { width: 18px; height: 18px; }
 .section-edit:hover { background: var(--button); color: #fff; }
+
+/* 愛積點表格：手機窄寬時「立即前往」不要被擠成直排（小鹿 11/6，m320） */
+.points-table td a { white-space: nowrap; }
+@media (max-width: 640px) {
+    .points-table { font-size: .85rem; }
+    .points-table th, .points-table td { padding: 8px 4px; }
+    .points-table tbody th { text-align: left; }
+    .points-table td a { padding: 0 10px; font-size: .8rem; }
+}
