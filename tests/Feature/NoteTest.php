@@ -91,10 +91,10 @@ class NoteTest extends TestCase
         $this->actingAs($a)->get("/notes/{$noProfile->id}")->assertNotFound();
         $this->actingAs($a)->post("/notes/{$noProfile->id}", ['body' => 'x'])->assertNotFound();
         // 檔案頁不出現按鈕
-        $this->actingAs($a)->get("/members/{$noProfile->id}")->assertDontSee('傳紙條給');
+        $this->actingAs($a)->get("/members/{$noProfile->id}")->assertDontSee('pill-note', false);
         $b = $this->member('乙');
-        $this->actingAs($a)->get("/members/{$b->id}")->assertSee('傳紙條給 乙');
-        $this->actingAs($a)->get("/members/{$a->id}")->assertDontSee('傳紙條給');
+        $this->actingAs($a)->get("/members/{$b->id}")->assertSee('傳紙條<span class="visually-hidden">給 乙</span>', false); // 設計稿按鈕字短，給誰念給螢幕閱讀器
+        $this->actingAs($a)->get("/members/{$a->id}")->assertDontSee('pill-note', false);
     }
 
     public function test_sender_opening_thread_does_not_mark_read_and_threads_sorted(): void

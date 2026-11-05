@@ -87,4 +87,16 @@ class ProfileDetailsTest extends TestCase
         $bare = User::factory()->create(['name' => '沒檔案']);
         $this->actingAs($other)->get("/members/{$bare->id}")->assertOk()->assertSee('心情日記');
     }
+
+    // 個人首頁上方輪播（熊叔叔 2026-11-05「每個個人的首頁會輪播 slide」；設計稿 Profile 142:22363）
+    public function test_profile_has_slides_with_text_alternatives(): void
+    {
+        $u = User::factory()->create(['name' => '輪播']);
+        Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990, 'live_place' => '台北市']);
+        $html = $this->actingAs($u)->get("/members/{$u->id}")->assertOk()->getContent();
+        $this->assertSame(3, substr_count($html, 'aria-roledescription="投影片"'));
+        $this->assertStringContainsString('alt="嚴謹認證，安心交友：多重認證機制，創造優質交友環境"', $html);
+        $this->assertStringContainsString('暫停輪播', $html);
+        $this->assertStringContainsString('台北市', $html);
+    }
 }
