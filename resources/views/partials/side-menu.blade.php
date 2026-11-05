@@ -1,7 +1,7 @@
 {{-- 側邊選單：照設計稿 Figma 1156:11227 的項目和順序（熊叔叔 2026-11-05「figma 應該有規劃選單的結構」）。
      設計稿下面的 App Store／Google Play 不放（新版是網頁，design-deviations #42）；會員中心設計稿沒有獨立一項，點頭像／暱稱進去。
      管理員的項目設計稿沒有，放在最後「管理」一段。
-     寬螢幕（≥1200px，設計稿 Index 電腦版）固定在左邊一直開著（CSS 蓋過 hidden，沒有 JS 也看得到）；窄螢幕是 ☰ 打開的抽屜，role=dialog 由 side-menu.js 打開時才加。 --}}
+     寬螢幕（≥1200px，設計稿 Index 電腦版）固定在左邊開著（CSS 蓋過 hidden，沒有 JS 也看得到），☰／✕ 可以收起來；窄螢幕是 ☰ 打開的抽屜，role=dialog 由 side-menu.js 打開時才加。 --}}
 @php($me = auth()->user())
 <div class="side-menu" id="side-menu" hidden>
     <div class="side-menu-panel">
@@ -20,10 +20,9 @@
                 <li><a href="{{ route('meetups.index') }}" @if(request()->routeIs('meetups.*')) aria-current="page" @endif>約會</a></li>
                 <li><a href="{{ route('love-stories.index') }}" @if(request()->routeIs('love-stories.*')) aria-current="page" @endif>愛的見證</a></li>
                 <li><a href="{{ route('about') }}" @if(request()->routeIs('about')) aria-current="page" @endif>關於愛諾園</a></li>
-                <li><a href="https://www.ccnda.org/devote/online" rel="noopener">支持奉獻</a></li>
+                <li><a href="{{ config('loveuno.links.devote') }}" rel="noopener">支持奉獻</a></li>
                 <li><a href="{{ route('contact') }}" @if(request()->routeIs('contact')) aria-current="page" @endif>聯絡我們</a></li>
                 <li><a href="{{ route('faq') }}" @if(request()->routeIs('faq')) aria-current="page" @endif>常見問題</a></li>
-                <li><a href="{{ route('terms') }}" @if(request()->routeIs('terms')) aria-current="page" @endif>會員條款</a></li>
                 <li>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -50,6 +49,9 @@
                 </ul>
             @endif
         </nav>
-        <p class="side-menu-serve">Serve by<br>Chinese Christian Network<br>Development Association</p>
+        {{-- 設計稿選單最下面：社群圖示、服務條款｜隱私權政策、Serve by（連到協會） --}}
+        @include('partials.social-links', ['class' => 'side-menu-social', 'light' => true])
+        <p class="side-menu-legal"><a href="{{ route('terms') }}">服務條款</a><span aria-hidden="true">｜</span><a href="{{ route('privacy') }}">隱私權政策</a></p>
+        <p class="side-menu-serve"><a href="{{ config('loveuno.links.ccnda') }}" rel="noopener">Serve by<br>Chinese Christian Network<br>Development Association</a></p>
     </div>
 </div>

@@ -1,6 +1,19 @@
 <?php
 
 return [
+    // 對外連結：Nien Chen 2023-12-23 在 Figma（Index2、menu、Register）留的轉址短網址，轉到正確網址、帶 loveuno 來源追蹤（熊叔叔 2026-11-05 TG）
+    'links' => [
+        'devote' => 'https://go.nien.co/3LUoTeH',      // 協會奉獻頁
+        'ccnda' => 'https://go.nien.co/3pbaRwa',       // 網路發展協會
+        'church' => 'https://go.nien.co/46Lofrx',      // 教會名錄
+        'oursweb' => 'https://bit.ly/3GXGAqx',         // Oursweb
+        'taiwanbible' => 'https://go.nien.co/3LVa7o7', // 台灣聖經網
+        'facebook' => 'https://go.hearty.me/ccnda-fb',
+        'line' => 'https://go.nien.co/3VJaTYk',        // LINE 官方帳號
+        'telegram' => 'https://go.nien.co/42yZOeN',
+        'google_review' => 'https://go.hearty.me/ccnda-gb', // 設計稿的星星：協會 Google 評論
+    ],
+
     // 開放註冊。11/8 會員大會是展示版，不開放；年底正式開放時才打開（熊叔叔 10/29：預計年底）
     'registration_open' => (bool) env('REGISTRATION_OPEN', false),
 
