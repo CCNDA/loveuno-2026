@@ -119,7 +119,7 @@ class ImportLegacyExport extends Command
                     'church' => mb_substr((string) ($m['church'] ?? ''), 0, 100),
                     'church_visible' => (bool) ($m['church_visible'] ?? false),
                     'job' => mb_substr((string) ($m['job'] ?? ''), 0, 20),
-                    'intro' => $m['intro'] ?? null,
+                    'intro' => \App\Support\LegacyText::plain($m['intro'] ?? null), // 舊站存 <br>（熊叔叔 11/6）
                 ]);
 
                 $photo = (string) ($m['photo'] ?? '');

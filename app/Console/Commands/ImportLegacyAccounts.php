@@ -81,7 +81,7 @@ class ImportLegacyAccounts extends Command
                     'church' => $row->church_show ? mb_substr((string) $row->church, 0, 100) : '',
                     'church_visible' => (bool) $row->church_show,
                     'job' => (string) $row->job,
-                    'intro' => $row->intro,
+                    'intro' => \App\Support\LegacyText::plain($row->intro), // 舊站存 <br>（熊叔叔 11/6）
                 ]);
             });
             $done[] = $row->id;
