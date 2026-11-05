@@ -811,3 +811,4 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
     .form-grid > :not(.field), .form-grid > fieldset { grid-column: 1 / -1; }
     .form-grid .field input:not([type=checkbox]):not([type=radio]), .form-grid .field select { width: 100%; box-sizing: border-box; }
 }
+@media (min-width: 64rem) { .form-grid > button[type=submit] { justify-self: center; min-width: 10rem; border-radius: 999px; } }
