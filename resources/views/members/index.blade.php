@@ -34,6 +34,7 @@
 <p class="pref-summary">
     依您的交友條件列出：<strong>{{ $prefParts->isNotEmpty() ? $prefParts->implode('・') : '不限' }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
     <a href="{{ route('center.preferences') }}">修改交友條件</a>
+    @if (! $f['gender'])<br>填好<a href="{{ route('profile.edit') }}">個人資料</a>的性別，就會自動幫您列出異性。@endif
 </p>
 
 <form method="GET" action="{{ route('members.index') }}" class="filters" role="search" aria-label="用暱稱找會員">
