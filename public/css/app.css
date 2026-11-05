@@ -1054,3 +1054,15 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 @media (max-width: 40rem) { .verify-row { width: 100%; flex-wrap: wrap; } .verify-row > .verify-go { width: 100%; } }
 .center-main input.camera-input { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; } /* 不要吃到上傳框的 width:100%（手機會左右捲） */
 .center-main .verify-row label.camera-box { display: flex; flex-direction: column; } /* 相機在上、「拍照」在下 */
+
+/* 目錄鈕照 Figma（圓底已畫在 SVG 裡）：按鈕本身不要再有底色；放大一點方便按 */
+.menu-toggle { background: none !important; width: 48px; height: 48px; padding: 0; }
+.menu-toggle svg { width: 40px; height: 40px; display: block; }
+.menu-toggle:hover svg circle { fill: #9a6f57; }
+
+/* 寫日記的照片框 */
+input.camera-input.photo-pick { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; opacity: 0; }
+.photo-box { border-style: dashed; }
+.photo-pick:focus-visible + .photo-box { outline: 3px solid var(--focus); outline-offset: 2px; }
+.photo-pick[aria-invalid="true"] + .photo-box { border-color: var(--error); }
+.photo-box-preview { max-width: 100%; max-height: 180px; border-radius: 6px; }
