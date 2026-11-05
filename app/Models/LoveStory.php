@@ -47,4 +47,13 @@ class LoveStory extends Model
 
         return mb_strlen($t) > $len ? mb_substr($t, 0, $len) . '…' : $t;
     }
+
+    // 照片裁切的焦點（CSS object-position）：管理員點過臉就用那裡；沒點過用上方 30%（臉通常在上面）
+    public function photoFocusStyle(): string
+    {
+        $x = $this->photo_focus_x ?? 50;
+        $y = $this->photo_focus_y ?? 30;
+
+        return 'object-position: ' . (int) $x . '% ' . (int) $y . '%';
+    }
 }

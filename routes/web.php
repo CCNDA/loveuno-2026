@@ -227,6 +227,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::put('/news/{announcement}', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'update'])->whereNumber('announcement')->name('admin.news.update');
         Route::delete('/news/{announcement}', [\App\Http\Controllers\Admin\AnnouncementAdminController::class, 'destroy'])->whereNumber('announcement')->name('admin.news.destroy');
         Route::get('/love-stories', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'index'])->name('admin.love-stories');
+        Route::post('/love-stories/{story}/focus', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'focus'])->whereNumber('story')->name('admin.love-stories.focus');
         Route::post('/love-stories/{story}', [\App\Http\Controllers\Admin\LoveStoryReviewController::class, 'decide'])->whereNumber('story')->name('admin.love-stories.decide');
         Route::get('/dates', [\App\Http\Controllers\Admin\MeetupAdminController::class, 'index'])->name('admin.meetups');
         // 會員搜尋與管理（上線前檢測表 D-02）

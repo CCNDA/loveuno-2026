@@ -29,7 +29,7 @@
     <p class="meta">會員<a href="{{ route('login') }}">登入</a>後可以看到兩位的檔案。</p>
     @endauth
     @if ($story->photo_path)
-        <img src="{{ route('love-stories.photo', $story) }}" alt="{{ $story->title }}的照片" class="story-photo" loading="lazy">
+        <img src="{{ route('love-stories.photo', $story) }}" alt="{{ $story->title }}的照片" class="story-photo" loading="lazy" style="{{ $story->photoFocusStyle() }}">
     @endif
     <div class="prose">{!! nl2br(e($story->body)) !!}</div>
 </article>

@@ -47,7 +47,7 @@
             @foreach ($stories as $story)
                 <li class="landing-story">
                     @if ($story->photo_path)
-                        <img src="{{ route('love-stories.photo', $story) }}" alt="" width="250" height="250" loading="lazy">
+                        <img src="{{ route('love-stories.photo', $story) }}" alt="" width="250" height="250" loading="lazy" style="{{ $story->photoFocusStyle() }}">
                     @endif
                     <div class="landing-story-text">
                         <h3>{{ $story->title }}</h3>

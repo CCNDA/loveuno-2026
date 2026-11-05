@@ -111,4 +111,20 @@ class NewsLoveStoryTest extends TestCase
         $this->actingAs($she)->post('/love-stories', ['title' => '舊站認識的', 'male_id' => 1000014, 'female_id' => $she->id, 'body' => '感謝主'])->assertRedirect();
         $this->assertSame($he->id, LoveStory::sole()->male_id);
     }
+
+    // 照片焦點（熊叔叔 2026-11-05「愛的見證照片是否可以判斷臉，而不是被切掉」）
+    public function test_admin_sets_photo_focus_and_pages_use_it(): void
+    {
+        $admin = $this->member('管理員', '女', ['is_admin' => true]);
+        $s = new LoveStory;
+        $s->forceFill(['title' => '焦點測試', 'body' => '內容', 'status' => 'approved', 'approved_at' => now(), 'photo_path' => 'love/x.jpg'])->save();
+        $this->get('/love-stories')->assertSee('object-position: 50% 30%', false); // 沒設：上方
+        $this->actingAs($admin)->post(route('admin.love-stories.focus', $s), ['x' => 61, 'y' => 53])->assertRedirect();
+        auth()->logout(); // 封面頁是沒登入的人看的
+        $this->get('/love-stories')->assertSee('object-position: 61% 53%', false);
+        $this->get('/')->assertSee('object-position: 61% 53%', false);
+        $this->actingAs($admin)->post(route('admin.love-stories.focus', $s), ['x' => 150, 'y' => 0])->assertSessionHasErrors('x');
+        $member = $this->member('一般', '男');
+        $this->actingAs($member)->post(route('admin.love-stories.focus', $s), ['x' => 1, 'y' => 1])->assertForbidden();
+    }
 }
