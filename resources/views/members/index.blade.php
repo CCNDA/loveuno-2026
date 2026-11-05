@@ -56,7 +56,13 @@
     @if (! empty($filters['name']))
         <p>符合您交友條件的會員裡，沒有暱稱有「{{ $filters['name'] }}」的。如果要找的人不在您的交友條件裡，可以<a href="{{ route('center.preferences') }}">回去修改交友條件</a>。</p>
     @else
-        <p>目前沒有符合您交友條件的會員。可以<a href="{{ route('center.preferences') }}">回去修改交友條件</a>，例如放寬年齡或居住地。</p>
+        {{-- 設計稿 405（378:19827）：「你的條件太嚴苛，找不到對象！」＋前往變更交友條件 --}}
+        <div class="error-hero error-nomatch">
+            <img src="{{ asset('images/errors/nomatch.svg') }}" alt="" width="757" height="343">
+            <h2>你的條件太嚴苛，找不到對象！<span lang="en">Your standards are too high, you can't find a friend!</span></h2>
+            <p>目前沒有符合您交友條件的會員，例如放寬年齡或居住地看看。</p>
+            <p><a class="button pill-submit" href="{{ route('center.preferences') }}">前往變更交友條件</a></p>
+        </div>
     @endif
 @else
     <ul class="member-grid">
