@@ -796,3 +796,11 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
 .cover-preset-grid label img { display: block; width: 100%; height: auto; }
 .cover-preset-grid input:checked + label { border-color: var(--button); }
 .cover-preset-grid input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* 會員中心大白卡：標題在卡外，其他都在卡裡（設計稿 253:15337） */
+.center-main { position: relative; isolation: isolate; padding-bottom: 72px; }
+.center-main::before { content: ""; position: absolute; z-index: -1; left: 16px; right: 16px; top: calc(24px + 3.4rem); bottom: 40px;
+    background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(61, 42, 34, .08); }
+.center-main > :not(h1) { margin-left: 28px; margin-right: 28px; }
+.center-main > .center-tabs { padding-top: 24px; }
+@media (max-width: 640px) { .center-main > :not(h1) { margin-left: 12px; margin-right: 12px; } .center-main::before { left: 4px; right: 4px; } }
