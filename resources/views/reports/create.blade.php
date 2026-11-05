@@ -36,9 +36,10 @@
     <div class="field">
         <label for="screenshot">圖片上傳（可以不放）</label>
         <p id="screenshot-hint" class="hint">截圖之類的證據。檔案格式：JPG、PNG，單一檔案不超過 5MB。只有管理員看得到。</p>
-        <input id="screenshot" name="screenshot" type="file" accept="image/jpeg,image/png"
+        <input id="screenshot" name="screenshot" type="file" accept="image/jpeg,image/png" class="camera-input photo-pick"
                aria-describedby="screenshot-hint @error('screenshot') screenshot-error @enderror"
                @error('screenshot') aria-invalid="true" @enderror>
+        <label for="screenshot" class="camera-box photo-box"><img class="photo-box-icon" src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32"><span class="camera-text">點這裡選圖片</span></label>
         @error('screenshot')<p id="screenshot-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 

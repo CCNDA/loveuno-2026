@@ -30,8 +30,9 @@
     <div class="field">
         <label for="photo">照片（可以不放）</label>
         <p id="photo-hint" class="hint">檔案格式：JPG、PNG，單一檔案不超過 5MB。</p>
-        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png"
+        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png" class="camera-input photo-pick"
                aria-describedby="photo-hint @error('photo') photo-error @enderror" @error('photo') aria-invalid="true" @enderror>
+        <label for="photo" class="camera-box photo-box"><img class="photo-box-icon" src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32"><span class="camera-text">點這裡選照片</span></label>
         @error('photo')<p id="photo-error" class="field-error">{{ $message }}</p>@enderror
     </div>
     <button type="submit" class="button">送出</button>
