@@ -956,3 +956,13 @@ form.is-autosaving > button[type=submit] { display: none; }
 .meetup-facts div { display: contents; }
 .meetup-facts dt { color: var(--muted); }
 .meetup-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+/* 常見問題（設計稿 785:9282）：每一組粉紅標題條＋米黃內容；答案珊瑚色字（設計稿 #f08070 對米黃只有 2.26:1，加深到 #b5452f 4.71:1） */
+.page-card .faq-group { max-width: 52rem; margin: 16px auto 0 !important; background: #ffeccf; }
+.page-card .faq-head { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 16px; background: #ffcfcb; font-size: 1.1rem; text-align: left; }
+.faq-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1.5px solid currentColor; border-radius: 50%; font-size: .8rem; font-weight: 700; }
+.page-card .faq-group .faq-item { border-top: 0; padding: 0 24px; }
+.page-card .faq-group .faq-item summary { font-weight: 400; min-height: 36px; }
+.page-card .faq-group .faq-item[open] summary { font-weight: 700; }
+.page-card .faq-group .faq-item p { color: #b5452f; }
+.page-card .faq-group > :last-child { padding-bottom: 12px; }
