@@ -14,6 +14,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
+    @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>@endauth
     <meta name="theme-color" content="#E5BBA2">
 </head>
 <body @auth class="has-bottom-nav" @endauth>
@@ -25,10 +26,17 @@
     <header class="site-header">
         <div class="wrap header-row">
             {{-- Logo 取自 loveuno-web 版型（public/images/brand/README.txt）；白色字的 Logo 屬於「標誌」，不受文字對比規定 --}}
+            @auth
+                {{-- 設計稿手機頁首（Header/Mobile）左邊的選單按鈕，打開側邊選單（Figma 1156:11227） --}}
+                <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="side-menu">
+                    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><path d="M4 7h20M4 14h20M4 21h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+                    <span class="visually-hidden">選單</span>
+                </button>
+            @endauth
             <a class="brand" href="{{ route('home') }}"><img src="{{ asset('images/brand/logo.svg') }}" alt="愛諾園 首頁" width="115" height="40"></a>
             <nav aria-label="主選單">
                 <ul class="nav">
-                    <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首頁</a></li>
+                    <li @auth class="nav-dup" @endauth><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首頁</a></li>
                     @auth
                         <li class="nav-dup"><a href="{{ route('diaries.index') }}" @if(request()->routeIs('diaries.*')) aria-current="page" @endif>心情日記</a></li>
                         <li class="nav-dup"><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif>認識朋友</a></li>
@@ -36,21 +44,21 @@
                         <li class="nav-dup"><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif>傳紙條@if($unreadNotes > 0) <span class="badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
                         <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
                         @if (auth()->user()->is_admin)
-                            <li><a href="{{ route('admin.members') }}" @if(request()->routeIs('admin.members*')) aria-current="page" @endif>會員管理</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.members') }}" @if(request()->routeIs('admin.members*')) aria-current="page" @endif>會員管理</a></li>
                             @php($openFeedback = \App\Models\Feedback::where('status', 'open')->count())
-                            <li><a href="{{ route('admin.feedback') }}" @if(request()->routeIs('admin.feedback*')) aria-current="page" @endif>回報@if($openFeedback)（{{ $openFeedback }}<span class="visually-hidden"> 則還沒處理</span>）@endif</a></li>
-                            <li><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
-                            <li><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
-                            <li><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
-                            <li><a href="{{ route('admin.meetups') }}" @if(request()->routeIs('admin.meetups')) aria-current="page" @endif>約會紀錄</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.feedback') }}" @if(request()->routeIs('admin.feedback*')) aria-current="page" @endif>回報@if($openFeedback)（{{ $openFeedback }}<span class="visually-hidden"> 則還沒處理</span>）@endif</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.meetups') }}" @if(request()->routeIs('admin.meetups')) aria-current="page" @endif>約會紀錄</a></li>
                             @php($pendingStories = \App\Models\LoveStory::where('status', 'pending')->count())
-                            <li><a href="{{ route('admin.love-stories') }}" @if(request()->routeIs('admin.love-stories')) aria-current="page" @endif>愛的見證@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.love-stories') }}" @if(request()->routeIs('admin.love-stories')) aria-current="page" @endif>愛的見證@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
                             @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
-                            <li><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
                             @php($openReports = \App\Models\Report::where('status', 'open')->count())
-                            <li><a href="{{ route('admin.reports') }}" @if(request()->routeIs('admin.reports')) aria-current="page" @endif>檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
+                            <li class="nav-dup"><a href="{{ route('admin.reports') }}" @if(request()->routeIs('admin.reports')) aria-current="page" @endif>檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
                         @endif
-                        <li>
+                        <li class="nav-dup">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="link-button">登出</button>
@@ -73,6 +81,7 @@
             </nav>
         </div>
     </header>
+    @auth @include('partials.side-menu') @endauth
 
     <main id="main" tabindex="-1" class="wrap">
         @if (session('status'))

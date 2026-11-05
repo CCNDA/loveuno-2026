@@ -10,7 +10,10 @@ class DiaryController extends Controller
 {
     public function index(Request $request): View
     {
+        // ?mine=1：側邊選單「我的日記」（設計稿 Figma 1156:11227）只列自己的
+        $mine = $request->boolean('mine');
         $diaries = Diary::visibleTo($request->user())
+            ->when($mine, fn ($q) => $q->where('user_id', $request->user()->id))
             ->whereNotIn('user_id', $request->user()->blockRelatedIds())
             ->whereHas('user', fn ($q) => $q->active()->orWhere('id', $request->user()->id))
             ->with('user:id,name')
@@ -18,7 +21,7 @@ class DiaryController extends Controller
             ->orderByDesc('published_on')->orderByDesc('id')
             ->paginate(10);
 
-        return view('diaries.index', ['diaries' => $diaries]);
+        return view('diaries.index', ['diaries' => $diaries->withQueryString(), 'mine' => $mine]);
     }
 
     public function show(Request $request, Diary $diary): View

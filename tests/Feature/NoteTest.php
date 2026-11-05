@@ -145,8 +145,8 @@ class NoteTest extends TestCase
         $b = $this->member('乙');
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => 'hi']);
         $html = $this->actingAs($b)->get('/diaries')->assertSee('傳紙條')->getContent();
-        // 頁首與底部選單各一次，數字本身 aria-hidden，螢幕閱讀器只念「有 1 則未讀」
-        $this->assertSame(2, substr_count($html, '，有 1 則未讀'));
-        $this->assertSame(2, substr_count($html, 'aria-hidden="true">1</span>'));
+        // 頁首、底部選單、側邊選單（11/5 起）各一次，數字本身 aria-hidden，螢幕閱讀器只念「有 1 則未讀」
+        $this->assertSame(3, substr_count($html, '，有 1 則未讀'));
+        $this->assertSame(3, substr_count($html, 'aria-hidden="true">1</span>'));
     }
 }
