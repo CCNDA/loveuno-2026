@@ -1243,7 +1243,8 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
     .profile-side .member-actions .pill-action { justify-content: center; padding: 0 6px; }
     /* 個人資料一列兩組（標題｜內容） */
     .profile-section .profile { grid-template-columns: 1fr 1fr; gap: 0 12px; }
-    .profile-section .profile div { grid-template-columns: 4.5rem minmax(0, 1fr); gap: 4px; padding: 6px 0; font-size: .9rem; }
+    .profile-section .profile div { grid-template-columns: 1fr; gap: 0; padding: 6px 0; font-size: .9rem; } /* 標題在上、內容在下：「職業 Email 認證」這種長標題才不會斷成一個字一行 */
+    .profile-section .profile dt { font-size: .8rem; }
 }
 /* 電腦：個人資料一列三組（設計稿 142:22363） */
 @media (min-width: 64rem) { .profile-section .profile { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
