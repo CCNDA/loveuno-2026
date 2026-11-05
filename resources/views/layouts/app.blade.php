@@ -23,6 +23,7 @@
 
     <p class="demo-banner" role="note">這是新版愛諾園的<strong>展示版</strong>，裡面的會員與日記都是示範資料。</p>
 
+    @sectionMissing('bare')
     <header class="site-header">
         <div class="wrap header-row">
             {{-- Logo 取自 loveuno-web 版型（public/images/brand/README.txt）；白色字的 Logo 屬於「標誌」，不受文字對比規定 --}}
@@ -47,16 +48,13 @@
                         <li><a class="header-login" href="{{ route('login') }}" @if(request()->routeIs('login')) aria-current="page" @endif>登入@if (config('loveuno.registration_open'))<span aria-hidden="true">/</span><span class="visually-hidden">或</span>註冊@endif</a></li>
                     @endguest
                     <li>
-                        @if (session('script') === 'hans')
-                            <a href="{{ route('script', 'hant') }}" data-keep-script lang="zh-Hant" class="script-toggle">繁體<span class="visually-hidden">（切換成繁體中文）</span></a>
-                        @else
-                            <a href="{{ route('script', 'hans') }}" data-keep-script lang="zh-Hans" class="script-toggle">简体<span class="visually-hidden">（切换成简体中文）</span></a>
-                        @endif
+                        @include('partials.script-toggle')
                     </li>
                 </ul>
             </nav>
         </div>
     </header>
+    @endif
     @auth @include('partials.side-menu') @endauth
 
     <main id="main" tabindex="-1" class="@yield('main_class', 'wrap')">
@@ -79,6 +77,7 @@
         </nav>
     @endauth
 
+    @sectionMissing('bare')
     <footer class="site-footer">
         <div class="wrap wrap-wide footer-row">
         <div class="footer-brand">
@@ -116,5 +115,6 @@
             <p class="version">版本 {{ $appVersion }}</p>
         </div>
     </footer>
+    @endif
 </body>
 </html>

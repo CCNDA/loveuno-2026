@@ -582,3 +582,42 @@ html.fs-large { font-size: 118.75%; }
     .has-side-menu .side-menu-panel { position: static; width: 280px; height: 100%; box-sizing: border-box; }
     .has-side-menu .side-menu-close, .has-side-menu .menu-toggle { display: none; }
 }
+
+/* ── 登入頁（設計稿 Login 209:21707／[MOBILE] Login 209:21677）：電腦版左插圖、右 480px 白框；手機只有白框 ── */
+.auth-page { display: grid; min-height: calc(100vh - 40px); background: #fff; }
+.auth-illustration { display: none; }
+.auth-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; }
+.auth-box { position: relative; width: 100%; max-width: 400px; text-align: center; }
+.auth-script { position: absolute; top: 0; right: 0; margin: 0; }
+.auth-script .script-toggle { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 999px; color: var(--text); text-decoration: none; border-color: #d6d6d6; }
+.auth-logo { display: inline-block; margin-top: 8px; }
+.auth-logo img { display: block; }
+.auth-box h1 { margin: 16px 0 4px; font-size: 1.4rem; color: #333; }
+.auth-sub { margin: 0 0 8px; font-size: .9rem; color: #666; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 16px 0 8px; border-bottom: 1px solid #e0e0e0; }
+.auth-tabs a { display: flex; align-items: center; justify-content: center; min-height: 44px; color: #333; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.auth-tabs a[aria-current="page"] { color: var(--button); border-bottom-color: var(--button); font-weight: 700; }
+.auth-box form { text-align: left; }
+.auth-field { position: relative; margin-top: 12px; padding: 4px 12px; border: 1px solid #c4c4c4; border-radius: 4px; background: #fff; } /* 設計稿框線 #d6d6d6 只有 1.4:1，輸入框框線要 3:1 → #8c857b */
+.auth-field { border-color: #8c857b; }
+.auth-field label { display: block; font-size: .78rem; color: #5c5c5c; }
+.auth-field input { display: block; width: 100%; box-sizing: border-box; min-height: 32px; padding: 2px 0; border: 0; background: transparent; font: inherit; font-size: 1rem; color: var(--text); }
+.auth-field input:focus-visible { outline: none; }
+.auth-field:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.auth-field:has(input[aria-invalid="true"]) { border-color: var(--error); }
+.auth-field-password input { padding-right: 44px; }
+.password-show { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; background: none; cursor: pointer; }
+.password-show[aria-pressed="true"] { opacity: .6; }
+.auth-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 24px; font-size: .9rem; }
+.auth-row a { display: inline-flex; align-items: center; min-height: 44px; color: var(--button); }
+.auth-remember { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.auth-remember input { width: 20px; height: 20px; }
+.auth-submit { width: 100%; border-radius: 24px; }
+.auth-links { margin: 32px 0 0; font-size: .85rem; }
+.auth-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.auth-serve { margin: 8px 0 0; font-size: .78rem; color: #666; text-align: center; }
+@media (min-width: 64rem) {
+    .auth-page { grid-template-columns: minmax(0, 1fr) 480px; }
+    .auth-illustration { display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f6f0e7; }
+    .auth-illustration img { width: 118%; max-width: none; height: auto; }
+}
