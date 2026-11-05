@@ -4,14 +4,14 @@
 <h1>會員中心</h1>
 <nav class="center-tabs" aria-label="會員中心">
     <ul>
-        {{-- 圖示照設計稿 253:15337／396:9221（手機版愛積點是愛心） --}}
+        {{-- 圖示照設計稿 253:15337／396:9221：愛積點在帳號管理、個人檔案是 P，在愛積點（328:6429）、交友條件（396:8842）頁是愛心；手機一律愛心 --}}
         @foreach ([
             'account' => ['帳號管理', 'center.account', 'center-account'],
             'profile' => ['個人檔案', 'profile.edit', 'center-profile'],
             'points' => ['愛積點', 'center.points', 'center-points'],
             'preferences' => ['交友條件', 'center.preferences', 'center-prefs'],
         ] as $key => [$label, $route, $icon])
-            <li><a href="{{ route($route) }}" @if($current === $key) aria-current="page" @endif><span class="ui-icon icon-{{ $icon === 'center-points' && $current === 'preferences' ? 'center-points-heart' : $icon }}" aria-hidden="true"></span>{{ $label }}</a></li>
+            <li><a href="{{ route($route) }}" @if($current === $key) aria-current="page" @endif><span class="ui-icon icon-{{ $icon === 'center-points' && in_array($current, ['points', 'preferences'], true) ? 'center-points-heart' : $icon }}" aria-hidden="true"></span>{{ $label }}</a></li>
         @endforeach
     </ul>
 </nav>
