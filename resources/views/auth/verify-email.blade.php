@@ -2,6 +2,8 @@
 
 @section('title', '請驗證電子郵件')
 
+@section('main_class', 'wrap auth-card')
+
 @section('content')
 @if (auth()->user()->email_bounced_at)
 <h1>您的電子郵件收不到信</h1>
@@ -27,6 +29,8 @@
     <button type="submit" class="button">寄確認信到新信箱</button>
 </form>
 @else
+{{-- 設計稿 忘記密碼／驗證頁（209:21695、209:21692）：上面一個大圖示、置中的小卡 --}}
+<img class="auth-card-icon" src="{{ asset('images/brand/auth-mail.svg') }}" alt="" width="96" height="96">
 <h1>請到信箱收驗證信</h1>
 <p>我們寄了一封信到 <strong>{{ auth()->user()->email }}</strong>，請點信裡的連結完成驗證。連結 60 分鐘內有效。</p>
 <p class="hint">沒收到的話，請看一下垃圾郵件匣，或按下面的按鈕重寄。</p>

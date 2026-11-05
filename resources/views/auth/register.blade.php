@@ -2,6 +2,8 @@
 
 @section('title', '加入會員')
 
+@section('main_class', 'wrap auth-card')
+
 @section('content')
 <h1>加入會員</h1>
 <p>填好下面的資料，我們會寄一封驗證信給您。愛諾園只開放 18 歲以上的會員。</p>

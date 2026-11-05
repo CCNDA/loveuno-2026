@@ -2,7 +2,11 @@
 
 @section('title', '忘記密碼')
 
+@section('main_class', 'wrap auth-card')
+
 @section('content')
+{{-- 設計稿 忘記密碼／驗證頁（209:21695、209:21692）：上面一個大圖示、置中的小卡 --}}
+<img class="auth-card-icon" src="{{ asset('images/brand/auth-lock.svg') }}" alt="" width="96" height="96">
 <h1>忘記密碼</h1>
 <p>請輸入註冊時用的電子郵件，我們會寄一封重設密碼的信給您。</p>
 
