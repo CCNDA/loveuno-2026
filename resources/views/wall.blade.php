@@ -98,7 +98,15 @@
         @csrf
         @include('diaries.partials.form-fields', ['diary' => $draft, 'px' => 'w-'])
         @include('diaries.partials.visibility-field', ['diary' => $draft, 'px' => 'w-'])
-        <p class="write-dialog-actions"><button type="submit" class="button pill-submit">發佈</button></p>
+        {{-- 設計稿「預覽」：在這裡看一下排起來的樣子，不會存 --}}
+        <section class="write-preview" id="write-preview" hidden aria-labelledby="write-preview-title">
+            <h3 id="write-preview-title">預覽</h3>
+            <p class="write-preview-tag"></p>
+            <p class="write-preview-heading"></p>
+            <p class="write-preview-body"></p>
+            <img class="write-preview-img" alt="" hidden>
+        </section>
+        <p class="write-dialog-actions"><button type="button" class="pill-link write-preview-btn" aria-controls="write-preview" aria-expanded="false" hidden>預覽</button> <button type="submit" class="button pill-submit">發佈</button></p>
     </form>
 </dialog>
 <script src="{{ asset('js/write-dialog.js') }}?v={{ $appVersion }}" defer></script>
