@@ -34,14 +34,18 @@
                 <h2 class="side-menu-sub">管理</h2>
                 <ul class="side-menu-list side-menu-admin">
                     <li><a href="{{ route('admin.members') }}">會員管理</a></li>
-                    <li><a href="{{ route('admin.feedback') }}">回報</a></li>
+                    @php($openFeedback = \App\Models\Feedback::where('status', 'open')->count())
+                    <li><a href="{{ route('admin.feedback') }}">回報@if($openFeedback)（{{ $openFeedback }}<span class="visually-hidden"> 則還沒處理</span>）@endif</a></li>
                     <li><a href="{{ route('admin.photos') }}">審核照片</a></li>
                     <li><a href="{{ route('admin.contacts') }}">來信</a></li>
                     <li><a href="{{ route('admin.news') }}">公告</a></li>
                     <li><a href="{{ route('admin.meetups') }}">約會紀錄</a></li>
-                    <li><a href="{{ route('admin.love-stories') }}">愛的見證審核</a></li>
-                    <li><a href="{{ route('admin.verifications') }}">審核認證</a></li>
-                    <li><a href="{{ route('admin.reports') }}">檢舉</a></li>
+                    @php($pendingStories = \App\Models\LoveStory::where('status', 'pending')->count())
+                    <li><a href="{{ route('admin.love-stories') }}">愛的見證審核@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
+                    @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
+                    <li><a href="{{ route('admin.verifications') }}">審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
+                    @php($openReports = \App\Models\Report::where('status', 'open')->count())
+                    <li><a href="{{ route('admin.reports') }}">檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
                 </ul>
             @endif
         </nav>

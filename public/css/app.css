@@ -191,8 +191,8 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
     body.has-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     /* 用 Tab 移到頁面下方時，焦點不要被底部選單蓋住 */
     html:has(body.has-bottom-nav) { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-    .site-header .nav .nav-dup { display: none; }
 }
+
 
 /* 側邊選單（設計稿 Figma 1156:11227）：蜜桃底、深褐字；左邊滑出，寬 280px */
 .menu-toggle { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-right: 4px;
@@ -478,3 +478,57 @@ html.fs-large { font-size: 118.75%; }
 /* 約會 */
 .meetup-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .meetup-list a, .notice a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* ── 首頁（生活日記牆）照設計稿 Figma Index 6:6038／Index - Mobile 216:8236（熊叔叔 11/5 A） ── */
+.wrap-wide { max-width: 72rem; }
+.site-header .wrap { max-width: 72rem; }
+.header-row .brand { margin-right: auto; }
+.header-icons { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.header-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--header-text); }
+.header-icon:hover { background: rgba(255,255,255,.55); color: var(--header-text); }
+.header-badge { position: absolute; top: 2px; right: 0; }
+.home-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.home-side { display: contents; }
+.home-suggest { order: 1; } .home-side .occasions { order: 2; } .home-wall { order: 3; } .ad-slot { order: 4; } .home-side .welcome-new { order: 5; }
+.home-grid .card h2 { margin-top: 0; }
+.home-grid .occasions, .home-grid .welcome-new { margin-top: 0; }
+.home-suggest .suggest-row { padding-bottom: 0; }
+.home-wall .wall-head { margin-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.home-wall .wall-head h2 { color: var(--button); }
+.wall-write a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; }
+.wall-filters { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 4px; }
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.chip-group a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); text-decoration: none; font-size: .95rem; }
+.chip-group a:hover { background: #fdf3ec; }
+.chip-group a[aria-current="page"] { background: var(--button); border-color: var(--button); color: #fff; font-weight: 700; }
+.home-wall .wall-list { gap: 0; margin: 0; }
+.home-wall .wall-card { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; padding: 16px 0; }
+.home-wall .wall-title a { color: var(--button-dark); }
+.wall-empty { margin: 16px 0 0; }
+.wall-more { margin: 12px 0 0; }
+.read-more { white-space: nowrap; }
+.ad-slot { width: 300px; max-width: 100%; margin: 0 auto; }
+.ad-label { margin: 0 0 4px; font-size: .8rem; color: var(--muted); }
+.ad-box { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 300px; max-width: 100%; height: 250px; box-sizing: border-box; padding: 16px;
+    border-radius: var(--radius); background: var(--header); color: var(--header-text); text-align: center; text-decoration: none; }
+.ad-box strong { font-size: 1.3rem; }
+.ad-box:hover { color: var(--header-text); background: #dcae93; }
+.ad-cta { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border-radius: 999px; background: var(--button); color: #fff; font-weight: 700; }
+.fab-write { display: none; }
+@media (min-width: 64rem) {
+    .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+    .home-suggest { grid-column: 1; grid-row: 1; }
+    .home-wall { grid-column: 1; grid-row: 2; }
+    .home-side { display: flex; flex-direction: column; gap: 16px; grid-column: 2; grid-row: 1 / span 2; }
+    .home-side > * { order: 0; } /* 右欄照原順序：特殊節日、歡迎新朋友、廣告 */
+}
+@media (min-width: 641px) {
+    .fab-write { display: inline-flex; align-items: center; justify-content: center; position: fixed; right: 24px; bottom: 24px; z-index: 15;
+        width: 60px; height: 60px; border-radius: 50%; background: var(--button); box-shadow: 0 4px 12px rgba(61, 42, 34, .3); }
+    .fab-write:hover { background: var(--button-dark); }
+    .fab-write img { filter: brightness(0) invert(1); }
+}
+.header-me { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border-radius: 999px; color: var(--header-text); text-decoration: none; }
+.header-me:hover { background: rgba(255,255,255,.55); color: var(--header-text); }
+.header-me .avatar-sm { width: 32px; height: 32px; }
+@media (max-width: 640px) { .header-me-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }

@@ -103,7 +103,7 @@ class WallTest extends TestCase
         $this->writeDiary($other, '今天的心情', false);
         $this->writeDiary($other, '請為我禱告', true);
 
-        $this->actingAs($me)->get('/')->assertOk()->assertSee('動態牆')
+        $this->actingAs($me)->get('/')->assertOk()->assertSee('生活日記牆')
             ->assertSee('今天的心情')->assertSee('請為我禱告')
             ->assertSee('<span class="tag tag-diary">心情日記</span>', false)
             ->assertSee('<span class="tag tag-prayer">代禱事項</span>', false);
