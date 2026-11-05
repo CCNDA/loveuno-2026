@@ -972,3 +972,11 @@ form.is-autosaving > button[type=submit] { display: none; }
 .contact-form .field input, .contact-form .field select, .contact-form .field textarea { width: 100%; box-sizing: border-box; }
 .contact-form > button[type=submit] { justify-self: center; min-width: 8rem; border-radius: 999px; }
 .page-card > ul.prose { max-width: 52rem; }
+
+/* 站務公告列表（設計稿 220:15493）：上插圖、灰表頭、每列「站務公告」小標籤、日期置中；表格不撐出卡外 */
+.page-card > .news-table { width: 100%; max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
+.page-card > .news-hero { margin-bottom: 16px; }
+.news-table thead th { background: #f4f2f0; font-size: .9rem; }
+.news-table th:last-child, .news-table td:last-child { width: 8rem; text-align: center; border-left: 1px solid var(--line); white-space: nowrap; }
+.news-table td { vertical-align: middle; }
+.news-tag { display: inline-block; margin-right: 6px; padding: 1px 6px; border: 1px solid #e0a352; border-radius: 3px; background: #fff3dc; color: #8a4f00; font-size: .8rem; white-space: nowrap; }
