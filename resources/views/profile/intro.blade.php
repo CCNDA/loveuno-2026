@@ -16,8 +16,9 @@
     <div class="field">
         <label for="headline">個人標題（必填）</label>
         <p id="headline-hint" class="hint">一句話介紹自己，會顯示在名字下面，例如「愛爬山的國小老師」。50 字以內。</p>
-        <input id="headline" name="headline" type="text" maxlength="50" required value="{{ old('headline', $profile->headline) }}"
-               aria-describedby="headline-hint @error('headline') headline-error @enderror" @error('headline') aria-invalid="true" @enderror>
+        <input id="headline" name="headline" type="text" maxlength="50" required value="{{ old('headline', $profile->headline) }}" data-count
+               aria-describedby="headline-hint headline-count @error('headline') headline-error @enderror" @error('headline') aria-invalid="true" @enderror>
+        <p id="headline-count" class="char-count" aria-live="off"><span>{{ mb_strlen(old('headline', $profile->headline ?? '')) }}</span>/50</p>
         @error('headline')<p id="headline-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
@@ -84,4 +85,5 @@
 </form>
 
 <p><a href="{{ route('me') }}">← 回我的檔案</a></p>
+<script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
 @endsection

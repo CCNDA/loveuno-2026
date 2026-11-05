@@ -31,8 +31,9 @@
     <div class="field">
         <label for="body">聯絡內容</label>
         <p id="body-hint" class="hint">1000 字以內。</p>
-        <textarea id="body" name="body" rows="8" maxlength="1000" required
-                  aria-describedby="body-hint @error('body') body-error @enderror" @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
+        <textarea id="body" name="body" rows="8" maxlength="1000" required data-count
+                  aria-describedby="body-hint body-count @error('body') body-error @enderror" @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
+        <p id="body-count" class="char-count" aria-live="off"><span>{{ mb_strlen(old('body', '')) }}</span>/1000</p>
         @error('body')<p id="body-error" class="field-error">{{ $message }}</p>@enderror
     </div>
     {{-- 擋機器人：這一格人看不到，有填就當成機器人（取代舊站的「系統安全碼」圖片，不用看圖打字） --}}
@@ -42,4 +43,5 @@
     </div>
     <button type="submit" class="button">送出</button>
 </form>
+<script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
 @endsection
