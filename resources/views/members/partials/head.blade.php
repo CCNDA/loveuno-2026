@@ -9,7 +9,7 @@
 <section class="card profile-card" aria-labelledby="member-name">
     <div class="profile-cover">
         @php($preset = $cp?->coverPreset() ?? 1)
-        <img src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
+        <img data-zoom src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
     </div>
 
     <div class="profile-row">

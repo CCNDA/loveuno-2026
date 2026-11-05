@@ -58,6 +58,7 @@
             @foreach (\App\Models\Profile::COVER_PRESETS as $n => $ref)
                 <li>
                     <input type="radio" name="cover_preset" id="cover-{{ $n }}" value="{{ $n }}" @checked($chosen === $n)>
+                    <button type="button" class="zoom-btn" data-zoom-src="{{ asset('images/covers/cover-' . $n . '.svg') }}" aria-label="放大看第 {{ $n }} 張封面"><span aria-hidden="true">🔍</span></button>
                     <label for="cover-{{ $n }}"><img src="{{ asset('images/covers/cover-' . $n . '.svg') }}" alt="第 {{ $n }} 張（{{ $ref }}）" width="551" height="165" loading="lazy"></label>
                 </li>
             @endforeach
