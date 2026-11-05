@@ -1268,9 +1268,9 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 }
 
 /* 查看禮物手機版：信頭固定排法（熊叔叔 11/6 07:11 TG 截圖「排版字會亂」：名字長時禮物名被擠到旁邊斷行、時間掉到下一行）
-   頭像｜誰（第一列整列）；第二列：禮物名（左）、時間（右） */
+   頭像｜第一列：誰（左）、時間（右）；第二列：禮物名整列 */
 @media (max-width: 640px) {
-    .gift-letter-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av who who" "av title time"; column-gap: 10px; row-gap: 2px; align-items: center; }
+    .gift-letter-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av who time" "av title title"; column-gap: 10px; row-gap: 2px; align-items: center; }
     .gift-letter-head > .avatar, .gift-letter-head > img, .gift-letter-head > span.avatar { grid-area: av; }
     .gift-letter-head .note-who { grid-area: who; overflow-wrap: anywhere; }
     .gift-letter-head .gift-letter-title { grid-area: title; font-size: .95rem; overflow-wrap: anywhere; }
