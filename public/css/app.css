@@ -850,3 +850,4 @@ input.switch:checked::before { transform: translateX(20px); }
 .center-main .verify-card .upload-box { max-width: 22rem; }
 .center-main .verify-card .field input:not([type=file]) { max-width: 22rem; }
 .center-main .verify-card .button { border-radius: 999px; min-width: 7rem; justify-content: center; }
+@media (min-width: 64rem) { .pref-form.form-grid > fieldset { grid-column: auto; } .pref-form.form-grid > p.hint { grid-column: 1 / -1; } } /* 交友條件照設計稿 122:9612 兩欄，年齡／身高／體重的範圍也在欄裡 */
