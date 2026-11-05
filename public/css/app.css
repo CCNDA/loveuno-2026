@@ -1038,3 +1038,17 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 .zoom-dialog img { display: block; width: 100%; height: auto; }
 .zoom-dialog .dialog-close { position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,.9); border-radius: 50%; }
 .cover-preset-grid .zoom-btn { position: absolute; top: 8px; right: 8px; z-index: 1; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); cursor: pointer; font-size: 1.1rem; }
+
+/* 身份認證（設計稿 118:8011）：欄位半寬、珊瑚色鈕在最後一欄右邊（.verify-row）、拍照大框、說明小字 */
+.center-main .verify-card form.form { max-width: 26rem; }
+.verify-row { display: flex; gap: 16px; align-items: center; width: calc(100% + 8rem); }
+.verify-row > input, .verify-row > .camera-box { flex: 1; min-width: 0; }
+.verify-go { flex: none; min-width: 6rem; justify-content: center; border-radius: 999px !important; background: #c4513b; } /* 設計稿珊瑚 #ff8964 配白字太淡 */
+.verify-go:hover { background: #a8432f; }
+.verify-card .hint { font-size: .85rem; }
+.camera-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.camera-box { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 104px; padding: 12px; border: 1px solid #8c857b; border-radius: 4px; background: #fff; color: var(--muted); cursor: pointer; text-align: center; overflow-wrap: anywhere; }
+.camera-box:hover { background: #fdf8f3; }
+.camera-input:focus-visible + .verify-row .camera-box { outline: 3px solid var(--focus); outline-offset: 2px; }
+.camera-input[aria-invalid="true"] + .verify-row .camera-box { border-color: var(--error); }
+@media (max-width: 40rem) { .verify-row { width: 100%; flex-wrap: wrap; } .verify-row > .verify-go { width: 100%; } }
