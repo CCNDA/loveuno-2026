@@ -758,8 +758,27 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
 .note-send:hover { background: #a8432f; }
 @media (max-width: 640px) { .notes-layout { grid-template-columns: 1fr; } }
 
-/* 登入後頁首撐滿：☰ 就在左邊選單旁邊，大螢幕不會被置中拉遠（熊叔叔 11/5「選單拉太遠了，直接在目錄按鈕旁邊即可」） */
-.has-side-menu .site-header .wrap { max-width: none; }
+/* 大螢幕：展開的選單跟內容（含頁首 ☰）一起置中，選單就在 ☰ 旁邊（熊叔叔 11/5「反了，是展開的目錄要在選單按鈕的旁邊」）。
+   1480px＝選單 280＋內容 1184＋留白；比這窄就貼左邊 */
+@media (min-width: 75rem) {
+    :root { --dock-left: max(0px, calc((100vw - 1480px) / 2)); }
+    body.has-side-menu { padding-left: 0; }
+    .has-side-menu .side-menu, .has-side-menu .side-menu[hidden] { left: var(--dock-left); }
+    html:not(.side-menu-collapsed) .has-side-menu .site-header .wrap,
+    html:not(.side-menu-collapsed) .has-side-menu main,
+    html:not(.side-menu-collapsed) .has-side-menu .site-footer .wrap { margin-left: calc(var(--dock-left) + 280px); margin-right: var(--dock-left); max-width: none; }
+}
+
+/* 側邊選單字級、顏色照設計稿 menu 1156:11227：大頭照 98、暱稱 25px、點數 22px、項目 22px 中粗、行距 47px；
+   字色設計稿 #664a53 對蜜桃底 4.48:1，差一點不到 4.5，加深一點點到 #634751（4.69:1） */
+.side-menu-panel { color: #634751; }
+.side-menu-me .avatar { width: 98px; height: 98px; font-size: 2.4rem; }
+.side-menu-me { color: #634751; }
+.side-menu-name { font-size: 1.55rem; font-weight: 500; }
+.side-menu-points { font-size: 1.375rem; font-weight: 500; color: #634751; padding: 4px 16px; }
+.side-menu-points span[aria-hidden] { font-size: 1.6rem; color: #e8705a; vertical-align: -2px; }
+.side-menu-list a, .side-menu-logout { min-height: 47px; font-size: 1.375rem; font-weight: 500; color: #634751; }
+.side-menu-legal a { color: #634751; }
 
 /* 寫日記（設計稿 235:8504）：對話框、字數、照片上傳框、膠囊發佈鈕 */
 .char-count { margin: 2px 0 0; text-align: right; font-size: .8rem; color: var(--muted); }
