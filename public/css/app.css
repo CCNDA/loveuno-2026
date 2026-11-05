@@ -1248,3 +1248,5 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 }
 /* 電腦：個人資料一列三組（設計稿 142:22363） */
 @media (min-width: 64rem) { .profile-section .profile { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.error-summary:focus { outline: 3px solid var(--focus); outline-offset: 2px; } /* 錯誤摘要拿到焦點時看得到 */
