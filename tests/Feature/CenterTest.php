@@ -25,7 +25,7 @@ class CenterTest extends TestCase
         $u = $this->member();
         $this->actingAs($u)->get('/center')->assertRedirect('/center/account');
         $html = $this->actingAs($u)->get('/center/account')->assertOk()->assertSee('會員中心')->getContent();
-        $this->assertMatchesRegularExpression('#aria-current="page"\s*>帳號管理#u', $html);
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="ui-icon icon-center-account" aria-hidden="true"></span>帳號管理#u', $html);
         $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee(route('profile.intro'), false);
         $this->actingAs($u)->get('/me/intro')->assertOk()->assertSee('最愛經文');
         $this->actingAs($u)->get('/me/photo')->assertOk()->assertSee(route('verify.index'), false);
