@@ -2,6 +2,8 @@
 
 @section('title', '送禮物')
 
+@section('main_class', 'wrap airmail')
+
 @section('content')
 <h1>送禮物給 {{ $member->name }}</h1>
 <p class="prose">送一份禮物給陌生網友是對他(她)表達好感的第一步。若對方回送給您一個禮物，雙方就成為「普通好友」囉。</p>
