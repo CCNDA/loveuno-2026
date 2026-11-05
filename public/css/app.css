@@ -851,3 +851,13 @@ input.switch:checked::before { transform: translateX(20px); }
 .center-main .verify-card .field input:not([type=file]) { max-width: 22rem; }
 .center-main .verify-card .button { border-radius: 999px; min-width: 7rem; justify-content: center; }
 @media (min-width: 64rem) { .pref-form.form-grid > fieldset { grid-column: auto; } .pref-form.form-grid > p.hint { grid-column: 1 / -1; } } /* 交友條件照設計稿 122:9612 兩欄，年齡／身高／體重的範圍也在欄裡 */
+
+/* 關於、常見問題、聯絡我們、站務公告、愛的見證：標題在外、一張大白卡（設計稿 122:10096 等） */
+.page-card > .prose, .page-card > .about-hero { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
+.page-card { padding-top: 24px; }
+.page-card::before { top: calc(24px + 3.4rem); }
+.page-card > :nth-child(2) { margin-top: 48px; }
+.about-hero { background: #f6f0e7; display: flex; justify-content: center; overflow: hidden; }
+.about-hero img { width: 100%; height: auto; display: block; }
+.page-card .donate { border: 0; background: none; text-align: center; }
+.page-card .donate h2 { margin-top: 0; }

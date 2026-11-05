@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', $item->title . '｜站務公告')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 <p class="meta"><a href="{{ route('news.index') }}">站務公告</a></p>
