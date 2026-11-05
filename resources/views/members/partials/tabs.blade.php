@@ -10,7 +10,7 @@
 {{-- 分頁內容放一張白卡，標題看得到（設計稿 Profile：「個人資料」「自我介紹」卡片） --}}
 <div class="card profile-section">
 @if ($tab === 'info')
-    <h2 class="profile-section-title">個人資料</h2>
+    <div class="profile-section-head"><h2 class="profile-section-title">個人資料</h2>@if ($isMe ?? false)<a class="section-edit" href="{{ route('profile.edit') }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.3 2.3a1.4 1.4 0 0 1 2 2L5.5 12.1 2.5 13l.9-3 7.9-7.7z" fill="currentColor"/></svg><span class="visually-hidden">編輯個人資料</span></a>@endif</div>
     @php($rows = $p->detailRows())
     @php($approved = $member->approvedVerifications())
     @php($rows['手機認證'] = $member->hasValidPhone() ? '已認證' : '尚未認證')
@@ -27,7 +27,7 @@
         </dl>
     @endif
 @elseif ($tab === 'intro')
-    <h2 class="profile-section-title">自我介紹</h2>
+    <div class="profile-section-head"><h2 class="profile-section-title">自我介紹</h2>@if ($isMe ?? false)<a class="section-edit" href="{{ route('profile.intro') }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.3 2.3a1.4 1.4 0 0 1 2 2L5.5 12.1 2.5 13l.9-3 7.9-7.7z" fill="currentColor"/></svg><span class="visually-hidden">編輯自我介紹</span></a>@endif</div>
     @if ($p->intro)
         <section aria-labelledby="intro-title">
             <h3 id="intro-title">簡介</h3>
@@ -87,7 +87,7 @@
         {{ $diaries->links('partials.pagination') }}
     @endif
 @else
-    <h2 class="profile-section-title">個人相簿</h2>
+    <div class="profile-section-head"><h2 class="profile-section-title">個人相簿</h2>@if ($isMe ?? false)<a class="section-edit" href="{{ route('album.edit') }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.3 2.3a1.4 1.4 0 0 1 2 2L5.5 12.1 2.5 13l.9-3 7.9-7.7z" fill="currentColor"/></svg><span class="visually-hidden">編輯個人相簿</span></a>@endif</div>
     @include('members.partials.album')
 @endif
 </div>
