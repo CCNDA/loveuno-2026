@@ -189,4 +189,22 @@ class WallTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/id="is_prayer"[^>]*\bchecked\b/s', $this->actingAs($me)->get(route('diaries.create'))->getContent());
         $this->actingAs($me)->get(route('diaries.create'))->assertSee('寫心情日記')->assertDontSee('寫代禱事項');
     }
+
+    // 瀑布流（熊叔叔 2026-11-05「生活日記簿是瀑布流方式，可以一直往下拉」）
+    public function test_wall_loads_more_in_batches_of_ten(): void
+    {
+        $me = $this->member('我');
+        $other = $this->member('別人');
+        foreach (range(1, 12) as $i) {
+            $other->diaries()->create(['title' => '第' . $i . '篇日記', 'body' => '內容', 'visibility' => 'public', 'is_prayer' => false,
+                'published_on' => now()->subDays(20 - $i)->toDateString()]);
+        }
+        $first = $this->actingAs($me)->get('/?kind=diary')->assertOk()->assertSee('第12篇日記')->assertDontSee('第2篇日記')
+            ->assertSee('data-wall-more', false)->getContent();
+        $this->assertStringContainsString('kind=diary', html_entity_decode($first)); // 下一批保留篩選
+        $more = $this->actingAs($me)->get('/?kind=diary&page=2', ['X-Wall-More' => '1'])->assertOk()
+            ->assertSee('第2篇日記')->assertSee('第1篇日記')->assertDontSee('第12篇日記')
+            ->assertDontSee('好友推薦')->assertSee('已經是最舊的日記了');
+        $this->actingAs($me)->get('/?page=2')->assertOk()->assertSee('好友推薦')->assertSee('第1篇日記'); // 沒有 JS：一般的下一頁
+    }
 }

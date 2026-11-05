@@ -14,7 +14,7 @@ use Illuminate\View\View;
 // 首頁：沒登入是介紹頁；登入後是日記牆（照 loveuno-web 版型：上面好友推薦、下面日記卡片）
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): View|RedirectResponse
+    public function __invoke(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         $me = $request->user();
         if (! $me || ! $me->hasVerifiedEmail()) {
@@ -41,7 +41,12 @@ class HomeController extends Controller
             // 卡片上的留言（設計稿 DiaryWall）：不含封鎖對象的；畫面只放最新 3 則
             ->with(['comments' => fn ($q) => $q->whereNotIn('user_id', $blocked)->whereHas('user', fn ($u) => $u->active())->with('user.profile')->orderBy('created_at')->orderBy('id')])
             ->orderByDesc('published_on')->orderByDesc('id')
-            ->limit(10)->get();
+            ->simplePaginate(10)->withQueryString();
+
+        // 往下拉接下一批（js/wall-scroll.js 帶這個標頭）：只回卡片＋下一個「載入更多」，不算好友推薦那些
+        if ($request->header('X-Wall-More') === '1') {
+            return response()->view('partials.wall-more-response', ['diaries' => $diaries, 'scope' => $scope, 'kind' => $kind]);
+        }
 
         return view('wall', [
             'diaries' => $diaries,

@@ -651,3 +651,5 @@ html.fs-large { font-size: 118.75%; }
 @media (max-width: 640px) { .notif-panel { position: fixed; left: 16px; right: 16px; top: 64px; width: auto; } }
 .side-menu-social { flex-wrap: wrap; gap: 10px; } /* 六顆在 280px 選單裡排兩行 */
 .footer-social { flex-wrap: wrap; }
+.wall-more { margin: 16px 0 0; text-align: center; }
+.wall-end { color: var(--muted); font-size: .9rem; }
