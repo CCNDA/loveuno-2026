@@ -6,7 +6,7 @@
 @include('center.tabs', ['current' => 'profile', 'sub' => 'intro'])
 <h2>自我介紹</h2>
 
-<form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide" novalidate>
+<form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide intro-form" novalidate>
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '自我介紹還沒存好'])
@@ -58,7 +58,7 @@
         <fieldset class="field" id="{{ $key }}" tabindex="-1" aria-describedby="{{ $key }}-hint{{ $groupError ? ' ' . $key . '-error' : '' }}">
             <legend>{{ $label }}</legend>
             <p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>
-            <div class="check-grid">
+            <div class="check-grid chip-checks">
                 @foreach ($options as $i => $opt)
                     <div class="field-check">
                         <input id="{{ $key }}-{{ $i }}" name="{{ $key }}[]" type="checkbox" value="{{ $opt }}" @checked(in_array($opt, $chosen, true))>
@@ -81,7 +81,7 @@
         </div>
     @endforeach
 
-    <button type="submit" class="button">存檔</button>
+    <button type="submit" class="button pill-submit">存檔</button>
 </form>
 
 <p><a href="{{ route('me') }}">← 回我的檔案</a></p>
