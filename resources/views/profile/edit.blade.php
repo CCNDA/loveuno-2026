@@ -7,7 +7,7 @@
 <h2>個人資料</h2>
 <p class="hint">性別和出生年是註冊時填的，這裡不能改；要改請找管理員。其他會員只會看到年齡層，看不到出生年。標「必填」的要選。</p>
 
-<form method="POST" action="{{ route('profile.update') }}" class="form form-wide" novalidate>
+<form method="POST" action="{{ route('profile.update') }}" class="form form-wide form-grid" novalidate>
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '個人資料還沒存好'])
@@ -19,11 +19,12 @@
         ['live_place', '居住地', 20, $profile->live_place, '例如：台北市'],
         ['job', '職業', 20, $profile->job, '例如：老師、工程師、學生'],
     ])
-    @foreach ($fields as [$key, $label, $max, $value, $hint])
+    {{-- 迴圈變數不能叫 $hint：下面 select-field 會撿到最後一個「例如：老師、工程師、學生」（11/5 抓到） --}}
+    @foreach ($fields as [$key, $label, $max, $value, $fieldHint])
         <div class="field">
             <label for="{{ $key }}">{{ $label }}</label>
-            @if ($hint)<p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>@endif
-            @php($desc = trim(($hint ? $key . '-hint' : '') . ($errors->has($key) ? ' ' . $key . '-error' : '')))
+            @if ($fieldHint)<p id="{{ $key }}-hint" class="hint">{{ $fieldHint }}</p>@endif
+            @php($desc = trim(($fieldHint ? $key . '-hint' : '') . ($errors->has($key) ? ' ' . $key . '-error' : '')))
             <input id="{{ $key }}" name="{{ $key }}" type="{{ $key === 'home_phone' ? 'tel' : 'text' }}" maxlength="{{ $max }}" value="{{ old($key, $value) }}"
                    @if ($key === 'name') required autocomplete="nickname" @elseif ($key === 'real_name') autocomplete="name" @elseif ($key === 'home_phone') autocomplete="tel" inputmode="tel" @endif
                    @if ($desc !== '') aria-describedby="{{ $desc }}" @endif

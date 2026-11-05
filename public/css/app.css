@@ -804,3 +804,10 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
 .center-main > :not(h1) { margin-left: 28px; margin-right: 28px; }
 .center-main > .center-tabs { padding-top: 24px; }
 @media (max-width: 640px) { .center-main > :not(h1) { margin-left: 12px; margin-right: 12px; } .center-main::before { left: 4px; right: 4px; } }
+
+/* 個人資料表單照設計稿 69:5636 電腦兩欄（欄位一格一格排，送出鈕和錯誤摘要佔整列） */
+@media (min-width: 64rem) {
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; max-width: none; align-items: start; }
+    .form-grid > :not(.field), .form-grid > fieldset { grid-column: 1 / -1; }
+    .form-grid .field input:not([type=checkbox]):not([type=radio]), .form-grid .field select { width: 100%; box-sizing: border-box; }
+}
