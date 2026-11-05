@@ -10,8 +10,10 @@
 {{-- 照交友條件列出（熊叔叔 11/4）：顯示會員自己填的條件；實際年齡以 5 歲一格計（Profile::preferenceFilter），註明一句 --}}
 @php($min = $pref?->pref_age_min)
 @php($max = $pref?->pref_age_max)
+@php($f = \App\Models\Profile::preferenceFilter($pref))
+@php($cm = fn ($lo, $hi, $u) => match (true) { $lo && $hi => $lo . '～' . $hi . ' ' . $u, (bool) $lo => $lo . ' ' . $u . '以上', (bool) $hi => $hi . ' ' . $u . '以下', default => null })
 @php($prefParts = collect([
-    ['男' => '弟兄', '女' => '姊妹'][$pref?->pref_gender] ?? null,
+    ['男' => '弟兄', '女' => '姊妹'][$f['gender']] ?? null,
     match (true) {
         $min && $max => $min . '～' . $max . ' 歲',
         (bool) $min => $min . ' 歲以上',
@@ -19,10 +21,14 @@
         default => null,
     },
     $pref?->pref_place ?: null,
+    $pref?->pref_marital ?: null,
+    $pref?->pref_faith ?: null,
+    ($h = $cm($pref?->pref_height_min, $pref?->pref_height_max, '公分')) ? '身高 ' . $h : null,
+    ($w = $cm($pref?->pref_weight_min, $pref?->pref_weight_max, '公斤')) ? '體重 ' . $w : null,
 ])->filter())
 @if ($members === null)
     {{-- 還沒設交友條件：先請他設定（熊叔叔 11/4 TG），不列人、不給搜尋 --}}
-    <p class="pref-summary">請先設定您的交友條件（想認識弟兄或姊妹、年齡、居住地），這裡就會列出您想認識的對象。</p>
+    <p class="pref-summary">請先設定您的交友條件（年齡、婚姻狀態、信仰、居住地區、身高、體重），這裡就會列出您想認識的對象。</p>
     <p><a class="button" href="{{ route('center.preferences') }}">設定交友條件</a></p>
 @else
 <p class="pref-summary">

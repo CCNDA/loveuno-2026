@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Profile;
 use App\Models\User;
 use App\Support\Points;
+use App\Support\ProfileOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -85,21 +86,39 @@ class CenterController extends Controller
 
     public function updatePreferences(Request $request): RedirectResponse
     {
+        // 只有下限有填才比大小（只填「到 40 歲」不能被誤擋）
+        $upper = fn (string $min) => Rule::when($request->filled($min), 'gte:' . $min);
         $data = $request->validate([
             'pref_gender' => ['nullable', 'in:男,女'],
             'pref_age_min' => ['nullable', 'integer', 'between:18,99'],
-            // 只有下限有填才比大小（只填「到 40 歲」不能被誤擋）
-            'pref_age_max' => ['nullable', 'integer', 'between:18,99', Rule::when($request->filled('pref_age_min'), 'gte:pref_age_min')],
+            'pref_age_max' => ['nullable', 'integer', 'between:18,99', $upper('pref_age_min')],
             'pref_place' => ['nullable', 'string', 'max:20'],
+            'pref_marital' => ['nullable', Rule::in(ProfileOptions::MARITAL)],
+            'pref_faith' => ['nullable', Rule::in(ProfileOptions::FAITH)],
+            'pref_height_min' => ['nullable', 'integer', 'between:120,230'],
+            'pref_height_max' => ['nullable', 'integer', 'between:120,230', $upper('pref_height_min')],
+            'pref_weight_min' => ['nullable', 'integer', 'between:30,200'],
+            'pref_weight_max' => ['nullable', 'integer', 'between:30,200', $upper('pref_weight_min')],
         ], [
             'pref_age_max.gte' => '年齡上限不能比下限小。',
-        ], ['pref_gender' => '想認識', 'pref_age_min' => '年齡下限', 'pref_age_max' => '年齡上限', 'pref_place' => '居住地']);
+            'pref_height_max.gte' => '身高上限不能比下限小。',
+            'pref_weight_max.gte' => '體重上限不能比下限小。',
+        ], ['pref_gender' => '想認識', 'pref_age_min' => '年齡下限', 'pref_age_max' => '年齡上限', 'pref_place' => '居住地區',
+            'pref_marital' => '婚姻狀態', 'pref_faith' => '對象信仰', 'pref_height_min' => '身高下限', 'pref_height_max' => '身高上限',
+            'pref_weight_min' => '體重下限', 'pref_weight_max' => '體重上限']);
 
         $profile = Profile::updateOrCreate(['user_id' => $request->user()->id], [
+            // 畫面上不再讓人選（照個人資料的性別配異性）；舊的表單或程式送來的才存
             'pref_gender' => $data['pref_gender'] ?? '',
             'pref_age_min' => $data['pref_age_min'] ?? null,
             'pref_age_max' => $data['pref_age_max'] ?? null,
             'pref_place' => trim((string) ($data['pref_place'] ?? '')),
+            'pref_marital' => $data['pref_marital'] ?? '',
+            'pref_faith' => $data['pref_faith'] ?? '',
+            'pref_height_min' => $data['pref_height_min'] ?? null,
+            'pref_height_max' => $data['pref_height_max'] ?? null,
+            'pref_weight_min' => $data['pref_weight_min'] ?? null,
+            'pref_weight_max' => $data['pref_weight_max'] ?? null,
         ]);
         // 存過就算設了，四項都「不限」也一樣（認識朋友沒存過才請他先設定；小霏 11/4 抓到原本會卡成迴圈）
         $profile->forceFill(['preferences_saved_at' => now()])->save();

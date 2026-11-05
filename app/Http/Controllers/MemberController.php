@@ -23,7 +23,8 @@ class MemberController extends Controller
     {
         $filters = $request->validate(['name' => ['nullable', 'string', 'max:20']], [], ['name' => '暱稱']);
         $me = $request->user();
-        if (! $me->profile?->preferences_saved_at && ! array_filter(Profile::preferenceFilter($me->profile))) {
+        // 11/5 起性別會照個人資料自動配異性，所以不能再用 preferenceFilter() 判斷「有沒有設」，改看會員自己填的欄位
+        if (! $me->profile?->preferences_saved_at && ! $me->profile?->hasExplicitPreferences()) {
             return view('members.index', ['members' => null, 'filters' => [], 'pref' => $me->profile]);
         }
         $members = $this->listable($me)

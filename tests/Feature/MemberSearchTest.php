@@ -86,7 +86,8 @@ class MemberSearchTest extends TestCase
         $this->actingAs($me)->put('/center/preferences', ['pref_gender' => '', 'pref_age_min' => '', 'pref_age_max' => '', 'pref_place' => ''])
             ->assertRedirect('/center/preferences');
         $me = $me->fresh(); // 測試裡同一個物件，profile 關聯還是存檔前那份；實際每個請求都會重讀
-        $this->list($me)->assertDontSee('請先設定您的交友條件')->assertSee('依您的交友條件列出：<strong>不限</strong>', false)->assertSee('一位姊妹')->assertSee('一位弟兄')->assertSee('用暱稱找');
+        // 11/5 熊叔叔「想認識…預設就是選擇異性」：其他都不拘，性別照個人資料配異性
+        $this->list($me)->assertDontSee('請先設定您的交友條件')->assertSee('依您的交友條件列出：<strong>姊妹</strong>', false)->assertSee('一位姊妹')->assertDontSee('一位弟兄')->assertSee('用暱稱找');
         // 之後改回有條件也照條件列
         $this->actingAs($me)->put('/center/preferences', ['pref_gender' => '女']);
         $this->list($me->fresh())->assertSee('一位姊妹')->assertDontSee('一位弟兄');
@@ -129,5 +130,66 @@ class MemberSearchTest extends TestCase
         $this->member('照常的人');
         $this->list($me)->assertSee('照常的人')->assertDontSee('結婚的人')->assertDontSee('暫停的人');
         $this->actingAs($me)->get("/members/{$wed->id}")->assertOk(); // 檔案照常看得到
+    }
+
+    // ── 交友條件補齊設計稿的欄位（熊叔叔 2026-11-05 TG）──
+
+    public function test_default_is_opposite_gender_from_profile(): void
+    {
+        $brother = $this->member('弟兄我', ['gender' => '男', 'preferences_saved_at' => now()]);
+        $sister = $this->member('姊妹我', ['gender' => '女', 'preferences_saved_at' => now()]);
+        $this->member('一位姊妹');
+        $this->member('一位弟兄', ['gender' => '男']);
+        $this->list($brother)->assertSee('一位姊妹')->assertDontSee('一位弟兄');
+        $this->list($sister)->assertSee('一位弟兄')->assertDontSee('一位姊妹');
+        // 交友條件頁說明照性別寫
+        $this->actingAs($brother)->get('/center/preferences')->assertSee('列出<strong>姊妹</strong>', false)->assertDontSee('id="pref_gender"', false);
+        // 個人資料沒填性別：請他先填
+        $nobody = $this->member('沒填性別', ['gender' => '']);
+        $this->actingAs($nobody)->get('/center/preferences')->assertSee('請先到');
+    }
+
+    public function test_marital_faith_height_weight_filter_with_widening(): void
+    {
+        $me = $this->member('我', ['gender' => '男', 'pref_marital' => '未婚', 'pref_faith' => '基督徒',
+            'pref_height_min' => 158, 'pref_height_max' => 162, 'pref_weight_min' => 48, 'pref_weight_max' => 52, 'preferences_saved_at' => now()]);
+        $this->member('都符合', ['height' => 160, 'weight' => 50]);
+        $this->member('離婚的', ['marital' => '離婚', 'height' => 160, 'weight' => 50]);
+        $this->member('慕道友', ['faith' => '慕道友', 'height' => 160, 'weight' => 50]);
+        $this->member('身高放寬下限', ['height' => 155, 'weight' => 50]); // 158 往下放寬到 155
+        $this->member('身高放寬上限', ['height' => 164, 'weight' => 50]); // 162 往上放寬到 164
+        $this->member('太高', ['height' => 165, 'weight' => 50]);
+        $this->member('太矮', ['height' => 154, 'weight' => 50]);
+        $this->member('體重放寬', ['height' => 160, 'weight' => 54]);   // 52 往上放寬到 54
+        $this->member('太重', ['height' => 160, 'weight' => 55]);
+        $this->member('沒填身高', ['height' => null, 'weight' => 50]);
+
+        $this->list($me)->assertSee('都符合')->assertSee('身高放寬下限')->assertSee('身高放寬上限')->assertSee('體重放寬')
+            ->assertDontSee('離婚的')->assertDontSee('慕道友')->assertDontSee('太高')->assertDontSee('太矮')->assertDontSee('太重')->assertDontSee('沒填身高')
+            ->assertSee('未婚・基督徒・身高 158～162 公分・體重 48～52 公斤', false);
+    }
+
+    public function test_new_preference_fields_save_and_validate(): void
+    {
+        $me = $this->member('我', ['gender' => '男']);
+        $this->actingAs($me)->put('/center/preferences', ['pref_marital' => '喪偶', 'pref_faith' => '慕道友',
+            'pref_height_min' => 150, 'pref_height_max' => 170, 'pref_weight_min' => 40, 'pref_weight_max' => 60])->assertSessionHasNoErrors();
+        $p = $me->profile->fresh();
+        $this->assertSame(['喪偶', '慕道友', 150, 170, 40, 60], [$p->pref_marital, $p->pref_faith, $p->pref_height_min, $p->pref_height_max, $p->pref_weight_min, $p->pref_weight_max]);
+
+        $this->actingAs($me)->put('/center/preferences', ['pref_marital' => '已婚'])->assertSessionHasErrors('pref_marital'); // 管理員專用的值不能選
+        $this->actingAs($me)->put('/center/preferences', ['pref_faith' => '佛教'])->assertSessionHasErrors('pref_faith');
+        $this->actingAs($me)->put('/center/preferences', ['pref_height_min' => 170, 'pref_height_max' => 160])->assertSessionHasErrors('pref_height_max');
+        $this->actingAs($me)->put('/center/preferences', ['pref_weight_min' => 10])->assertSessionHasErrors('pref_weight_min');
+        $this->actingAs($me)->put('/center/preferences', ['pref_height_max' => 170])->assertSessionHasNoErrors(); // 只填上限可以
+
+        // 表單照設計稿的順序：對象年齡、婚姻狀態、對象信仰、居住地區、對象身高、對象體重
+        $html = $this->actingAs($me)->get('/center/preferences')->getContent();
+        $pos = array_map(fn ($t) => strpos($html, $t), ['對象年齡', '婚姻狀態', '對象信仰', '居住地區', '對象身高（cm）', '對象體重（kg）']);
+        $this->assertNotContains(false, $pos);
+        $sorted = $pos;
+        sort($sorted);
+        $this->assertSame($sorted, $pos);
+        $this->assertStringContainsString('此欄不會顯示於交友檔案', $html);
     }
 }

@@ -163,6 +163,7 @@ class GiftTest extends TestCase
     public function test_welcome_new_friends_on_wall(): void
     {
         $me = $this->member('我');
+        $me->profile->forceFill(['gender' => '男'])->save(); // 11/5 起照個人資料配異性：我是弟兄，才會看到這些姊妹
         $new = $this->member('新來的');
         $old = $this->member('老會員');
         $old->forceFill(['email_verified_at' => now()->subDays(60)])->save();
