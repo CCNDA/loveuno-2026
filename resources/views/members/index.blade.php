@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '認識朋友')
+@section('main_class', 'wrap wrap-wide')
 
 @section('content')
 <h1>認識朋友</h1>
@@ -31,6 +32,8 @@
     <p class="pref-summary">請先設定您的交友條件（年齡、婚姻狀態、信仰、居住地區、身高、體重），這裡就會列出您想認識的對象。</p>
     <p><a class="button" href="{{ route('center.preferences') }}">設定交友條件</a></p>
 @else
+{{-- 設計稿：一張大白卡裡兩欄會員卡（蜜桃框、大頭照、♂／♀ 居住地／年齡、關係、一句話、看完整資料） --}}
+<div class="card friends-panel">
 <p class="pref-summary">
     依您的交友條件列出：<strong>{{ $prefParts->isNotEmpty() ? $prefParts->implode('・') : '不限' }}</strong>@if ($min || $max)（年齡以 5 歲一格計）@endif
     <a href="{{ route('center.preferences') }}">修改交友條件</a>
@@ -59,17 +62,17 @@
     <ul class="member-grid">
         @foreach ($members as $m)
             <li class="member-card">
-                @include('partials.avatar', ['user' => $m])
-                <div>
-                    <p class="member-name"><a href="{{ route('members.show', $m) }}">{{ $m->name }}</a></p>
-                    <p class="meta">
-                        {{ collect([$m->profile->genderLabel(), $m->profile->ageGroup(), $m->profile->live_place])->filter()->implode('・') }}
-                    </p>
+                @include('partials.avatar', ['user' => $m, 'size' => 'xl'])
+                <div class="member-card-main">
+                    <p class="member-name">{{ $m->name }}</p>
+                    @php($g = $m->profile->gender)
                     @php($level = auth()->user()->friendLevelWith($m))
-                    @if ($level > 0)<p class="meta"><span class="tag">{{ \App\Models\Friendship::LEVELS[$level] }}</span></p>@endif
-                    @if ($m->profile->intro)
-                        <p class="excerpt">{{ \Illuminate\Support\Str::limit($m->profile->intro, 40) }}</p>
-                    @endif
+                    <p class="member-where">@if ($g)<span class="gender-icon gender-{{ $g === '男' ? 'm' : 'f' }}" aria-hidden="true">{{ $g === '男' ? '♂' : '♀' }}</span>@endif
+                        {{ collect([$m->profile->genderLabel(), $m->profile->live_place, $m->profile->ageGroup()])->filter()->implode(' / ') }}
+                        @if ($level > 0)<span class="member-level">{{ \App\Models\Friendship::LEVELS[$level] }}</span>@endif</p>
+                    @php($line = ($m->profile->headline ?? '') !== '' ? $m->profile->headline : $m->profile->intro)
+                    @if ($line)<p class="excerpt">{{ \Illuminate\Support\Str::limit($line, 40) }}</p>@endif
+                    <a class="pill-link" href="{{ route('members.show', $m) }}"><span aria-hidden="true">👤</span> 看完整資料<span class="visually-hidden">：{{ $m->name }}</span></a>
                 </div>
             </li>
         @endforeach
@@ -77,5 +80,6 @@
 
     {{ $members->links('partials.pagination') }}
 @endif
+</div>
 @endif
 @endsection
