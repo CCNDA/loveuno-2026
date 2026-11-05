@@ -1,4 +1,6 @@
 {{-- 會員中心的四個圓形分頁（loveuno-web 版型）。$current：account／profile／points／preferences --}}
+{{-- 設計稿會員中心（帳號管理 253:15337、個人資料 69:5636…）：標題在外、下面一張大白卡（main 加 center-main，CSS 畫卡片） --}}
+@section('main_class', 'wrap wrap-wide center-main')
 <h1>會員中心</h1>
 <nav class="center-tabs" aria-label="會員中心">
     <ul>
