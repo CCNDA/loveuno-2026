@@ -911,5 +911,6 @@ main.airmail ul:not(.gift-grid) li { color: #9a3d2b; font-size: .92rem; }
 @media (max-width: 40rem) { .airmail .gift-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } main.airmail { padding: 16px; border-width: 10px; } }
 .airmail .gift-card { background: #f4efe8; border-color: transparent; }
 .airmail .button { border-radius: 999px; display: flex; margin: 16px auto 0; min-width: 8rem; justify-content: center; }
-.airmail form .field input, .airmail form .field select, .airmail form .field textarea { width: 100%; box-sizing: border-box; }
+.airmail form .field input:not([type=radio]):not([type=checkbox]), .airmail form .field select, .airmail form .field textarea { width: 100%; box-sizing: border-box; } /* radio 不能撐寬（禮物的 radio 是藏起來的，撐寬會讓頁面橫向捲動） */
+.airmail input[type=date] { min-height: 44px; padding: 6px 10px; border: 2px solid #8c857b; border-radius: 8px; font: inherit; }
 @media (min-width: 75rem) { html:not(.side-menu-collapsed) .has-side-menu main.airmail { max-width: 46rem; margin-left: calc(var(--dock-left) + 280px + max(16px, (100vw - 2 * var(--dock-left) - 280px - 46rem) / 2)); margin-right: auto; } } /* 選單展開時，信紙在右邊內容區置中 */
