@@ -25,6 +25,9 @@ class SideMenuTest extends TestCase
         $me = $this->member('雪莉');
         $html = $this->actingAs($me)->get('/')->assertOk()->getContent();
         $this->assertStringContainsString('aria-controls="side-menu"', $html);
+        // 電腦版固定在左邊（熊叔叔 11/5）：body 有 has-side-menu；對話框 role 只在抽屜打開時由 JS 加
+        $this->assertStringContainsString('class="has-bottom-nav has-side-menu"', $html);
+        $this->assertStringNotContainsString('role="dialog"', $html);
         $menu = substr($html, strpos($html, 'id="side-menu"'));
         $items = ['生活日記牆', '我的日記', '認識朋友', '傳紙條', '約會', '愛的見證', '關於愛諾園', '支持奉獻', '聯絡我們', '常見問題', '會員條款', '登出'];
         $pos = array_map(fn ($t) => strpos($menu, '>' . $t), $items);
