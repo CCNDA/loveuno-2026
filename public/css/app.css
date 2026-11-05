@@ -1129,5 +1129,5 @@ form .field input[type=file].camera-input.photo-pick { position: absolute; width
 .settings-actions .btn-icon { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 16px; font-size: 14px; }
 .settings-actions .btn-icon .ui-icon { width: 20px; height: 20px; }
 
-.settings-other { text-align: left; } /* 設計稿「其它」靠左（小鹿 11/6 #5） */
+.center-main h3.settings-other, .center-main .acct-panel h3 { text-align: left; } /* 設計稿「其它」靠左（小鹿 11/6 #5） */
 .acct-box { min-height: 48px; } /* 跟下拉選單一樣高 */
