@@ -950,3 +950,9 @@ form.is-autosaving > button[type=submit] { display: none; }
 .gift-letter-actions { margin: 0; padding: 0 20px 16px; }
 @media (max-width: 40rem) { .gift-letter-body { flex-direction: column; align-items: flex-start; } }
 .gift-letter-actions { text-align: center; } .gift-letter-actions .note-send { display: inline-flex; margin: 0; } /* 回禮鈕置中膠囊，不撐滿 */
+
+/* 約會邀請（設計稿 2529:26799）：卡片內 日期／時間／地點／活動／內容 兩欄排 */
+.meetup-facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 20px; margin: 0; padding: 16px 20px; }
+.meetup-facts div { display: contents; }
+.meetup-facts dt { color: var(--muted); }
+.meetup-facts dd { margin: 0; overflow-wrap: anywhere; }
