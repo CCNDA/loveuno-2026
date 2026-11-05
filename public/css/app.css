@@ -757,3 +757,6 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
 .note-send { display: flex; margin: 8px auto 0; min-width: 9rem; justify-content: center; border-radius: 999px; background: #c4513b; } /* 設計稿珊瑚 #ff8964 白字太淡 */
 .note-send:hover { background: #a8432f; }
 @media (max-width: 640px) { .notes-layout { grid-template-columns: 1fr; } }
+
+/* 登入後頁首撐滿：☰ 就在左邊選單旁邊，大螢幕不會被置中拉遠（熊叔叔 11/5「選單拉太遠了，直接在目錄按鈕旁邊即可」） */
+.has-side-menu .site-header .wrap { max-width: none; }
