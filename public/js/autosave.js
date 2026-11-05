@@ -115,9 +115,10 @@
             }).then(function (r) {
                 return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; });
             }).then(function (res) {
-                if (again[key]) { return; } // 這筆回來前又改了：結果不顯示，最後的 next() 會送最新的
+                if (res.ok) { lastSaved[key] = sent; } // 先記下伺服器現在的值（小鹿 11/6：改回原值時才不會被當成「一樣」而不送）
+                else if (res.status !== 422) { delete lastSaved[key]; } // 伺服器狀態不明（419、500…）：下次一定重送
+                if (again[key]) { return; } // 這筆回來前又改了：提示不顯示，最後的 next() 會送最新的
                 if (res.ok) {
-                    lastSaved[key] = sent;
                     names.forEach(function (n) { setError(n, ''); });
                     var msg = '✓ 已儲存：' + (whole ? labelOf(name) : names.map(labelOf).join('、'));
                     if (res.j.note) { msg += '　' + res.j.note; }
@@ -140,7 +141,10 @@
                     return;
                 }
                 showToast(res.status === 419 ? '登入逾時了，請重新整理頁面再改。' : '沒有存到，網路可能斷了，請再試一次。', true);
-            }).catch(function () { showToast('沒有存到，網路可能斷了，請再試一次。', true); }).then(next);
+            }).catch(function () {
+                delete lastSaved[key];
+                if (!again[key]) { showToast('沒有存到，網路可能斷了，請再試一次。', true); }
+            }).then(next);
         }
 
         form.addEventListener('change', function (e) {
