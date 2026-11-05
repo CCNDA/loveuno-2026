@@ -33,7 +33,7 @@ class SettingsTest extends TestCase
     {
         $u = $this->member('我');
         $this->actingAs($u)->get('/center/account')->assertOk()
-            ->assertSee('帳號管理')->assertSee('會員編號')->assertSee('啟用帳號')->assertSee('網路檢測')->assertSee('註銷帳號');
+            ->assertSee('帳號管理')->assertSee('會員編號')->assertSee('帳號開關')->assertSee('網路檢測')->assertSee('註銷帳號');
         $this->actingAs($u)->put('/center/settings', $this->settings(['font_size' => 'large', 'script' => 'hans', 'notify_email' => null]))->assertRedirect();
         $u->refresh();
         $this->assertSame(['large', 'hans', false], [$u->font_size, $u->script, $u->notify_email]);

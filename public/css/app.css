@@ -242,7 +242,6 @@ html.side-menu-open { overflow: hidden; }
 .field .age-range input[type="number"] { flex: 1 1 0; width: auto; min-width: 0; }
 .field .age-range span { white-space: nowrap; }
 .pref-form .field select { width: 100%; }
-@media (max-width: 400px) { .center-tabs a { width: 76px; height: 76px; font-size: .9rem; } }
 
 /* 螢幕閱讀器才念的文字 */
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -1077,3 +1076,55 @@ label.camera-box.photo-box { display: flex; flex-direction: column; align-items:
 .field select, .field input, .field textarea { max-width: 100%; box-sizing: border-box; } /* 選項文字很長的下拉（戀愛履歷）在手機不要撐出畫面 */
 /* 照片框的藏起來的檔案欄：要比 .form-grid／.report-form 的 width:100% 更具體，不然電腦版撐出橫向捲動（0.39.6 投稿、檢舉） */
 form .field input[type=file].camera-input.photo-pick { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; border: 0; overflow: hidden; opacity: 0; }
+
+/* 單色圖示（Figma 匯出的 SVG 當遮罩，顏色跟著文字 currentColor） */
+.ui-icon { display: inline-block; flex: none; width: 20px; height: 20px; background: currentColor;
+    -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+.icon-center-account { --icon: url(../images/icons/center-account.svg); }
+.icon-center-profile { --icon: url(../images/icons/center-profile.svg); }
+.icon-center-points { --icon: url(../images/icons/center-points.svg); }
+.icon-center-prefs { --icon: url(../images/icons/center-prefs.svg); }
+.icon-wifi { --icon: url(../images/icons/btn-wifi.svg); }
+.icon-cs { --icon: url(../images/icons/btn-cs.svg); }
+.icon-clear { --icon: url(../images/icons/btn-clear.svg); }
+
+/* 會員中心四顆圓鈕（小鹿 11/6 #1 #2）：電腦 120px、圖 32、字 22/31；手機一排四顆 75px、圖 20、字 13.75/19.375（設計稿 396:9221） */
+.center-tabs ul { gap: 40px; }
+.center-tabs a { flex-direction: column; gap: 4px; width: 120px; height: 120px; font-size: 22px; line-height: 31px; font-weight: 500; }
+.center-tabs .ui-icon { width: 32px; height: 32px; }
+@media (max-width: 640px) {
+    .center-tabs ul { flex-wrap: nowrap; justify-content: space-between; gap: 0; max-width: 315px; margin-left: auto; margin-right: auto; }
+    .center-tabs li { flex: 0 1 75px; min-width: 0; }
+    .center-tabs a { width: 100%; max-width: 75px; height: auto; aspect-ratio: 1; font-size: 13.75px; line-height: 19.375px; gap: 2px; padding: 0; }
+    .center-tabs .ui-icon { width: 20px; height: 20px; }
+    .center-tabs .icon-center-points { --icon: url(../images/icons/center-points-heart.svg); }
+    .center-tabs li + li { margin-left: 4px; }
+}
+
+/* 帳號管理（設計稿 253:15337 電腦四欄、274:7986 手機；小鹿 11/6 #3–#5） */
+.account-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px 20px; max-width: none; align-items: start; }
+.account-grid > .acct-wide { grid-column: span 2; }
+.account-grid > .pill-submit { grid-column: 1 / -1; justify-self: center; }
+.account-grid .field { margin: 0; }
+.acct-item { margin: 0; padding: 0; border: 0; min-width: 0; }
+.acct-label { display: block; margin: 0 0 6px; padding: 0; font-size: .9rem; font-weight: 700; }
+.acct-value { color: #b5452f; }
+.acct-switch-row { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.acct-switches .field-check { gap: 12px; }
+.acct-switches .field-check label { font-weight: 400; }
+.acct-switches .hint { margin: 4px 0 0; font-size: .8rem; }
+.acct-row { display: flex; align-items: center; gap: 20px; }
+.acct-box { display: flex; align-items: center; flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 1px solid #c9c2bb; border-radius: 4px; background: #fff; overflow-wrap: anywhere; }
+.acct-edit { flex: none; min-height: 36px; padding: 0 16px; border: 1px solid var(--button); border-radius: 999px; background: #fff; color: var(--button); font: inherit; font-size: .9rem; cursor: pointer; }
+.acct-edit.is-open, .acct-edit:hover { background: var(--button); color: #fff; }
+.account-grid .field select { width: 100%; }
+.acct-panel { margin: 16px 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; }
+.acct-panel[hidden] { display: none; }
+.acct-panel h3 { margin-top: 0; }
+@media (max-width: 64rem) {
+    .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+    .account-grid > .acct-switches, .account-grid > .acct-wide { grid-column: 1 / -1; }
+}
+/* 其它三顆鈕：高 36、字 14、圖 20、左右 16（設計稿 328:6371） */
+.settings-actions .btn-icon { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 16px; font-size: 14px; }
+.settings-actions .btn-icon .ui-icon { width: 20px; height: 20px; }
