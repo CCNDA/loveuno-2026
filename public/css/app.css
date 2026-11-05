@@ -1052,3 +1052,4 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 .camera-input:focus-visible + .verify-row .camera-box { outline: 3px solid var(--focus); outline-offset: 2px; }
 .camera-input[aria-invalid="true"] + .verify-row .camera-box { border-color: var(--error); }
 @media (max-width: 40rem) { .verify-row { width: 100%; flex-wrap: wrap; } .verify-row > .verify-go { width: 100%; } }
+.center-main input.camera-input { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; } /* 不要吃到上傳框的 width:100%（手機會左右捲） */
