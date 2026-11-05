@@ -2,6 +2,8 @@
 
 @section('title', '手機認證')
 
+@section('main_class', 'wrap auth-card')
+
 @section('content')
 <h1>{{ $changing ? '更換手機號碼' : '手機認證' }}</h1>
 @if ($expired)

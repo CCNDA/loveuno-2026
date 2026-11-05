@@ -980,3 +980,13 @@ form.is-autosaving > button[type=submit] { display: none; }
 .news-table th:last-child, .news-table td:last-child { width: 8rem; text-align: center; border-left: 1px solid var(--line); white-space: nowrap; }
 .news-table td { vertical-align: middle; }
 .news-tag { display: inline-block; margin-right: 6px; padding: 1px 6px; border: 1px solid #e0a352; border-radius: 3px; background: #fff3dc; color: #8a4f00; font-size: .8rem; white-space: nowrap; }
+
+/* 忘記密碼、重設密碼、驗證信、手機認證、註冊（設計稿 209:21695 等）：置中窄卡、上面大圖示、深紫膠囊鈕、返回登入 */
+main.auth-card { max-width: 26rem; text-align: center; padding-top: 56px; }
+main.auth-card .auth-card-icon { display: block; margin: 0 auto 12px; }
+main.auth-card h1 { font-size: 1.5rem; }
+main.auth-card .form, main.auth-card form { text-align: left; max-width: none; }
+main.auth-card .field input:not([type=checkbox]):not([type=radio]), main.auth-card .field select { width: 100%; box-sizing: border-box; }
+main.auth-card .button { display: flex; width: 100%; justify-content: center; border-radius: 999px; background: var(--plum); }
+main.auth-card .button:hover { background: #4f3842; }
+main.auth-card .button-secondary { background: #fff; color: var(--plum); border: 2px solid var(--plum); }
