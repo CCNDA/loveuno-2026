@@ -53,8 +53,11 @@
                 <div class="field">
                     <label for="{{ $kind }}-photo">選一張照片</label>
                     @php($err = $errors->getBag($kind)->first('photo'))
+                    {{-- 設計稿 118:8011：相機圖示的上傳框 --}}
+                    <div class="upload-box"><img src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32">
                     <input id="{{ $kind }}-photo" name="photo" type="file" accept="image/jpeg,image/png" required
                            aria-describedby="{{ $kind }}-hint{{ $err ? ' ' . $kind . '-error' : '' }}" @if ($err) aria-invalid="true" @endif>
+                    </div>
                     @if ($err)<p id="{{ $kind }}-error" class="field-error">{{ $err }}</p>@endif
                 </div>
                 <button type="submit" class="button">上傳</button>
