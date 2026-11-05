@@ -760,3 +760,19 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
 
 /* 登入後頁首撐滿：☰ 就在左邊選單旁邊，大螢幕不會被置中拉遠（熊叔叔 11/5「選單拉太遠了，直接在目錄按鈕旁邊即可」） */
 .has-side-menu .site-header .wrap { max-width: none; }
+
+/* 寫日記（設計稿 235:8504）：對話框、字數、照片上傳框、膠囊發佈鈕 */
+.char-count { margin: 2px 0 0; text-align: right; font-size: .8rem; color: var(--muted); }
+.upload-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px; border: 1px dashed #8c857b; border-radius: 6px; background: #fff; }
+.upload-box input { max-width: 100%; }
+.pill-submit { border-radius: 999px; min-width: 8rem; justify-content: center; }
+.diary-form select { min-height: 44px; width: 100%; border: 2px solid #8c857b; border-radius: 8px; background: #fff; font: inherit; padding: 0 10px; color: var(--text); }
+.write-dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 0; border-radius: 8px; box-shadow: 0 10px 40px rgba(43, 33, 29, .3); color: var(--text); }
+.write-dialog::backdrop { background: rgba(43, 33, 29, .55); }
+.write-dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 10px 20px; border-bottom: 1px solid var(--line); }
+.write-dialog-head h2 { margin: 0; font-size: 1.15rem; color: var(--button); }
+.dialog-close { width: 44px; height: 44px; border: 0; background: none; font-size: 1.3rem; color: var(--button); cursor: pointer; }
+.write-dialog form { padding: 12px 20px 20px; }
+.write-dialog .field { margin-bottom: 10px; }
+.write-dialog .field label { font-size: .9rem; }
+.write-dialog-actions { text-align: center; margin: 12px 0 0; }

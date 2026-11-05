@@ -185,8 +185,9 @@ class WallTest extends TestCase
     {
         $me = $this->member('我');
         $page = $this->actingAs($me)->get(route('diaries.create', ['kind' => 'prayer']))->assertSee('寫代禱事項')->getContent();
-        $this->assertMatchesRegularExpression('/id="is_prayer"[^>]*\bchecked\b/s', $page);
-        $this->assertDoesNotMatchRegularExpression('/id="is_prayer"[^>]*\bchecked\b/s', $this->actingAs($me)->get(route('diaries.create'))->getContent());
+        // 11/5 照 Figma 改成「類型」下拉：心情日記／需要代禱
+        $this->assertStringContainsString('<option value="1" selected>需要代禱</option>', $page);
+        $this->assertStringContainsString('<option value="0" selected>心情日記</option>', $this->actingAs($me)->get(route('diaries.create'))->getContent());
         $this->actingAs($me)->get(route('diaries.create'))->assertSee('寫心情日記')->assertDontSee('寫代禱事項');
     }
 
@@ -206,5 +207,19 @@ class WallTest extends TestCase
             ->assertSee('第2篇日記')->assertSee('第1篇日記')->assertDontSee('第12篇日記')
             ->assertDontSee('好友推薦')->assertSee('已經是最舊的日記了');
         $this->actingAs($me)->get('/?page=2')->assertOk()->assertSee('好友推薦')->assertSee('第1篇日記'); // 沒有 JS：一般的下一頁
+    }
+
+    // 寫日記對話框（設計稿 235:8504）：首頁有對話框，送出去 diaries.store；類型 1 就是代禱
+    public function test_wall_has_write_dialog_and_select_posts_prayer(): void
+    {
+        $me = $this->member('我');
+        $html = $this->actingAs($me)->get('/')->assertOk()->getContent();
+        $this->assertStringContainsString('<dialog id="write-dialog"', $html);
+        $this->assertStringContainsString('id="w-title"', $html);
+        $this->assertSame(3, substr_count($html, 'data-write-dialog='));
+        $this->actingAs($me)->post('/diaries', ['title' => '下拉選代禱', 'body' => '請為我禱告', 'is_prayer' => '1', 'visibility' => 'public'])->assertRedirect();
+        $this->assertTrue((bool) $me->diaries()->where('title', '下拉選代禱')->value('is_prayer'));
+        $this->actingAs($me)->post('/diaries', ['title' => '下拉選心情', 'body' => '今天很好', 'is_prayer' => '0', 'visibility' => 'public'])->assertRedirect();
+        $this->assertFalse((bool) $me->diaries()->where('title', '下拉選心情')->value('is_prayer'));
     }
 }
