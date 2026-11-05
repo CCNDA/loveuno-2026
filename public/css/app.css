@@ -861,3 +861,14 @@ input.switch:checked::before { transform: translateX(20px); }
 .about-hero img { width: 100%; height: auto; display: block; }
 .page-card .donate { border: 0; background: none; text-align: center; }
 .page-card .donate h2 { margin-top: 0; }
+
+/* 愛的見證列表（設計稿 2524:10317）：兩欄、照片＋標題＋日期（珊瑚色），不放摘要 */
+.page-card .story-cards { grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 24px 32px; max-width: 52rem; margin-left: auto; margin-right: auto; }
+@media (min-width: 48rem) { .page-card .story-cards { grid-template-columns: 1fr 1fr; } }
+.page-card .story-card { border: 0; border-radius: 0; background: none; }
+.page-card .story-card .story-img { width: 100%; height: auto; aspect-ratio: 240 / 104; object-fit: cover; }
+.page-card .story-card h3, .page-card .story-card p { margin: 6px 0; }
+.page-card .story-card h3 a { color: var(--plum); text-decoration: none; min-height: 0; font-weight: 500; }
+.page-card .story-card h3 a:hover { text-decoration: underline; }
+.page-card .story-date { color: #b5452f; font-size: .85rem; }
+.page-card .story-excerpt { display: none; }
