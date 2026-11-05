@@ -52,12 +52,13 @@ class ProfileDetailsTest extends TestCase
 
     public function test_intro_picks_limited_to_three_and_shown_on_intro_tab(): void
     {
+        \Illuminate\Support\Facades\DB::table('bible_verses')->insert(['book' => 24, 'chapter' => 29, 'verse' => 11, 'text' => '耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。']);
         $u = $this->member('我');
         $this->actingAs($u)->put('/me/intro', $this->introForm(['hobbies' => ['各地旅遊', '看書寫作', '攝影繪畫', '讀經靈修']]))->assertSessionHasErrors(['hobbies' => '興趣最多選 3 種。']);
         $this->actingAs($u)->put('/me/intro', $this->introForm(['hobbies' => ['駭客']]))->assertSessionHasErrors('hobbies.0');
         $this->actingAs($u)->put('/me/intro', $this->introForm([
             'headline' => '愛爬山的老師', 'hobbies' => ['看書寫作', '各地旅遊'], 'sports' => ['登山'], 'languages' => ['中文/普通話', '台語/閩南話'],
-            'verse_book' => '耶利米書', 'verse_chapter' => 29, 'verse_verse' => 11, 'verse_text' => '耶和華說：我知道我向你們所懷的意念…',
+            'verse_book' => '耶利米書', 'verse_chapter' => 29, 'verse_verse' => 11, 'verse_text' => '亂打的字不會被存',
         ]))->assertRedirect();
         $this->assertSame(['看書寫作', '各地旅遊'], $u->profile->fresh()->hobbies); // 照選項順序存
 
@@ -65,7 +66,11 @@ class ProfileDetailsTest extends TestCase
         $this->actingAs($other)->get("/members/{$u->id}?tab=intro")->assertOk()
             ->assertSee('愛爬山的老師')->assertSee('耶利米書 29:11')->assertSeeInOrder(['興趣嗜好', '看書寫作', '各地旅遊', '喜愛的運動', '登山', '慣用語言', '中文/普通話']);
         $this->actingAs($u)->put('/me/intro', $this->introForm(['verse_book' => '耶利米書']))->assertSessionHasErrors('verse_chapter');
-        $this->actingAs($u)->put('/me/intro', $this->introForm(['verse_text' => '只有經文']))->assertSessionHasErrors(['verse_book' => '寫了經文，請一起選是哪一卷。']);
+        // 經文自己帶出來（熊叔叔 11/5）：存的是和合本、不是使用者打的字；章節不存在就擋
+        $this->assertSame('耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。', $u->profile->fresh()->verse_text);
+        $this->actingAs($u)->put('/me/intro', $this->introForm(['verse_book' => '耶利米書', 'verse_chapter' => 29, 'verse_verse' => 99]))->assertSessionHasErrors('verse_verse');
+        $this->actingAs($u)->getJson(route('bible.verse', ['book' => '耶利米書', 'chapter' => 29, 'verse' => 11]))->assertOk()->assertJsonPath('text', $u->profile->fresh()->verse_text);
+        $this->actingAs($u)->getJson(route('bible.verse', ['book' => '亂寫書', 'chapter' => 1, 'verse' => 1]))->assertNotFound();
         // 選錯的興趣：錯誤摘要連到整組、欄位旁邊有訊息
         $this->actingAs($u)->put('/me/intro', $this->introForm(['hobbies' => ['駭客']]));
         $this->actingAs($u)->get('/me/intro')->assertSee('href="#hobbies"', false)->assertSee('id="hobbies-error"', false);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Support\Bible;
 use App\Support\Points;
 use App\Support\ProfileOptions as Opt;
 use Illuminate\Http\JsonResponse;
@@ -125,6 +126,10 @@ class ProfileController extends Controller
         [$rules, $messages, $attributes] = $this->introRules();
         $keys = self::sentKeys($request, $rules);
         $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
+        $this->checkVerse($data);
+        if (in_array('verse_book', $keys, true)) {
+            $keys = array_values(array_unique([...$keys, 'verse_text'])); // 經文跟著書卷章節一起存
+        }
         $values = array_intersect_key(self::introValues($request, $data), array_flip($keys));
         Profile::updateOrCreate(['user_id' => $request->user()->id], $values);
         Points::checkTasks($request->user());
@@ -163,6 +168,7 @@ class ProfileController extends Controller
     public function updateIntro(Request $request): RedirectResponse
     {
         $data = $request->validate(...$this->introRules());
+        $this->checkVerse($data);
         $user = $request->user();
         Profile::updateOrCreate(['user_id' => $user->id], self::introValues($request, $data));
         Points::checkTasks($user);
@@ -179,7 +185,8 @@ class ProfileController extends Controller
             'church' => $text('church'), 'church_visible' => $request->boolean('church_visible'),
             'verse_book' => $text('verse_book'),
             'verse_chapter' => $data['verse_chapter'] ?? null, 'verse_verse' => $data['verse_verse'] ?? null,
-            'verse_text' => $text('verse_text'),
+            // 經文從聖經帶出來，不收使用者打的字（熊叔叔 11/5「聖經要自己帶出來」）
+            'verse_text' => ($data['verse_book'] ?? '') !== '' ? (string) Bible::verse($data['verse_book'], (int) $data['verse_chapter'], (int) $data['verse_verse']) : '',
             // 照選項本來的順序存，同一個不會存兩次
             'languages' => array_values(array_intersect(Opt::LANGUAGES, $data['languages'] ?? [])),
             'hobbies' => array_values(array_intersect(Opt::HOBBIES, $data['hobbies'] ?? [])),
@@ -196,10 +203,9 @@ class ProfileController extends Controller
             'headline' => ['required', 'string', 'max:50'],
             'church' => ['nullable', 'string', 'max:100'],
             'church_visible' => ['nullable', 'boolean'],
-            'verse_book' => ['nullable', Rule::in(Opt::BIBLE_BOOKS), 'required_with:verse_text'],
+            'verse_book' => ['nullable', Rule::in(Opt::BIBLE_BOOKS)],
             'verse_chapter' => ['nullable', 'integer', 'between:1,150', 'required_with:verse_book'],
-            'verse_verse' => ['nullable', 'integer', 'between:1,176'],
-            'verse_text' => ['nullable', 'string', 'max:300'],
+            'verse_verse' => ['nullable', 'integer', 'between:1,176', 'required_with:verse_book'],
             'languages' => ['required', ...$picks], 'languages.*' => [Rule::in(Opt::LANGUAGES)],
             'hobbies' => ['required', ...$picks], 'hobbies.*' => [Rule::in(Opt::HOBBIES)],
             'sports' => ['nullable', ...$picks], 'sports.*' => [Rule::in(Opt::SPORTS)],
@@ -214,7 +220,7 @@ class ProfileController extends Controller
             'languages.required' => '請選擇 1～3 種慣用語言。',
             'hobbies.required' => '請選擇 1～3 種興趣。',
             'verse_chapter.required_with' => '選了書卷，請一起填「章」。',
-            'verse_book.required_with' => '寫了經文，請一起選是哪一卷。',
+            'verse_verse.required_with' => '選了書卷，請一起填「節」。',
         ], [
             'headline' => '個人標題', 'church' => '教會名稱', 'verse_book' => '聖經書卷', 'verse_chapter' => '章', 'verse_verse' => '節',
             'verse_text' => '經文', 'languages' => '慣用語言', 'hobbies' => '興趣', 'sports' => '喜愛的運動', 'intro' => '自我介紹', 'hope' => '期待認識的人',
@@ -231,5 +237,20 @@ class ProfileController extends Controller
         $user = $request->user();
 
         return ['user' => $user, 'profile' => $user->profile ?? new Profile(['user_id' => $user->id])];
+    }
+
+    private function checkVerse(array $data): void
+    {
+        if (($data['verse_book'] ?? '') !== '' && Bible::verse($data['verse_book'], (int) $data['verse_chapter'], (int) $data['verse_verse']) === null) {
+            throw ValidationException::withMessages(['verse_verse' => sprintf('%s 沒有 %d 章 %d 節，請再看一下。', $data['verse_book'], $data['verse_chapter'], $data['verse_verse'])]);
+        }
+    }
+
+    // GET /bible/verse?book=約翰福音&chapter=3&verse=16 → {"text": "…"}（查不到 404）
+    public function bibleVerse(Request $request): JsonResponse
+    {
+        $text = Bible::verse((string) $request->query('book', ''), (int) $request->query('chapter'), (int) $request->query('verse'));
+
+        return $text === null ? response()->json(['text' => null], 404) : response()->json(['text' => $text]);
     }
 }

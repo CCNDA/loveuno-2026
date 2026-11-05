@@ -1027,3 +1027,7 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 
 /* .button-light 的 display 會蓋過 hidden：推播「開啟／關閉」兩顆鈕原本同時出現（11/5 熊叔叔問 Android 時發現） */
 #push-box [hidden] { display: none !important; }
+
+/* 最愛經文帶出來的經文（唯讀） */
+.verse-preview { margin: 8px 0 0; padding: 12px 16px; border-left: 4px solid #e5bba2; background: #fffdf4; color: var(--plum); line-height: 1.8; }
+.verse-preview.is-error { border-left-color: var(--error); color: var(--error); }
