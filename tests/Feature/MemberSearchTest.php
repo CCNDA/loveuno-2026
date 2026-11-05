@@ -192,4 +192,13 @@ class MemberSearchTest extends TestCase
         $this->assertSame($sorted, $pos);
         $this->assertStringContainsString('此欄不會顯示於交友檔案', $html);
     }
+
+    // 小布 11/5 審查附註 3：個人資料沒填性別，認識朋友提醒他去填
+    public function test_no_gender_hint_on_member_list(): void
+    {
+        $me = $this->member('沒填性別', ['gender' => '', 'preferences_saved_at' => now()]);
+        $this->list($me)->assertSee('就會自動幫您列出異性');
+        $he = $this->member('弟兄', ['gender' => '男', 'preferences_saved_at' => now()]);
+        $this->list($he)->assertDontSee('就會自動幫您列出異性');
+    }
 }

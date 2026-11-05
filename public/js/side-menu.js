@@ -5,15 +5,21 @@
     if (!toggle || !menu) { return; }
     var closeBtn = menu.querySelector('.side-menu-close');
     var panel = menu.querySelector('.side-menu-panel');
+    // 選單開著時背後整頁 inert：螢幕閱讀器的虛擬游標讀不到、也點不到（小布 11/5 審查）
+    function background() {
+        return Array.prototype.filter.call(document.body.children, function (el) { return el !== menu && el.tagName !== 'SCRIPT'; });
+    }
 
     function open() {
         menu.hidden = false;
+        background().forEach(function (el) { el.inert = true; });
         toggle.setAttribute('aria-expanded', 'true');
         document.documentElement.classList.add('side-menu-open');
         closeBtn.focus();
     }
     function close() {
         menu.hidden = true;
+        background().forEach(function (el) { el.inert = false; });
         toggle.setAttribute('aria-expanded', 'false');
         document.documentElement.classList.remove('side-menu-open');
         toggle.focus();
