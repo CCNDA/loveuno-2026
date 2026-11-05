@@ -7,7 +7,8 @@
 <h2>個人資料</h2>
 <p class="hint">性別和出生年是註冊時填的，這裡不能改；要改請找管理員。其他會員只會看到年齡層，看不到出生年。標「必填」的要選。</p>
 
-<form method="POST" action="{{ route('profile.update') }}" class="form form-wide form-grid" novalidate>
+<form method="POST" action="{{ route('profile.update') }}" class="form form-wide form-grid" novalidate
+      data-autosave="{{ route('profile.patch') }}" data-autosave-groups="birth_month birth_day">
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '個人資料還沒存好'])

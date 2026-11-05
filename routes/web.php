@@ -153,6 +153,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::post('/me/cover-preset', [AlbumController::class, 'coverPreset'])->name('cover.preset'); // 個人化封面 10 選 1
     Route::delete('/me/album/{photo}', [AlbumController::class, 'destroy'])->whereNumber('photo')->name('album.destroy');
     Route::get('/album/{photo}', [AlbumController::class, 'show'])->whereNumber('photo')->name('album.show');
+    // 即時存檔（REST，PATCH 只送改的欄位；熊叔叔 11/5）
+    Route::patch('/me/profile/fields', [ProfileController::class, 'patchProfile'])->middleware('throttle:120,1,autosave')->name('profile.patch');
+    Route::patch('/me/intro/fields', [ProfileController::class, 'patchIntro'])->middleware('throttle:120,1,autosave')->name('profile.intro.patch');
     Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
