@@ -3,6 +3,17 @@
 @section('title', '審核愛的見證')
 
 @section('content')
+<script>
+// 點照片上的臉：換算成百分比填進去並送出（審核愛的見證，熊叔叔 11/5）
+document.addEventListener('click', function (e) {
+    var img = e.target.closest && e.target.closest('img[data-focus-pick]');
+    if (!img) { return; }
+    var r = img.getBoundingClientRect(), f = img.closest('form');
+    f.querySelector('[name=x]').value = Math.round((e.clientX - r.left) / r.width * 100);
+    f.querySelector('[name=y]').value = Math.round((e.clientY - r.top) / r.height * 100);
+    f.submit();
+});
+</script>
 <h1>審核愛的見證</h1>
 <p class="meta">通過就會公開在首頁和「愛的見證」（不用登入就看得到）。公開前請跟男女雙方確認都同意。</p>
 <section aria-labelledby="pending-title">
@@ -17,6 +28,7 @@
                 <dt>照片</dt><dd>{{ $s->photo_path ? '有' : '沒有' }}</dd>
                 <dt>時間</dt><dd>{{ $s->created_at->shown()->format('Y/n/j H:i') }}</dd>
             </dl>
+            @include('admin.partials.story-focus')
             <form method="POST" action="{{ route('admin.love-stories.decide', $s) }}" class="review-actions">
                 @csrf
                 <div class="field-check">
@@ -37,6 +49,7 @@
         @forelse ($approved as $s)
             <li>
                 <a href="{{ route('love-stories.show', $s) }}">{{ $s->title }}</a>・{{ $s->approved_at->shown()->format('Y/n/j') }}
+                @include('admin.partials.story-focus')
                 <form method="POST" action="{{ route('admin.love-stories.decide', $s) }}" class="inline-form" onsubmit="return confirm('確定要撤下這篇嗎？照片會刪掉。')">
                     @csrf
                     <button type="submit" name="decision" value="reject" class="link-button">撤下<span class="visually-hidden">「{{ $s->title }}」</span></button>

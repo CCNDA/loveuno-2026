@@ -61,4 +61,13 @@ class LoveStoryReviewController extends Controller
 
         return redirect()->route('admin.love-stories')->with('status', sprintf('「%s」不公開，照片已刪除。', $story->title));
     }
+
+    // 設照片焦點（臉在哪）：審核頁點照片上的臉，或填百分比
+    public function focus(Request $request, LoveStory $story): RedirectResponse
+    {
+        $data = $request->validate(['x' => ['required', 'integer', 'between:0,100'], 'y' => ['required', 'integer', 'between:0,100']]);
+        $story->forceFill(['photo_focus_x' => (int) $data['x'], 'photo_focus_y' => (int) $data['y']])->save();
+
+        return redirect()->to(route('admin.love-stories') . '#focus-' . $story->id)->with('status', '「' . $story->title . '」的照片焦點設好了。');
+    }
 }
