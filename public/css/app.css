@@ -701,3 +701,14 @@ html.fs-large { font-size: 118.75%; }
 .profile-section .profile { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 4px 24px; }
 .profile-section .profile div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 8px; background: none; border: 0; border-radius: 0; padding: 6px 0; }
 .profile-section .profile dd { font-weight: 400; }
+
+/* 手機：登入後頁首只留 ☰、Logo、鈴、頭像（简体移到側邊選單），不換行；大頭照小一點、少疊一點在輪播上 */
+.side-menu-script { display: none; margin: 8px 0 0; text-align: center; }
+.side-menu-script .script-toggle { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; color: var(--header-text); text-decoration: none; }
+@media (max-width: 640px) {
+    .has-side-menu .site-header nav[aria-label="主選單"] { display: none; }
+    .side-menu-script { display: block; }
+    .has-side-menu .header-row { flex-wrap: nowrap; }
+    .profile-avatar { margin-top: -32px; }
+    .profile-avatar .avatar-xl { width: 96px; height: 96px; font-size: 2.4rem; }
+}
