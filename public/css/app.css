@@ -1163,7 +1163,7 @@ form .field input[type=file].camera-input.photo-pick { position: absolute; width
 /* 忘記密碼（設計稿 209:21695／209:21686）：標題 32／34 #212b36，輸入框 1px、8px 圓角、字 24px 上下 16px（高 56） */
 main.forgot-card h1 { font-size: 32px; line-height: 34px; color: #212b36; }
 main.forgot-card .forgot-lead { color: #637381; }
-main.forgot-card .forgot-field input { min-height: 56px; padding: 16px 14px; border-radius: 8px; font-size: 1rem; line-height: 24px; }
+main.forgot-card .forgot-field input { min-height: 56px !important; padding: 16px 14px !important; border-radius: 8px !important; font-size: 1rem; line-height: 24px; } /* 要蓋過上面全站表單 44px 那條（選擇器比較具體） */
 main.forgot-card .forgot-back { margin-top: 16px; }
 main.forgot-card .forgot-back a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--text); font-weight: 700; text-decoration: none; }
 main.forgot-card .forgot-back a:hover { text-decoration: underline; }
