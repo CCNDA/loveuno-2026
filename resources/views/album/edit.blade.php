@@ -14,8 +14,10 @@
         <div class="field">
             <label for="photos">選照片（可以選好幾張）</label>
             @php($err = $errors->first('photos') ?: $errors->first('photos.*'))
-            <input id="photos" name="photos[]" type="file" accept="image/jpeg,image/png" multiple required
+            {{-- 整個框就是按鈕（熊叔叔 11/5「多一個選擇檔案很難看」） --}}
+            <input id="photos" name="photos[]" type="file" accept="image/jpeg,image/png" multiple required class="camera-input photo-pick"
                    aria-describedby="album-hint{{ $err ? ' photos-error' : '' }}" @if ($err) aria-invalid="true" @endif>
+            <label for="photos" class="camera-box photo-box"><img class="photo-box-icon" src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32"><span class="camera-text">點這裡選照片（可以選好幾張）</span></label>
             @if ($err)<p id="photos-error" class="field-error">{{ $err }}</p>@endif
         </div>
         <button type="submit" class="button">匯入資料</button>
