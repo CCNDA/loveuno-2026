@@ -26,7 +26,7 @@
                     <th scope="row">{{ $label }}</th>
                     <td>+{{ $amount }}</td>
                     @if ($status[$type])
-                        <td>任務已完成</td>
+                        <td><span class="done-check" aria-hidden="true">✓</span><span class="visually-hidden">任務已完成</span></td>
                         <td>{{ \Illuminate\Support\Carbon::parse($status[$type])->shown()->format('Y/n/j') }}</td>
                     @else
                         <td><a href="{{ route($links[$type]) }}">立即前往<span class="visually-hidden">（{{ $label }}）</span></a></td>
