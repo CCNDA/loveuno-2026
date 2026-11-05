@@ -1095,7 +1095,7 @@ form .field input[type=file].camera-input.photo-pick { position: absolute; width
 @media (max-width: 640px) {
     .center-tabs ul { flex-wrap: nowrap; justify-content: space-between; gap: 0; max-width: 315px; margin-left: auto; margin-right: auto; }
     .center-tabs li { flex: 0 1 75px; min-width: 0; }
-    .center-tabs a { width: 100%; max-width: 75px; height: auto; aspect-ratio: 1; font-size: 13.75px; line-height: 19.375px; gap: 2px; padding: 0; }
+    .center-tabs a { width: 100%; max-width: 75px; height: auto; aspect-ratio: 1; font-size: clamp(11px, 3.667vw, 13.75px); line-height: 1.41; gap: 2px; padding: 0; } /* 375 寬剛好 13.75px；320 寬縮到約 11.7px，四個字不碰到圓框 */
     .center-tabs .ui-icon { width: 20px; height: 20px; }
     .center-tabs .icon-center-points { --icon: url(../images/icons/center-points-heart.svg); }
     .center-tabs li + li { margin-left: 4px; }
@@ -1128,3 +1128,6 @@ form .field input[type=file].camera-input.photo-pick { position: absolute; width
 /* 其它三顆鈕：高 36、字 14、圖 20、左右 16（設計稿 328:6371） */
 .settings-actions .btn-icon { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 16px; font-size: 14px; }
 .settings-actions .btn-icon .ui-icon { width: 20px; height: 20px; }
+
+.settings-other { text-align: left; } /* 設計稿「其它」靠左（小鹿 11/6 #5） */
+.acct-box { min-height: 48px; } /* 跟下拉選單一樣高 */
