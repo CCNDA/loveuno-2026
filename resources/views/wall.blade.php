@@ -39,8 +39,8 @@
         <div class="wall-head">
             <h2 id="wall-title">生活日記牆</h2>
             <p class="wall-write">
-                <a href="{{ route('diaries.create') }}">寫心情日記</a>
-                <a href="{{ route('diaries.create', ['kind' => 'prayer']) }}">寫代禱事項</a>
+                <a href="{{ route('diaries.create') }}" data-write-dialog="0">寫心情日記</a>
+                <a href="{{ route('diaries.create', ['kind' => 'prayer']) }}" data-write-dialog="1">寫代禱事項</a>
             </p>
         </div>
         @php
@@ -85,5 +85,21 @@
 <script src="{{ asset('js/wall-scroll.js') }}?v={{ $appVersion }}" defer></script>
 
 {{-- 設計稿電腦版右下角浮動的寫日記按鈕（手機版用底部選單的「寫日記」，所以 640px 以下不顯示） --}}
-<a class="fab-write" href="{{ route('diaries.create') }}"><img src="{{ asset('images/brand/nav-write.svg') }}" alt="" width="28" height="28"><span class="visually-hidden">寫日記</span></a>
+<a class="fab-write" href="{{ route('diaries.create') }}" data-write-dialog="0"><img src="{{ asset('images/brand/nav-write.svg') }}" alt="" width="28" height="28"><span class="visually-hidden">寫日記</span></a>
+
+{{-- 寫日記對話框（設計稿 235:8504「心情日記 / 需要代禱」） --}}
+@php($draft = new \App\Models\Diary(['visibility' => 'public', 'is_prayer' => false]))
+<dialog id="write-dialog" class="write-dialog" aria-labelledby="write-dialog-title">
+    <div class="write-dialog-head">
+        <h2 id="write-dialog-title">心情日記 / 需要代禱</h2>
+        <button type="button" class="dialog-close" data-close><span aria-hidden="true">✕</span><span class="visually-hidden">關閉</span></button>
+    </div>
+    <form method="POST" action="{{ route('diaries.store') }}" class="diary-form" enctype="multipart/form-data" novalidate>
+        @csrf
+        @include('diaries.partials.form-fields', ['diary' => $draft, 'px' => 'w-'])
+        @include('diaries.partials.visibility-field', ['diary' => $draft, 'px' => 'w-'])
+        <p class="write-dialog-actions"><button type="submit" class="button pill-submit">發佈</button></p>
+    </form>
+</dialog>
+<script src="{{ asset('js/write-dialog.js') }}?v={{ $appVersion }}" defer></script>
 @endsection
