@@ -3,9 +3,9 @@
 @php($sfx = ($light ?? false) ? '-light' : '')
 <ul class="{{ $class }}">
     <li><a href="{{ config('loveuno.links.facebook') }}" rel="noopener"><img src="{{ asset("images/brand/social-facebook{$sfx}.svg") }}" alt="協會 Facebook" width="40" height="40" loading="lazy"></a></li>
-    <li><a href="{{ config('loveuno.links.instagram') }}" rel="noopener"><img src="{{ asset("images/brand/social-instagram{$sfx}.svg") }}" alt="協會 Instagram" width="40" height="40" loading="lazy"></a></li>
-    <li><a href="{{ config('loveuno.links.messenger') }}" rel="noopener"><img src="{{ asset("images/brand/social-messenger{$sfx}.svg") }}" alt="協會 Messenger" width="40" height="40" loading="lazy"></a></li>
     <li><a href="{{ config('loveuno.links.line') }}" rel="noopener"><img src="{{ asset("images/brand/social-line{$sfx}.svg") }}" alt="協會 LINE" width="40" height="40" loading="lazy"></a></li>
     <li><a href="{{ config('loveuno.links.telegram') }}" rel="noopener"><img src="{{ asset("images/brand/social-telegram{$sfx}.svg") }}" alt="協會 Telegram" width="40" height="40" loading="lazy"></a></li>
     <li><a href="{{ config('loveuno.links.google_review') }}" rel="noopener"><img src="{{ asset("images/brand/social-star{$sfx}.svg") }}" alt="協會 Google 評論" width="40" height="40" loading="lazy"></a></li>
+    <li><a href="{{ config('loveuno.links.instagram') }}" rel="noopener"><img src="{{ asset("images/brand/social-instagram{$sfx}.svg") }}" alt="協會 Instagram" width="40" height="40" loading="lazy"></a></li>
+    <li><a href="{{ config('loveuno.links.messenger') }}" rel="noopener"><img src="{{ asset("images/brand/social-messenger{$sfx}.svg") }}" alt="協會 Messenger" width="40" height="40" loading="lazy"></a></li>
 </ul>
