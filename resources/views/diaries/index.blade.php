@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', '心情日記')
+@section('title', ($mine ?? false) ? '我的日記' : '心情日記')
 
 @section('content')
-<h1>心情日記</h1>
+<h1>{{ ($mine ?? false) ? '我的日記' : '心情日記' }}</h1>
 <p><a class="button" href="{{ route('diaries.create') }}">寫日記</a></p>
 
 @if ($diaries->isEmpty())
