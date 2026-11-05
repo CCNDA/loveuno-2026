@@ -28,11 +28,10 @@
 
 <div class="field">
     <label for="{{ $px }}image">照片上傳<span class="hint">（可以不放）</span></label>
-    <div class="upload-box">
-        <img src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32">
-        <input id="{{ $px }}image" name="image" type="file" accept="image/jpeg,image/png,image/webp"
-               aria-describedby="{{ $px }}image-hint @error('image') image-error @enderror" @error('image') aria-invalid="true" @enderror>
-    </div>
+    {{-- 整個框就是按鈕：點了開檔案總管（熊叔叔 11/5「多一個選擇檔案很難看」）；選好會在框裡預覽 --}}
+    <input id="{{ $px }}image" name="image" type="file" accept="image/jpeg,image/png,image/webp" class="camera-input photo-pick"
+           aria-describedby="{{ $px }}image-hint @error('image') image-error @enderror" @error('image') aria-invalid="true" @enderror>
+    <label for="{{ $px }}image" class="camera-box photo-box"><img class="photo-box-icon" src="{{ asset('images/brand/camera.svg') }}" alt="" width="32" height="32"><span class="camera-text">點這裡選照片</span></label>
     <p id="{{ $px }}image-hint" class="hint">檔案格式：JPG、PNG、WebP，單一檔案不超過 5MB。看得到這篇日記的會員都看得到照片。</p>
     @error('image')<p id="image-error" class="field-error">{{ $message }}</p>@enderror
 </div>

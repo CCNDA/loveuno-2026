@@ -18,6 +18,7 @@
     <script src="{{ asset('js/notifications.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/autosave.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/zoom.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/photo-pick.js') }}?v={{ $appVersion }}" defer></script>
     {{-- 電腦版上次收起選單：畫面出來前就收好，不會先閃一下 --}}
     <script>try { if (localStorage.getItem('lu-menu') === 'collapsed') { document.documentElement.classList.add('side-menu-collapsed'); } } catch (e) {}</script>@endauth
     <meta name="theme-color" content="#E5BBA2">
@@ -35,7 +36,7 @@
             @auth
                 {{-- 設計稿手機頁首（Header/Mobile）左邊的選單按鈕，打開側邊選單（Figma 1156:11227） --}}
                 <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="side-menu">
-                    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><path d="M4 7h20M4 14h20M4 21h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+                    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="20" fill="#B0876F"/><rect x="18.12" y="13.71" width="11.76" height="1.96" rx=".98" fill="#fff"/><rect x="10.29" y="19.59" width="19.59" height="1.96" rx=".98" fill="#fff"/><rect x="10.29" y="25.47" width="11.76" height="1.96" rx=".98" fill="#fff"/></svg>
                     <span class="visually-hidden">選單</span>
                 </button>
             @endauth
