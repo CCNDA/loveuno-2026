@@ -1191,3 +1191,13 @@ main.page-card.wrap-wide { max-width: 75rem; }
 /* 愛積點餘額：標籤 20px、數字 22px（設計稿 328:6429）。設計的 #ff8274 對白底只有 2.4:1，數字用 #b5452f（5.4:1） */
 .points-balance { font-size: 20px; }
 .points-balance strong { font-size: 22px; color: #b5452f; }
+
+/* 自己的個人首頁：捷徑小膠囊鈕；區塊標題右邊鉛筆鈕（設計稿 142:25006，36px 圓、#e5bba2） */
+ul.profile-mine { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 12px 0 0; }
+ul.profile-mine a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--button); border-radius: 999px; background: #fff; color: var(--button); font-size: .875rem; text-decoration: none; }
+ul.profile-mine a:hover { background: var(--button); color: #fff; }
+.profile-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.profile-section-head .profile-section-title { margin: 0; }
+.section-edit { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: #e5bba2; color: #4f3842; } /* 設計是白色鉛筆，但白對 #e5bba2 只有 1.7:1；圖示要 3:1 → 深梅色 */
+.section-edit svg { width: 18px; height: 18px; }
+.section-edit:hover { background: var(--button); color: #fff; }

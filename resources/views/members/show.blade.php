@@ -6,11 +6,16 @@
 @section('content')
 @include('members.partials.head')
 @if ($isMe)
-    <p class="profile-mine">
-        <a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('friends.index') }}">我的朋友</a>・<a href="{{ route('gifts.index') }}">我的禮物</a>・<a href="{{ route('meetups.index') }}">我的約會</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>
-        ・<a href="{{ route('photo.edit') }}">換大頭照</a>@if ($member->profile?->photo_status === 'pending')（審核中）@endif
-        ・<a href="{{ route('album.edit') }}#cover-title">換封面</a>
-    </p>
+    {{-- 自己的頁面：常用入口做成小膠囊鈕（小鹿 11/6：原本一長串文字連結在手機換好幾行） --}}
+    <ul class="profile-mine" aria-label="我的捷徑">
+        <li><a href="{{ route('center.account') }}">會員中心</a></li>
+        <li><a href="{{ route('friends.index') }}">我的朋友</a></li>
+        <li><a href="{{ route('gifts.index') }}">我的禮物</a></li>
+        <li><a href="{{ route('meetups.index') }}">我的約會</a></li>
+        <li><a href="{{ route('profile.edit') }}">編輯個人檔案</a></li>
+        <li><a href="{{ route('photo.edit') }}">換大頭照@if ($member->profile?->photo_status === 'pending')（審核中）@endif</a></li>
+        <li><a href="{{ route('album.edit') }}#cover-title">換封面</a></li>
+    </ul>
 @endif
 
 @if ($iBlocked ?? false)
