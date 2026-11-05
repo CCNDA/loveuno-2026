@@ -12,7 +12,7 @@
     <li>如果您忘記密碼，請使用<a href="{{ route('password.request') }}">忘記密碼</a>功能，客服人員無法告訴您原本的密碼。</li>
 </ul>
 
-<form method="POST" action="{{ route('contact.store') }}" class="form form-wide" novalidate>
+<form method="POST" action="{{ route('contact.store') }}" class="form form-wide form-grid contact-form" novalidate>
     @csrf
     @include('partials.errors', ['title' => '還沒有送出'])
     @php($me = auth()->user())
