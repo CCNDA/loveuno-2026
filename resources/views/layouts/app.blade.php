@@ -14,12 +14,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/error-focus.js') }}?v={{ $appVersion }}" defer></script>
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/notifications.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/autosave.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/zoom.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/photo-pick.js') }}?v={{ $appVersion }}" defer></script>
-    <script src="{{ asset('js/error-focus.js') }}?v={{ $appVersion }}" defer></script>
     {{-- 電腦版上次收起選單：畫面出來前就收好，不會先閃一下 --}}
     <script>try { if (localStorage.getItem('lu-menu') === 'collapsed') { document.documentElement.classList.add('side-menu-collapsed'); } } catch (e) {}</script>@endauth
     <meta name="theme-color" content="#E5BBA2">
