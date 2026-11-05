@@ -844,3 +844,9 @@ input.switch:checked::before { transform: translateX(20px); }
 .points-table td a:hover { background: var(--button-dark); color: #fff; }
 .done-check { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #1a7f9c; color: #fff; font-size: .8rem; font-weight: 700; }
 .center-main h3 { text-align: center; }
+
+/* 身份認證（設計稿 118:8011）：不框卡片、區塊之間一條線；上傳用相機框；送出鈕膠囊 */
+.center-main .verify-card { border: 0; border-radius: 0; box-shadow: none; background: none; padding: 16px 0; border-top: 1px solid var(--line); }
+.center-main .verify-card .upload-box { max-width: 22rem; }
+.center-main .verify-card .field input:not([type=file]) { max-width: 22rem; }
+.center-main .verify-card .button { border-radius: 999px; min-width: 7rem; justify-content: center; }
