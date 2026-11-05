@@ -1254,7 +1254,7 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 /* 封面經文：電腦版在插圖裡就看得到，所以藏起來；手機版顯示在封面下面（熊叔叔 11/6） */
 .cover-verse { display: none; }
 @media (max-width: 640px) {
-    .cover-verse { display: block; margin: 0; padding: 10px 16px 0; font-size: .85rem; line-height: 1.7; color: #7a5a45; text-align: center; }
+    .cover-verse { display: block; margin: 0 16px; padding: 10px 0 14px; border-top: 1px dashed #e5d3c6; font-size: .85rem; line-height: 1.7; color: #7a5a45; text-align: center; }
     .cover-verse-ref { display: block; font-size: .8rem; color: #8c6f5c; }
     .profile-cover picture, .profile-cover picture img { display: block; width: 100%; height: 100%; }
 }
