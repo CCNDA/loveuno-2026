@@ -17,7 +17,7 @@
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>@endauth
     <meta name="theme-color" content="#E5BBA2">
 </head>
-<body @auth class="has-bottom-nav" @endauth>
+<body @auth class="has-bottom-nav has-side-menu" @endauth>
     @auth @php($unreadNotes = \App\Models\Note::unreadCountFor(auth()->user())) @endauth
     <a class="skip-link" href="#main">跳到主要內容</a>
 

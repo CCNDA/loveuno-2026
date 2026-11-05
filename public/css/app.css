@@ -445,6 +445,7 @@ html.fs-large { font-size: 118.75%; }
 
 /* 公開頁 */
 .footer-row { display: grid; gap: 24px; }
+.footer-row .footer-links ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; } /* 設計稿手機兩欄、電腦四欄 */
 .footer-brand img { display: block; height: auto; }
 .footer-social { display: flex; gap: 12px; list-style: none; margin: 16px 0 0; padding: 0; }
 .footer-social a { display: inline-flex; border-radius: 50%; }
@@ -454,7 +455,7 @@ html.fs-large { font-size: 118.75%; }
 .site-footer :focus-visible { outline-color: #fff; }
 @media (min-width: 48rem) {
     .footer-row { grid-template-columns: 220px 1fr; }
-    .footer-links ul { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .footer-row .footer-links ul { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
 }
 .footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
@@ -570,4 +571,12 @@ html.fs-large { font-size: 118.75%; }
     .landing-hero h1 { font-size: 2.5rem; }
     .landing-features ul { grid-template-columns: repeat(3, 1fr); margin-top: -120px; }
     .landing-story-list { grid-template-columns: 1fr 1fr; }
+}
+
+/* 電腦版側邊選單固定在左邊（設計稿 Index 電腦版；熊叔叔 11/5「電腦版目錄選單是展開的」「縮放就要有」☰） */
+@media (min-width: 75rem) {
+    body.has-side-menu { padding-left: 280px; }
+    .has-side-menu .side-menu, .has-side-menu .side-menu[hidden] { display: block; position: fixed; inset: 0 auto 0 0; width: 280px; background: none; z-index: 30; }
+    .has-side-menu .side-menu-panel { position: static; width: 280px; height: 100%; box-sizing: border-box; }
+    .has-side-menu .side-menu-close, .has-side-menu .menu-toggle { display: none; }
 }
