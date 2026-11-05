@@ -35,6 +35,7 @@
             pv.hidden = !open;
             pbtn.setAttribute('aria-expanded', open ? 'true' : 'false');
             pbtn.textContent = open ? '收起預覽' : '預覽';
+            if (open) { pv.scrollIntoView({ block: 'nearest' }); } // 預覽在對話框最下面，打開時捲到看得到
         });
     }
     dlg.addEventListener('close', function () { if (opener) { opener.focus(); } });
