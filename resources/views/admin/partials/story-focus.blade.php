@@ -2,7 +2,7 @@
 @if ($s->photo_path)
 <form method="POST" action="{{ route('admin.love-stories.focus', $s) }}" class="story-focus" id="focus-{{ $s->id }}">
     @csrf
-    <p class="hint">點一下照片上的臉，裁成方形、長條時就會以臉為中心（現在：左右 {{ $s->photo_focus_x ?? 50 }}%、上下 {{ $s->photo_focus_y ?? 30 }}%{{ $s->photo_focus_x === null ? '，還沒設，先用上方' : '' }}）。</p>
+    <p class="hint">投稿時系統會自動找臉；認錯了就點一下照片上的臉，裁成方形、長條時就會以臉為中心（現在：左右 {{ $s->photo_focus_x ?? 50 }}%、上下 {{ $s->photo_focus_y ?? 30 }}%{{ $s->photo_focus_x === null ? '，還沒設，先用上方' : '' }}）。</p>
     <div class="story-focus-pic">
         <img src="{{ route('love-stories.photo', $s) }}" alt="「{{ $s->title }}」的照片，點臉的位置" data-focus-pick>
         <span class="story-focus-dot" aria-hidden="true" style="left: {{ $s->photo_focus_x ?? 50 }}%; top: {{ $s->photo_focus_y ?? 30 }}%"></span>

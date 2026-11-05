@@ -34,5 +34,11 @@ return [
     ],
 
     // 會員收不到簡訊等問題要寫信來的地方（熊叔叔 10/29「愛諾園有愛諾園的專屬信箱 support@loveuno.com」）
+    // 愛的見證照片自動找臉：Python（裝了 opencv）和 face_focus.py 的路徑；任一個不存在就不找（用預設焦點）
+    'face' => [
+        'python' => env('LOVEUNO_FACE_PYTHON', '/opt/loveuno-face/venv/bin/python'),
+        'script' => env('LOVEUNO_FACE_SCRIPT', '/opt/loveuno-face/face_focus.py'),
+    ],
+
     'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'support@loveuno.com'),
 ];
