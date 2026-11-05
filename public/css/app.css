@@ -529,7 +529,9 @@ html.fs-large { font-size: 118.75%; }
     .home-suggest { grid-column: 1; grid-row: 1; }
     .home-wall { grid-column: 1; grid-row: 2; }
     .home-side { display: flex; flex-direction: column; gap: 16px; grid-column: 2; grid-row: 1 / span 2; }
-    .home-side > * { order: 0; } /* 右欄照原順序：特殊節日、歡迎新朋友、廣告 */
+    .home-grid .home-side > * { order: 0; } /* 右欄照設計稿順序：特殊節日、歡迎新朋友、廣告（要蓋過手機版的 order） */
+    .home-side .welcome-new { font-size: .92rem; }
+    .home-side .welcome-item { flex-wrap: wrap; }
 }
 @media (min-width: 641px) {
     .fab-write { display: inline-flex; align-items: center; justify-content: center; position: fixed; right: 24px; bottom: 24px; z-index: 15;
