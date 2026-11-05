@@ -33,7 +33,7 @@ class PagesTest extends TestCase
         foreach (['/about' => '關於愛諾園', '/faq' => '常見問題', '/terms' => '網站服務條款', '/privacy' => '隱私權政策', '/contact' => '聯絡我們'] as $url => $title) {
             $this->get($url)->assertOk()->assertSee($title);
         }
-        $this->get('/about')->assertSee('https://www.ccnda.org/devote/online', false);
+        $this->get('/about')->assertSee('https://go.nien.co/3LUoTeH', false);
         $this->get('/')->assertSee(route('faq'), false)->assertSee(route('privacy'), false);
     }
 

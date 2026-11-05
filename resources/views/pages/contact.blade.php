@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '聯絡我們')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 {{-- 設計稿 PageContactUs（姓名、帳號、Email、聯絡事項、聯絡內容）＋舊站 info/contact.php 的提醒文字 --}}

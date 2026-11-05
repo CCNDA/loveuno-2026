@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', $story->title . '｜愛的見證')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 {{-- 設計稿 PageViewLoveStory：標題、兩位的頭像＋名字（名字旁有已認證徽章）、內文、照片、「我要投稿」 --}}

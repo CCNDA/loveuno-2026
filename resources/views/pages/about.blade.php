@@ -1,10 +1,13 @@
 @extends('layouts.app')
 
 @section('title', '關於愛諾園')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 {{-- 內容照舊站 info/aboutus.php 原文（設計稿 PageAbout 也是同一段）；奉獻連結照舊站 devote.ccnda.org（現在轉到 www.ccnda.org/devote/online） --}}
 <h1>關於愛諾園</h1>
+{{-- 設計稿 122:10096：卡片最上面一張插圖（跟封面頁同一張） --}}
+<div class="about-hero"><img src="{{ asset('images/welcome-hero.svg') }}" alt="" width="763" height="389"></div>
 <div class="prose">
     <p>愛諾園是由中華基督教網路發展協會提供的基督徒網路交友服務。愛諾園代表著基督徒對於另一半的真愛與承諾。而 LoveUno 除了有愛諾的諧音外，單字 UNO 更在西班牙文中有著【唯一】的意思，代表了對於婚姻與伴侶的忠貞。</p>
     <p>根據主計處統計，全台 15 歲以上的單身人口，近四年來已暴增 50 萬以上，其中 25 歲到 29 歲的人口中，平均每 100 位就有 70 位未婚，全台單身總人口數已經逼近 1,000 萬大關。而這其中基督徒單身的人口比例更是比非基督徒要高出許多。有非常多的單身基督徒弟兄姊妹因著聖經的教導或為了未來婚姻的幸福，堅持只願意跟同是基督徒的異性交往，但由於現實生活圈中可遇到的單身基督徒實在太少，而遲遲無法走進神所應許的婚姻。</p>
@@ -16,6 +19,6 @@
 <section aria-labelledby="donate-title" class="card donate">
     <h2 id="donate-title">奉獻</h2>
     <p>愛諾園所有的服務都是免費的，網站的營運費用都來自弟兄姊妹的自由奉獻。若您對社青以及兩性事工有負擔，歡迎奉獻給中華基督教網路發展協會，讓這個事工可以長久經營下去。</p>
-    <p><a class="button" href="https://www.ccnda.org/devote/online" rel="noopener">捐款奉獻<span class="visually-hidden">（到中華基督教網路發展協會的奉獻頁）</span></a></p>
+    <p><a class="button pill-submit" href="{{ config('loveuno.links.devote') }}" rel="noopener">捐款奉獻<span class="visually-hidden">（到中華基督教網路發展協會的奉獻頁）</span></a></p>
 </section>
 @endsection

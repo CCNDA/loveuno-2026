@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '愛的見證')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 <h1>愛的見證</h1>

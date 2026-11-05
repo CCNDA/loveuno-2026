@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '站務公告')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 {{-- 設計稿 PageInformation：表格「公告標題」「發佈時間」 --}}

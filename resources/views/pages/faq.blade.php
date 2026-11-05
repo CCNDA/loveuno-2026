@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '常見問題')
+@section('main_class', 'wrap wrap-wide center-main page-card')
 
 @section('content')
 {{-- 題目照設計稿 PageFaq（一般常見問題／會員建檔相關問題）＋舊站 info/faq.php 還適用的；
