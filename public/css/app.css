@@ -933,3 +933,19 @@ form.is-autosaving > button[type=submit] { display: none; }
 @media (max-width: 640px) { .toast { bottom: calc(76px + env(safe-area-inset-bottom)); } } /* 不要被底部選單蓋住 */
 @media (prefers-reduced-motion: no-preference) { .toast:not([hidden]) { animation: toast-in .2s ease-out; } }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* 查看禮物（設計稿 2529:20867）：白板上一份一張卡，上藍灰條、下禮物圖＋簡訊、珊瑚色回禮 */
+.gift-board { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(61, 42, 34, .08); padding: 12px 20px 20px; margin-bottom: 24px; }
+.gift-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.gift-letter { border-radius: 4px; overflow: hidden; background: #eef0f5; }
+.gift-letter-head { background: #d9deea; flex-wrap: wrap; }
+.gift-letter-mine { background: #f6f0e7; }
+.gift-letter-mine .gift-letter-head { background: #ffe8c8; }
+.gift-letter-head .note-who { flex: none; }
+.gift-letter-title { margin: 0; flex: 1; font-size: 1.05rem; color: var(--plum); }
+.gift-letter-body { display: flex; gap: 20px; align-items: center; padding: 16px 20px; }
+.gift-tile { margin: 0; width: 140px; flex: none; padding: 8px; background: #f4efe8; border-radius: 6px; text-align: center; font-size: .85rem; }
+.gift-tile img { display: block; margin: 0 auto; width: 100px; height: 100px; object-fit: contain; }
+.gift-letter-msg { margin: 0; line-height: 1.75; overflow-wrap: anywhere; }
+.gift-letter-actions { margin: 0; padding: 0 20px 16px; }
+@media (max-width: 40rem) { .gift-letter-body { flex-direction: column; align-items: flex-start; } }
