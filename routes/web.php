@@ -129,6 +129,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::put('/center/password', [CenterController::class, 'updatePassword'])->middleware('throttle:5,10,password-change')->name('center.password');
     Route::get('/center/points', [CenterController::class, 'points'])->name('center.points');
     // 帳號設定（設計稿 PageMemberSettings）
+    Route::patch('/center/settings/fields', [SettingsController::class, 'patch'])->middleware('throttle:120,1,autosave')->name('settings.patch'); // 即時存檔
     Route::put('/center/settings', [SettingsController::class, 'update'])->middleware('throttle:30,60,settings-save')->name('settings.update');
     Route::get('/center/network', [SettingsController::class, 'network'])->name('settings.network');
     // Web Push（public/js/push.js、public/sw.js）
@@ -138,6 +139,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::get('/center/delete', [SettingsController::class, 'confirmDestroy'])->name('settings.delete');
     Route::delete('/center/account', [SettingsController::class, 'destroy'])->middleware('throttle:5,60,account-delete')->name('settings.destroy');
     Route::get('/center/preferences', [CenterController::class, 'preferences'])->name('center.preferences');
+    Route::patch('/center/preferences/fields', [CenterController::class, 'patchPreferences'])->middleware('throttle:120,1,autosave')->name('center.preferences.patch');
     Route::put('/center/preferences', [CenterController::class, 'updatePreferences'])->middleware('throttle:30,60,preferences-save')->name('center.preferences.update');
     Route::get('/me/intro', [ProfileController::class, 'editIntro'])->name('profile.intro');
     Route::get('/me/love', [LoveHistoryController::class, 'edit'])->name('profile.love');

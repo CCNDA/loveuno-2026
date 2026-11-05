@@ -6,6 +6,7 @@ use App\Models\Profile;
 use App\Models\User;
 use App\Support\Points;
 use App\Support\ProfileOptions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,6 +83,15 @@ class CenterController extends Controller
             'profile' => $user->profile ?? new Profile(['user_id' => $user->id]),
             'places' => Profile::where('live_place', '<>', '')->distinct()->orderBy('live_place')->pluck('live_place'),
         ]);
+    }
+
+    // 即時存檔（熊叔叔 11/5）：整張交友條件送來，驗證和存法跟 updatePreferences() 一樣，回 JSON
+    public function patchPreferences(Request $request): JsonResponse
+    {
+        $this->updatePreferences($request);
+        $request->session()->forget('status');
+
+        return response()->json(['saved' => ['preferences'], 'at' => now()->shown()->format('H:i')]);
     }
 
     public function updatePreferences(Request $request): RedirectResponse
