@@ -2,12 +2,17 @@
 
 @section('title', $other ? '傳紙條給 ' . $other->name : '傳紙條')
 
+@section('main_class', 'wrap wrap-wide')
+
 @section('content')
 <h1>傳紙條</h1>
+{{-- 設計稿 402:13701：左邊信件清單白卡、右邊一封一張卡（對方藍灰、自己蜜桃）、珊瑚色回信鈕 --}}
 
 <div class="notes-layout @if($other) has-thread @endif">
     <section class="notes-threads" aria-labelledby="threads-title">
-        <h2 id="threads-title" class="visually-hidden">對話清單</h2>
+        @php($unreadTotal = $threads->sum('unread'))
+        <h2 id="threads-title" class="threads-head"><img src="{{ asset('images/brand/nav-notes.svg') }}" alt="" width="28" height="28">
+            @if ($unreadTotal > 0)您有 <span class="threads-count">{{ $unreadTotal }}</span> 張紙條未讀@else對話清單@endif</h2>
         @if ($threads->isEmpty())
             <p>還沒有紙條。到「認識朋友」找一位，在他的檔案頁按「傳紙條」。</p>
         @else
@@ -17,8 +22,9 @@
                         <a href="{{ route('notes.show', $t->user) }}" class="thread-item" @if($other && $other->is($t->user)) aria-current="page" @endif>
                             @include('partials.avatar', ['user' => $t->user])
                             <span class="thread-text">
-                                <span class="thread-name">{{ $t->user->name }}@if($t->blocked) <span class="tag">已封鎖</span>@endif</span>
-                                <span class="thread-last">{{ \Illuminate\Support\Str::limit($t->last->body, 28) }}</span>
+                                <span class="thread-top"><span class="thread-name">{{ $t->user->name }}@if($t->blocked) <span class="tag">已封鎖</span>@endif</span>
+                                    <time class="thread-date" datetime="{{ $t->last->created_at->toIso8601String() }}">{{ $t->last->created_at->shown()->format('Y/m/d') }}</time></span>
+                                <span class="thread-last">{{ \Illuminate\Support\Str::limit($t->last->body, 40) }}</span>
                             </span>
                             @if ($t->unread > 0)
                                 <span class="badge" aria-hidden="true">{{ $t->unread }}</span><span class="visually-hidden">，{{ $t->unread }} 則未讀</span>
@@ -45,9 +51,12 @@
                     @foreach ($notes as $n)
                         @php($mine = $n->sender_id === auth()->id())
                         <li class="note {{ $mine ? 'note-mine' : 'note-theirs' }}">
-                            <p class="note-who visually-hidden">{{ $mine ? '我' : $other->name }}：</p>
+                            <div class="note-head">
+                                @include('partials.avatar', ['user' => $mine ? auth()->user() : $other, 'size' => 'sm'])
+                                <p class="note-who">{{ $mine ? '我' : $other->name }}<span class="visually-hidden">：</span></p>
+                                <p class="note-time"><time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->shown()->format('Y-m-d H:i') }}</time>@if($mine && $n->read_at)・已讀@endif</p>
+                            </div>
                             <div class="note-body">{!! nl2br(e($n->body)) !!}</div>
-                            <p class="note-time"><time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->shown()->format('n/j H:i') }}</time>@if($mine && $n->read_at)・已讀@endif</p>
                         </li>
                     @endforeach
                 </ol>
@@ -67,7 +76,7 @@
                               @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
                     @error('body')<p id="body-error" class="field-error">{{ $message }}</p>@enderror
                 </div>
-                <button type="submit" class="button">送出</button>
+                <button type="submit" class="button note-send">回信</button>
             </form>
             @endif
         @endif
