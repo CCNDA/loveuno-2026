@@ -14,6 +14,8 @@
             <source media="(max-width: 640px)" srcset="{{ asset('images/covers/cover-' . $preset . '-art.svg') }}">
             <img data-zoom src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
         </picture>
+        {{-- 手機版：經文用網頁文字接在插圖下面（同一塊封面裡，下面留空給大頭照疊上來；熊叔叔 11/6「排版不行」） --}}
+        <p class="cover-verse">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
     </div>
 
     <div class="profile-row">
@@ -59,6 +61,4 @@
             @endif
         </div>
     </div>
-    {{-- 手機版：封面上的經文改在卡片最下面用網頁文字顯示（封面圖裡的字太小；放在封面正下方會被大頭照蓋住） --}}
-    <p class="cover-verse">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
 </section>
