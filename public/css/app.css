@@ -580,7 +580,8 @@ html.fs-large { font-size: 118.75%; }
     body.has-side-menu { padding-left: 280px; }
     .has-side-menu .side-menu, .has-side-menu .side-menu[hidden] { display: block; position: fixed; inset: 0 auto 0 0; width: 280px; background: none; z-index: 30; }
     .has-side-menu .side-menu-panel { position: static; width: 280px; height: 100%; box-sizing: border-box; }
-    .has-side-menu .side-menu-close, .has-side-menu .menu-toggle { display: none; }
+    html.side-menu-collapsed body.has-side-menu { padding-left: 0; }
+    html.side-menu-collapsed .has-side-menu .side-menu[hidden] { display: none; }
 }
 
 /* ── 登入頁（設計稿 Login 209:21707／[MOBILE] Login 209:21677）：電腦版左插圖、右 480px 白框；手機只有白框 ── */

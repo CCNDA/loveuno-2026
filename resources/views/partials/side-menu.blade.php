@@ -1,7 +1,7 @@
 {{-- 側邊選單：照設計稿 Figma 1156:11227 的項目和順序（熊叔叔 2026-11-05「figma 應該有規劃選單的結構」）。
      設計稿下面的 App Store／Google Play 不放（新版是網頁，design-deviations #42）；會員中心設計稿沒有獨立一項，點頭像／暱稱進去。
      管理員的項目設計稿沒有，放在最後「管理」一段。
-     寬螢幕（≥1200px，設計稿 Index 電腦版）固定在左邊一直開著（CSS 蓋過 hidden，沒有 JS 也看得到）；窄螢幕是 ☰ 打開的抽屜，role=dialog 由 side-menu.js 打開時才加。 --}}
+     寬螢幕（≥1200px，設計稿 Index 電腦版）固定在左邊開著（CSS 蓋過 hidden，沒有 JS 也看得到），☰／✕ 可以收起來；窄螢幕是 ☰ 打開的抽屜，role=dialog 由 side-menu.js 打開時才加。 --}}
 @php($me = auth()->user())
 <div class="side-menu" id="side-menu" hidden>
     <div class="side-menu-panel">
