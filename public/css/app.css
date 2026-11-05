@@ -1016,3 +1016,8 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 .page-card > .news-article { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
 .news-article h1 { font-size: 1.35rem; margin: 16px 0 8px; }
 .news-article .prose { line-height: 1.85; }
+
+/* 心情日記列表／我的日記：跟生活日記牆一樣的大白卡，標題珊瑚色 */
+.diary-page > :not(h1) { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
+.diary-page-write { text-align: right; }
+.diary-page .diary-list h2 a, .diary-page .diary-list h3 a { color: var(--button-dark); }
