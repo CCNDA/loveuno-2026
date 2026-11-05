@@ -2,6 +2,8 @@
 
 @section('title', '確認送禮物')
 
+@section('main_class', 'wrap airmail')
+
 @section('content')
 {{-- 送出前再確認一次（會員反映誤觸就送出、沒寫到簡訊；熊叔叔 11/2 選 gift_both，Asana 1220127768201283） --}}
 <h1>確認送禮物給 {{ $member->name }}</h1>
