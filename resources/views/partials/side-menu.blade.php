@@ -51,6 +51,8 @@
         </nav>
         {{-- 設計稿選單最下面：社群圖示、服務條款｜隱私權政策、Serve by（連到協會） --}}
         @include('partials.social-links', ['class' => 'side-menu-social', 'light' => true])
+        {{-- 手機頁首放不下繁简切換，放這裡（Salt Chang 在 Figma 留言：登入後也要能切換語言） --}}
+        <p class="side-menu-script">@include('partials.script-toggle')</p>
         <p class="side-menu-legal"><a href="{{ route('terms') }}">服務條款</a><span aria-hidden="true">｜</span><a href="{{ route('privacy') }}">隱私權政策</a></p>
         <p class="side-menu-serve"><a href="{{ config('loveuno.links.ccnda') }}" rel="noopener">Serve by<br>Chinese Christian Network<br>Development Association</a></p>
     </div>
