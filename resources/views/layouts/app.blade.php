@@ -16,6 +16,7 @@
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/notifications.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/autosave.js') }}?v={{ $appVersion }}" defer></script>
     {{-- 電腦版上次收起選單：畫面出來前就收好，不會先閃一下 --}}
     <script>try { if (localStorage.getItem('lu-menu') === 'collapsed') { document.documentElement.classList.add('side-menu-collapsed'); } } catch (e) {}</script>@endauth
     <meta name="theme-color" content="#E5BBA2">
@@ -59,6 +60,8 @@
     </header>
     @endif
     @auth @include('partials.side-menu') @endauth
+    {{-- 即時存檔的跳出訊息（白底、蜜桃框，跟通知框同一套；熊叔叔 11/5「要跳出訊息讓使用者知道」） --}}
+    @auth<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>@endauth
 
     <main id="main" tabindex="-1" class="@yield('main_class', 'wrap')">
         @if (session('status'))

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Profile;
 use App\Support\Points;
 use App\Support\ProfileOptions as Opt;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,8 +23,51 @@ class ProfileController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        $data = $request->validate(...$this->profileRules($request));
+        $this->checkBirthday($data);
+
+        $user = $request->user();
+        $user->forceFill(['name' => trim($data['name'])])->save();
+        Profile::updateOrCreate(['user_id' => $user->id], self::profileValues($data, array_keys(self::PROFILE_FIELDS)));
+        Points::checkTasks($user); // 基本資料填好就給點
+
+        // 直接回自己的檔案頁（經過 /me 再轉一次，提示訊息會在中途被用掉）
+        return redirect()->route('members.show', $user)->with('status', '個人資料存好了。');
+    }
+
+    // 個人資料欄位怎麼存：text＝去頭尾空白的字串、num＝整數或 null
+    private const PROFILE_FIELDS = [
+        'real_name' => 'text', 'home_phone' => 'text', 'live_place' => 'text', 'job' => 'text',
+        'birth_month' => 'num', 'birth_day' => 'num', 'faith' => 'text', 'marital' => 'text', 'children' => 'text',
+        'education' => 'text', 'blood_type' => 'text', 'height' => 'num', 'weight' => 'num',
+        'smoking' => 'text', 'drinking' => 'text', 'family_planning' => 'text',
+    ];
+
+    private static function profileValues(array $data, array $keys): array
+    {
+        $out = [];
+        foreach ($keys as $k) {
+            $out[$k] = self::PROFILE_FIELDS[$k] === 'num'
+                ? (isset($data[$k]) && $data[$k] !== '' ? (int) $data[$k] : null)
+                : self::trimmed($data, $k);
+        }
+
+        return $out;
+    }
+
+    // 2/30、4/31 這種日子不存在（用閏年 2000 檢查，2/29 可以）
+    private function checkBirthday(array $data): void
+    {
+        if (! empty($data['birth_month']) && ! empty($data['birth_day']) && ! checkdate((int) $data['birth_month'], (int) $data['birth_day'], 2000)) {
+            throw ValidationException::withMessages(['birth_day' => sprintf('%d 月沒有 %d 日。', $data['birth_month'], $data['birth_day'])]);
+        }
+    }
+
+    private function profileRules(Request $request): array
+    {
         $in = fn (array $list) => Rule::in($list);
-        $data = $request->validate([
+
+        return [[
             'name' => ['required', 'string', 'max:20'],
             'real_name' => ['nullable', 'string', 'max:30'],
             'home_phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-() #]*$/'],
@@ -51,29 +95,64 @@ class ProfileController extends Controller
             'birth_month' => '生日的月', 'birth_day' => '生日的日', 'faith' => '信仰', 'marital' => '婚姻狀況', 'children' => '子女人數',
             'education' => '教育程度', 'blood_type' => '血型', 'height' => '身高', 'weight' => '體重', 'smoking' => '是否抽菸',
             'drinking' => '是否喝酒', 'family_planning' => '計劃生育',
-        ]);
-        // 2/30、4/31 這種日子不存在（用閏年 2000 檢查，2/29 可以）
-        if (! empty($data['birth_month']) && ! checkdate((int) $data['birth_month'], (int) $data['birth_day'], 2000)) {
-            throw ValidationException::withMessages(['birth_day' => sprintf('%d 月沒有 %d 日。', $data['birth_month'], $data['birth_day'])]);
+        ]];
+    }
+
+    // 即時存檔（熊叔叔 11/5「要走 rest api 即時儲存」）：PATCH，只驗證、只存這次送來的欄位
+    public function patchProfile(Request $request): JsonResponse
+    {
+        [$rules, $messages, $attributes] = $this->profileRules($request);
+        $keys = self::sentKeys($request, $rules);
+        $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
+        if (in_array('birth_month', $keys, true) || in_array('birth_day', $keys, true)) {
+            $this->checkBirthday($data);
+        }
+        $user = $request->user();
+        if (in_array('name', $keys, true)) {
+            $user->forceFill(['name' => trim($data['name'])])->save();
+        }
+        $fields = array_values(array_intersect($keys, array_keys(self::PROFILE_FIELDS)));
+        if ($fields) {
+            Profile::updateOrCreate(['user_id' => $user->id], self::profileValues($data, $fields));
+        }
+        Points::checkTasks($user);
+
+        return self::saved($keys);
+    }
+
+    public function patchIntro(Request $request): JsonResponse
+    {
+        [$rules, $messages, $attributes] = $this->introRules();
+        $keys = self::sentKeys($request, $rules);
+        $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
+        $values = array_intersect_key(self::introValues($request, $data), array_flip($keys));
+        Profile::updateOrCreate(['user_id' => $request->user()->id], $values);
+        Points::checkTasks($request->user());
+
+        return self::saved($keys);
+    }
+
+    // 這次送了哪些「認得的」欄位；一個都沒有就是 422（不認得的欄位不會被存）
+    private static function sentKeys(Request $request, array $rules): array
+    {
+        $known = array_unique(array_map(fn ($k) => explode('.', $k)[0], array_keys($rules)));
+        $keys = array_values(array_intersect($known, array_keys($request->except(['_token', '_method']))));
+        if (! $keys) {
+            throw ValidationException::withMessages(['fields' => '沒有可以存的欄位。']);
         }
 
-        $user = $request->user();
-        $user->forceFill(['name' => trim($data['name'])])->save();
-        $text = fn (string $k) => self::trimmed($data, $k);
-        $num = fn (string $k) => isset($data[$k]) && $data[$k] !== '' ? (int) $data[$k] : null;
-        Profile::updateOrCreate(['user_id' => $user->id], [
-            'real_name' => $text('real_name'), 'home_phone' => $text('home_phone'),
-            'live_place' => $text('live_place'), 'job' => $text('job'),
-            'birth_month' => $num('birth_month'), 'birth_day' => $num('birth_day'),
-            'faith' => $text('faith'), 'marital' => $text('marital'), 'children' => $text('children'),
-            'education' => $text('education'), 'blood_type' => $text('blood_type'),
-            'height' => $num('height'), 'weight' => $num('weight'),
-            'smoking' => $text('smoking'), 'drinking' => $text('drinking'), 'family_planning' => $text('family_planning'),
-        ]);
-        Points::checkTasks($user); // 基本資料填好就給點
+        return $keys;
+    }
 
-        // 直接回自己的檔案頁（經過 /me 再轉一次，提示訊息會在中途被用掉）
-        return redirect()->route('members.show', $user)->with('status', '個人資料存好了。');
+    // 規則只留這次送來的欄位（含 languages.* 這種子規則）
+    private static function only(array $rules, array $keys): array
+    {
+        return array_filter($rules, fn ($k) => in_array(explode('.', $k)[0], $keys, true), ARRAY_FILTER_USE_KEY);
+    }
+
+    private static function saved(array $keys): JsonResponse
+    {
+        return response()->json(['saved' => $keys, 'at' => now()->shown()->format('H:i')]);
     }
 
     public function editIntro(Request $request): View
@@ -83,8 +162,37 @@ class ProfileController extends Controller
 
     public function updateIntro(Request $request): RedirectResponse
     {
+        $data = $request->validate(...$this->introRules());
+        $user = $request->user();
+        Profile::updateOrCreate(['user_id' => $user->id], self::introValues($request, $data));
+        Points::checkTasks($user);
+
+        return redirect()->route('members.show', ['user' => $user, 'tab' => 'intro'])->with('status', '自我介紹存好了。');
+    }
+
+    private static function introValues(Request $request, array $data): array
+    {
+        $text = fn (string $k) => self::trimmed($data, $k);
+
+        return [
+            'headline' => $text('headline'),
+            'church' => $text('church'), 'church_visible' => $request->boolean('church_visible'),
+            'verse_book' => $text('verse_book'),
+            'verse_chapter' => $data['verse_chapter'] ?? null, 'verse_verse' => $data['verse_verse'] ?? null,
+            'verse_text' => $text('verse_text'),
+            // 照選項本來的順序存，同一個不會存兩次
+            'languages' => array_values(array_intersect(Opt::LANGUAGES, $data['languages'] ?? [])),
+            'hobbies' => array_values(array_intersect(Opt::HOBBIES, $data['hobbies'] ?? [])),
+            'sports' => array_values(array_intersect(Opt::SPORTS, $data['sports'] ?? [])),
+            'intro' => $data['intro'] ?? null, 'hope' => $data['hope'] ?? null,
+        ];
+    }
+
+    private function introRules(): array
+    {
         $picks = ['array', 'max:' . Opt::MAX_PICKS]; // 「請選擇1-3種」
-        $data = $request->validate([
+
+        return [[
             'headline' => ['required', 'string', 'max:50'],
             'church' => ['nullable', 'string', 'max:100'],
             'church_visible' => ['nullable', 'boolean'],
@@ -110,25 +218,7 @@ class ProfileController extends Controller
         ], [
             'headline' => '個人標題', 'church' => '教會名稱', 'verse_book' => '聖經書卷', 'verse_chapter' => '章', 'verse_verse' => '節',
             'verse_text' => '經文', 'languages' => '慣用語言', 'hobbies' => '興趣', 'sports' => '喜愛的運動', 'intro' => '自我介紹', 'hope' => '期待認識的人',
-        ]);
-
-        $user = $request->user();
-        $text = fn (string $k) => self::trimmed($data, $k);
-        Profile::updateOrCreate(['user_id' => $user->id], [
-            'headline' => $text('headline'),
-            'church' => $text('church'), 'church_visible' => $request->boolean('church_visible'),
-            'verse_book' => $text('verse_book'),
-            'verse_chapter' => $data['verse_chapter'] ?? null, 'verse_verse' => $data['verse_verse'] ?? null,
-            'verse_text' => $text('verse_text'),
-            // 照選項本來的順序存，同一個不會存兩次
-            'languages' => array_values(array_intersect(Opt::LANGUAGES, $data['languages'] ?? [])),
-            'hobbies' => array_values(array_intersect(Opt::HOBBIES, $data['hobbies'] ?? [])),
-            'sports' => array_values(array_intersect(Opt::SPORTS, $data['sports'] ?? [])),
-            'intro' => $data['intro'] ?? null, 'hope' => $data['hope'] ?? null,
-        ]);
-        Points::checkTasks($user);
-
-        return redirect()->route('members.show', ['user' => $user, 'tab' => 'intro'])->with('status', '自我介紹存好了。');
+        ]];
     }
 
     private static function trimmed(array $data, string $key): string
