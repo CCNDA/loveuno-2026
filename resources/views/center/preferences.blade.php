@@ -12,7 +12,7 @@
 <p class="hint">「認識朋友」和首頁的好友推薦，會照這裡的條件列出對象；沒選的就是不拘。
     @if ($opposite)想認識的對象：依您個人資料的性別，列出<strong>{{ $opposite }}</strong>。@else請先到<a href="{{ route('profile.edit') }}">個人資料</a>填性別，才知道要幫您列出弟兄還是姊妹。@endif</p>
 
-<form method="POST" action="{{ route('center.preferences.update') }}" class="form" novalidate>
+<form method="POST" action="{{ route('center.preferences.update') }}" class="form pref-form" novalidate>
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '交友條件還沒存好'])
