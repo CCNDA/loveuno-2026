@@ -712,3 +712,18 @@ html.fs-large { font-size: 118.75%; }
     .profile-avatar { margin-top: -32px; }
     .profile-avatar .avatar-xl { width: 96px; height: 96px; font-size: 2.4rem; }
 }
+
+/* 認識朋友（設計稿 659:22941）：大白卡、兩欄蜜桃框會員卡 */
+.friends-panel { padding: 20px; box-shadow: 0 2px 8px rgba(61, 42, 34, .08); }
+.friends-panel .member-grid { grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 16px; margin: 16px 0; }
+.friends-panel .member-card { align-items: center; gap: 16px; padding: 16px; background: #fffdf4; border: 2px solid #ffcdaf; border-radius: 8px; }
+.friends-panel .avatar-xl { width: 96px; height: 96px; font-size: 2.4rem; border: 0; }
+.member-card-main { min-width: 0; }
+.member-card-main p { margin: 0 0 4px; }
+.member-where { font-size: .92rem; color: var(--plum); }
+.gender-icon { font-weight: 700; margin-right: 2px; }
+.gender-m { color: #1a7f9c; }
+.gender-f { color: #b5452f; }
+.member-level { margin-left: 6px; color: #b5452f; } /* 設計稿珊瑚色字太淡，加深到 5.34:1 */
+.member-card-main .pill-link { margin-top: 6px; }
+@media (max-width: 30rem) { .friends-panel { padding: 12px; } .friends-panel .member-grid { grid-template-columns: 1fr; } }
