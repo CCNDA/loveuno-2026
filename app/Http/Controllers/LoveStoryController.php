@@ -87,6 +87,12 @@ class LoveStoryController extends Controller
             'submitter_id' => $me->id, 'male_id' => $ids['male_id'], 'female_id' => $ids['female_id'],
             'title' => $data['title'], 'body' => $data['body'], 'photo_path' => $path, 'status' => 'pending',
         ])->save();
+        if ($path) { // 自動找臉，裁切時以臉為中心（找不到就用預設，管理員可以點臉改）
+            $focus = \App\Support\FaceFocus::find(Storage::disk('avatars')->path($path));
+            if ($focus) {
+                $story->forceFill(['photo_focus_x' => $focus[0], 'photo_focus_y' => $focus[1]])->save();
+            }
+        }
 
         return redirect()->route('love-stories.show', $story)->with('status', '謝謝您的投稿！管理員看過以後就會公開。');
     }

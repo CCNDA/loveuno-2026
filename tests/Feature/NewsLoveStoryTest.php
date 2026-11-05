@@ -127,4 +127,11 @@ class NewsLoveStoryTest extends TestCase
         $member = $this->member('一般', '男');
         $this->actingAs($member)->post(route('admin.love-stories.focus', $s), ['x' => 1, 'y' => 1])->assertForbidden();
     }
+
+    // 自動找臉：主機沒裝（路徑不存在）時不出錯、焦點留空用預設
+    public function test_face_focus_missing_tool_returns_null(): void
+    {
+        config(['loveuno.face.python' => '/nonexistent/python', 'loveuno.face.script' => '/nonexistent/face_focus.py']);
+        $this->assertNull(\App\Support\FaceFocus::find(__FILE__));
+    }
 }
