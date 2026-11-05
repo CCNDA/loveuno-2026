@@ -82,11 +82,7 @@
         <div class="wrap wrap-wide footer-row">
         <div class="footer-brand">
             <img src="{{ asset('images/brand/footer-logo.svg') }}" alt="愛諾園 LoveUNO" width="207" height="72" loading="lazy">
-            {{-- 設計稿四個圓形圖示：Facebook、LINE、Telegram、星號；LINE 和星號還不知道連到哪，先放協會的 Facebook、Telegram --}}
-            <ul class="footer-social">
-                <li><a href="https://www.facebook.com/CCNDA" rel="noopener"><img src="{{ asset('images/brand/social-facebook.svg') }}" alt="協會 Facebook" width="40" height="40" loading="lazy"></a></li>
-                <li><a href="https://t.me/ccnda" rel="noopener"><img src="{{ asset('images/brand/social-telegram.svg') }}" alt="協會 Telegram" width="40" height="40" loading="lazy"></a></li>
-            </ul>
+            @include('partials.social-links', ['class' => 'footer-social'])
         </div>
         <nav aria-label="網站資訊" class="footer-links">
             <ul>
@@ -100,13 +96,13 @@
                 @unless (request()->routeIs('feedback.*'))<li><a href="{{ route('feedback.create', ['from' => request()->getRequestUri()]) }}" target="_blank" rel="noopener">回報問題／建議<span class="visually-hidden">（開新分頁）</span></a></li>@endunless
                 <li><a href="{{ route('terms') }}">網站服務條款</a></li>
                 <li><a href="{{ route('privacy') }}">隱私權政策</a></li>
-                <li><a href="https://www.ccnda.org/devote/online" rel="noopener">奉獻支持</a></li>
+                <li><a href="{{ config('loveuno.links.devote') }}" rel="noopener">奉獻支持</a></li>
             </ul>
             <ul>
-                <li><a href="https://www.ccnda.org" rel="noopener">網路發展協會</a></li>
-                <li><a href="https://church.oursweb.net" rel="noopener">教會名錄</a></li>
-                <li><a href="https://oursweb.net" rel="noopener">Oursweb</a></li>
-                <li><a href="https://www.taiwanbible.com/web/first.jsp" rel="noopener">台灣聖經網</a></li>
+                <li><a href="{{ config('loveuno.links.ccnda') }}" rel="noopener">網路發展協會</a></li>
+                <li><a href="{{ config('loveuno.links.church') }}" rel="noopener">教會名錄</a></li>
+                <li><a href="{{ config('loveuno.links.oursweb') }}" rel="noopener">Oursweb</a></li>
+                <li><a href="{{ config('loveuno.links.taiwanbible') }}" rel="noopener">台灣聖經網</a></li>
             </ul>
         </nav>
         </div>

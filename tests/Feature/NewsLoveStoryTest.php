@@ -100,7 +100,7 @@ class NewsLoveStoryTest extends TestCase
 
     public function test_welcome_page_follows_design(): void
     {
-        $this->get('/')->assertOk()->assertSee('嚴謹認證<br>安心交友', false)->assertSee('我們需要您的支持')->assertSee('https://www.ccnda.org/devote/online', false)
+        $this->get('/')->assertOk()->assertSee('嚴謹認證<br>安心交友', false)->assertSee('我們需要您的支持')->assertSee('https://go.nien.co/3LUoTeH', false)->assertSee('https://go.hearty.me/ccnda-gb', false)
             ->assertSee('images/welcome-hero.svg', false)->assertSee('images/feature-3.svg', false); // 熊叔叔 11/5 封面照 Figma Index2
     }
 

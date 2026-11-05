@@ -621,3 +621,11 @@ html.fs-large { font-size: 118.75%; }
     .auth-illustration { display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f6f0e7; }
     .auth-illustration img { width: 118%; max-width: none; height: auto; }
 }
+
+/* 側邊選單最下面（設計稿 menu 1156:11227）：白色社群圖示、服務條款｜隱私權政策 */
+.side-menu-social { display: flex; justify-content: center; gap: 16px; list-style: none; margin: 24px 0 8px; padding: 0; }
+.side-menu-social a { display: inline-flex; border-radius: 50%; }
+.side-menu-legal { margin: 0; text-align: center; font-size: .9rem; }
+.side-menu-legal a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; color: var(--header-text); }
+.side-menu-serve a { color: var(--header-text); text-decoration: none; }
+.side-menu-serve a:hover { text-decoration: underline; }

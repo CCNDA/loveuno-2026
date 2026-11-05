@@ -29,7 +29,7 @@ class SideMenuTest extends TestCase
         $this->assertStringContainsString('class="has-bottom-nav has-side-menu"', $html);
         $this->assertStringNotContainsString('role="dialog"', $html);
         $menu = substr($html, strpos($html, 'id="side-menu"'));
-        $items = ['生活日記牆', '我的日記', '認識朋友', '傳紙條', '約會', '愛的見證', '關於愛諾園', '支持奉獻', '聯絡我們', '常見問題', '會員條款', '登出'];
+        $items = ['生活日記牆', '我的日記', '認識朋友', '傳紙條', '約會', '愛的見證', '關於愛諾園', '支持奉獻', '聯絡我們', '常見問題', '登出', '服務條款', '隱私權政策'];
         $pos = array_map(fn ($t) => strpos($menu, '>' . $t), $items);
         $this->assertNotContains(false, $pos, '缺項目');
         $sorted = $pos;
@@ -38,6 +38,8 @@ class SideMenuTest extends TestCase
         $this->assertStringContainsString('雪莉', $menu);
         $this->assertStringContainsString('點<span class="visually-hidden">（愛積點）</span>', $menu);
         $this->assertStringNotContainsString('會員管理', $menu); // 一般會員看不到管理
+        $this->assertStringNotContainsString('>會員條款', $menu); // Nien Chen：下面已有服務條款連結，這行刪掉
+        $this->assertStringContainsString('https://go.nien.co/3VJaTYk', $menu); // LINE
     }
 
     public function test_admin_section_only_for_admins_and_guest_has_no_menu(): void
