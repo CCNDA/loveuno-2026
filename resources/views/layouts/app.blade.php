@@ -17,6 +17,7 @@
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/notifications.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/autosave.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/zoom.js') }}?v={{ $appVersion }}" defer></script>
     {{-- 電腦版上次收起選單：畫面出來前就收好，不會先閃一下 --}}
     <script>try { if (localStorage.getItem('lu-menu') === 'collapsed') { document.documentElement.classList.add('side-menu-collapsed'); } } catch (e) {}</script>@endauth
     <meta name="theme-color" content="#E5BBA2">
