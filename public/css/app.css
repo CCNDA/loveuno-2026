@@ -918,7 +918,7 @@ main.airmail ul:not(.gift-grid) li { color: #9a3d2b; font-size: .92rem; }
 /* 寫日記對話框的預覽（設計稿 235:8504「預覽」） */
 .write-preview { margin: 12px 0 0; padding: 12px 16px; border: 1px dashed #8c857b; border-radius: 8px; background: #fffdf4; }
 .write-preview h3 { margin: 0 0 6px; font-size: .9rem; color: var(--muted); }
-.write-preview-tag { display: inline-block; margin: 0 0 6px; padding: 2px 8px; border-radius: 4px; background: #f6e3d6; color: #7a3b1d; font-size: .85rem; font-weight: 700; }
+.write-preview-tag { display: inline-block; margin: 0 0 6px; }
 .write-preview-heading { margin: 0 0 6px; font-weight: 700; color: var(--button-dark); font-size: 1.1rem; }
 .write-preview-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .write-preview-img { display: block; max-width: 100%; max-height: 240px; margin-top: 8px; border-radius: 8px; }

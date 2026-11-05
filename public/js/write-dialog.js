@@ -26,7 +26,9 @@
         pbtn.addEventListener('click', function () {
             var open = pv.hidden;
             if (open) {
-                pv.querySelector('.write-preview-tag').textContent = document.getElementById('w-is_prayer').value === '1' ? '代禱事項' : '心情日記';
+                var prayer = document.getElementById('w-is_prayer').value === '1', tag = pv.querySelector('.write-preview-tag');
+                tag.textContent = prayer ? '代禱事項' : '心情日記';
+                tag.className = 'write-preview-tag tag ' + (prayer ? 'tag-prayer' : 'tag-diary'); // 跟牆上的標籤同色
                 pv.querySelector('.write-preview-heading').textContent = document.getElementById('w-title').value || '（還沒寫標題）';
                 pv.querySelector('.write-preview-body').textContent = document.getElementById('w-body').value || '（還沒寫內文）';
                 var f = document.getElementById('w-image').files[0], img = pv.querySelector('.write-preview-img');
