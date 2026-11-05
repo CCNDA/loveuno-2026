@@ -44,7 +44,7 @@ class PrayerTest extends TestCase
         $this->assertTrue($d->is_prayer);
 
         $viewer = $this->member('讀者');
-        $this->actingAs($viewer)->get('/')->assertSee('<span class="tag tag-prayer">代禱</span>', false);
+        $this->actingAs($viewer)->get('/')->assertSee('<span class="tag tag-prayer">代禱事項</span>', false);
         $this->actingAs($viewer)->get('/diaries')->assertSee('代禱');
 
         // 改的時候取消勾選
@@ -54,7 +54,7 @@ class PrayerTest extends TestCase
 
     public function test_pray_toggles_and_counts_once_per_person(): void
     {
-        $d = $this->diary($this->member('作者'));
+        $d = $this->diary($this->member('作者'), ['is_prayer' => true]); // 11/5 起「為你禱告」只在代禱事項
         $v = $this->member('讀者');
 
         $this->actingAs($v)->post("/diaries/{$d->id}/pray", ['from' => 'wall'])->assertRedirect('/#d' . $d->id)->assertSessionHas('status', '謝謝您為這篇日記禱告。');
@@ -74,6 +74,7 @@ class PrayerTest extends TestCase
         $d = $this->diary($author);
         $v = $this->member('讀者');
         $other = $this->member('路人');
+        \App\Models\Friendship::raise($author, $v, 1); // 11/5 起只有朋友能留言
 
         $r = $this->actingAs($v)->post("/diaries/{$d->id}/comments", ['body' => "為你禱告\n<b>加油</b>"]);
         $c = DiaryComment::firstOrFail();
@@ -192,6 +193,7 @@ class PrayerTest extends TestCase
         $author = $this->member('作者');
         $d = $this->diary($author);
         $v = $this->member('讀者');
+        \App\Models\Friendship::raise($author, $v, 1); // 11/5 起只有朋友能留言
 
         $this->actingAs($v)->get('/')->assertSee('id="comment-body-' . $d->id . '"', false)->assertSee('placeholder="請輸入留言"', false);
         $this->actingAs($v)->post("/diaries/{$d->id}/comments", ['body' => '為你禱告', 'from' => 'wall'])->assertRedirect('/#d' . $d->id);

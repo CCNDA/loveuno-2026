@@ -87,6 +87,12 @@ class Diary extends Model
             && ($this->user->is_active || $this->isOwnedBy($viewer)); // 暫停的帳號的日記別人看不到
     }
 
+    // 熊叔叔 2026-11-05「非朋友不能留言」：作者本人、作者的朋友（好友等級 1 以上）才能留言
+    public function commentableBy(User $viewer): bool
+    {
+        return $this->isReachableBy($viewer) && ($this->isOwnedBy($viewer) || $viewer->friendLevelWith($this->user) >= 1);
+    }
+
     public function isOwnedBy(User $user): bool
     {
         return (int) $this->user_id === (int) $user->id;

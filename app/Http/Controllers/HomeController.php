@@ -27,8 +27,14 @@ class HomeController extends Controller
         }
 
         $blocked = $me->blockRelatedIds();
+        // 動態牆（熊叔叔 2026-11-05）：舊站心情日記、代禱兩個服務放在一起；可以只看朋友、只看某一種
+        $scope = $request->query('scope') === 'friends' ? 'friends' : 'all';
+        $kind = in_array($request->query('kind'), ['diary', 'prayer'], true) ? $request->query('kind') : 'all';
+        $friendIds = array_keys(array_filter($me->friendLevels(), fn ($level) => $level >= 1));
         $diaries = Diary::visibleTo($me)
             ->whereNotIn('user_id', $blocked)
+            ->when($scope === 'friends', fn ($q) => $q->whereIn('user_id', [...$friendIds, $me->id]))
+            ->when($kind !== 'all', fn ($q) => $q->where('is_prayer', $kind === 'prayer'))
             ->whereHas('user', fn ($q) => $q->active()->orWhere('id', $me->id)) // 暫停的帳號的日記不上牆
             ->with(['user.profile', 'user.verifications' => fn ($q) => $q->where('status', 'approved')])
             ->withInteractions($me)
@@ -39,6 +45,8 @@ class HomeController extends Controller
 
         return view('wall', [
             'diaries' => $diaries,
+            'scope' => $scope,
+            'kind' => $kind,
             'suggestions' => $this->suggestions($me, $blocked),
             'newcomers' => $this->newcomers($me, $blocked),
             'newGifts' => Gift::unopenedCountFor($me),

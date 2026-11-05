@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', $diary->exists ? '修改日記' : '寫日記')
+@section('title', $diary->exists ? '修改日記' : ($diary->is_prayer ? '寫代禱事項' : '寫心情日記'))
 
 @section('content')
-<h1>{{ $diary->exists ? '修改日記' : '寫日記' }}</h1>
+<h1>{{ $diary->exists ? '修改日記' : ($diary->is_prayer ? '寫代禱事項' : '寫心情日記') }}</h1>
 
 <form method="POST" action="{{ $diary->exists ? route('diaries.update', $diary) : route('diaries.store') }}" class="form form-wide" enctype="multipart/form-data" novalidate>
     @csrf
