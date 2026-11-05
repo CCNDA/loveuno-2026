@@ -812,3 +812,23 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
     .form-grid .field input:not([type=checkbox]):not([type=radio]), .form-grid .field select { width: 100%; box-sizing: border-box; }
 }
 @media (min-width: 64rem) { .form-grid > button[type=submit] { justify-self: center; min-width: 10rem; border-radius: 999px; } }
+
+/* 帳號管理（設計稿 253:15337） */
+.account-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 12px 24px; margin: 0 0 16px; }
+.account-summary dt { font-size: .85rem; font-weight: 700; }
+.account-summary dd { margin: 4px 0 0; color: #b5452f; overflow-wrap: anywhere; }
+.inline-edit { margin: 8px 0; border-top: 1px solid var(--line); padding-top: 8px; }
+.inline-edit summary { list-style: none; display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.inline-edit summary::-webkit-details-marker { display: none; }
+.inline-edit-label { font-weight: 700; }
+.inline-edit-btn { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid var(--button); border-radius: 999px; color: var(--button); font-size: .9rem; }
+.inline-edit[open] .inline-edit-btn { background: var(--button); color: #fff; }
+.inline-edit > .form { margin: 8px 0 16px; }
+.settings-form { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+input.switch { appearance: none; -webkit-appearance: none; position: relative; width: 44px; height: 24px; margin: 0; border-radius: 12px; background: #8c857b; cursor: pointer; flex: none; transition: background .2s; }
+input.switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+input.switch:checked { background: var(--button); }
+input.switch:checked::before { transform: translateX(20px); }
+.settings-other { margin: 16px 0 8px; font-size: 1rem; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; }
+.settings-actions .button { min-height: 36px; padding: 0 16px; border-radius: 999px; font-size: .9rem; font-weight: 400; }
