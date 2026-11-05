@@ -5,15 +5,12 @@
 @section('content')
 @include('center.tabs', ['current' => 'account'])
 
-<h2>帳號</h2>
-<dl class="profile">
-    <div><dt>電子郵件</dt><dd>{{ $user->email }}</dd></div>
-    <div><dt>暱稱</dt><dd>{{ $user->name }}</dd></div>
-</dl>
-
 @include('center.settings')
 
-<h2 id="phone-title">手機號碼</h2>
+{{-- 手機、密碼：設計稿沒有獨立區塊，收在「修改」裡（出錯時自動打開） --}}
+<details class="inline-edit" @if ($errors->any()) open @endif>
+<summary><span class="inline-edit-label">手機號碼</span> <span class="inline-edit-btn">修改</span></summary>
+<h2 id="phone-title" class="visually-hidden">手機號碼</h2>
 @php($phoneUntil = \App\Support\Phone::expiresAt(auth()->user()->phone_verified_at))
 <p>@if (auth()->user()->phone)已認證：{{ \App\Support\Sms::mask(auth()->user()->phone) }}@else已認證（新版還沒有存號碼）@endif
     @if ($phoneUntil)・認證到 {{ $phoneUntil->shown()->format('Y/n/j') }}，之後要重新認證一次@endif</p>
@@ -36,7 +33,11 @@
     <button type="submit" class="button">寄認證碼到新號碼</button>
 </form>
 
-<h2 id="pw-title">換密碼</h2>
+</details>
+
+<details class="inline-edit" @if ($errors->any()) open @endif>
+<summary><span class="inline-edit-label">密碼</span> <span class="inline-edit-btn">修改</span></summary>
+<h2 id="pw-title" class="visually-hidden">換密碼</h2>
 <form method="POST" action="{{ route('center.password') }}" class="form" aria-labelledby="pw-title" novalidate>
     @csrf
     @method('PUT')
@@ -62,6 +63,8 @@
     </div>
     <button type="submit" class="button">換密碼</button>
 </form>
+
+</details>
 
 <h2 id="blocked-title">封鎖名單</h2>
 @if ($blocked->isEmpty())

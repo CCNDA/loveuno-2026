@@ -1,12 +1,17 @@
 {{-- 帳號管理頁裡的「帳號設定」（設計稿 PageMemberSettings）。$user --}}
 @php($bag = $errors->getBag('settings'))
-<h2 id="settings-title">帳號設定</h2>
-<dl class="profile">
+<h2 id="settings-title">帳號管理</h2>
+{{-- 設計稿 253:15337 上面一列：會員編號、註冊日期（珊瑚色字）；E-mail 旁邊「修改」才展開換信箱 --}}
+<dl class="account-summary">
     <div><dt>會員編號</dt><dd>{{ $user->id }}</dd></div>
-    <div><dt>註冊日期</dt><dd>{{ $user->created_at?->shown()->format('Y/n/j') }}</dd></div>
+    <div><dt>註冊日期</dt><dd>{{ $user->created_at?->shown()->format('Y/m/d') }}</dd></div>
+    <div><dt>暱稱</dt><dd>{{ $user->name }}</dd></div>
+    <div><dt>E-mail</dt><dd>{{ $user->email }}</dd></div>
 </dl>
 
 @php($ebag = $errors->getBag('email'))
+<details class="inline-edit" @if ($ebag->any()) open @endif>
+<summary><span class="inline-edit-label">E-mail</span> <span class="inline-edit-btn">修改</span></summary>
 <form method="POST" action="{{ route('email.change') }}" class="form" aria-labelledby="email-change-title" novalidate>
     @csrf
     <h3 id="email-change-title">修改 E-mail</h3>
@@ -25,15 +30,16 @@
     </div>
     <button type="submit" class="button">寄確認信到新信箱</button>
 </form>
+</details>
 
-<form method="POST" action="{{ route('settings.update') }}" class="form" aria-labelledby="settings-title" novalidate>
+<form method="POST" action="{{ route('settings.update') }}" class="form form-grid settings-form" aria-labelledby="settings-title" novalidate>
     @csrf
     @method('PUT')
 
     <fieldset class="field">
         <legend>通知</legend>
         <div class="field-check">
-            <input id="notify_email" name="notify_email" type="checkbox" value="1" aria-describedby="notify_email-hint" @checked($bag->any() ? old('notify_email') : $user->notify_email)>
+            <input id="notify_email" name="notify_email" type="checkbox" role="switch" class="switch" value="1" aria-describedby="notify_email-hint" @checked($bag->any() ? old('notify_email') : $user->notify_email)>
             <label for="notify_email">Email 通知</label>
         </div>
         <p id="notify_email-hint" class="hint">有人傳紙條、送禮物給您的時候，寄 email 告訴您。</p>
@@ -50,7 +56,7 @@
     <fieldset class="field">
         <legend>帳號</legend>
         <div class="field-check">
-            <input id="is_active" name="is_active" type="checkbox" value="1" aria-describedby="is_active-hint" @checked($bag->any() ? old('is_active') : $user->is_active)>
+            <input id="is_active" name="is_active" type="checkbox" role="switch" class="switch" value="1" aria-describedby="is_active-hint" @checked($bag->any() ? old('is_active') : $user->is_active)>
             <label for="is_active">啟用帳號</label>
         </div>
         <p id="is_active-hint" class="hint">關掉就是暫停：其他會員看不到您的檔案和日記，也不能傳紙條、送禮物給您。資料都還在，隨時可以再打開。</p>
@@ -60,9 +66,10 @@
     @include('partials.select-field', ['name' => 'font_family', 'label' => '字體', 'options' => \App\Http\Controllers\SettingsController::FONT_FAMILIES, 'value' => $bag->any() ? old('font_family') : $user->font_family, 'hint' => '粉圓是比較圓潤可愛的字體；手機網路慢的話，第一次會比較久。'])
     @include('partials.select-field', ['name' => 'script', 'label' => '顯示語言', 'options' => \App\Http\Controllers\SettingsController::SCRIPTS, 'value' => $bag->any() ? old('script') : (session('script') ?? $user->script), 'required' => true])
 
-    <button type="submit" class="button">存設定</button>
+    <button type="submit" class="button pill-submit">存設定</button>
 </form>
 
+<h3 class="settings-other">其它</h3>
 <ul class="settings-actions">
     <li><a class="button button-light" href="{{ route('settings.network') }}">網路檢測</a></li>
     <li><a class="button button-light" href="{{ route('contact', ['subject' => 'bug']) }}">Bug 回報</a></li>
