@@ -966,3 +966,9 @@ form.is-autosaving > button[type=submit] { display: none; }
 .page-card .faq-group .faq-item[open] summary { font-weight: 700; }
 .page-card .faq-group .faq-item p { color: #b5452f; }
 .page-card .faq-group > :last-child { padding-bottom: 12px; }
+
+/* 聯絡我們（設計稿 785:10490）：姓名｜Email 兩欄，聯絡事項、內容整列，送出鈕置中膠囊 */
+.contact-form .field:has(#subject), .contact-form .field:has(#body) { grid-column: 1 / -1; }
+.contact-form .field input, .contact-form .field select, .contact-form .field textarea { width: 100%; box-sizing: border-box; }
+.contact-form > button[type=submit] { justify-self: center; min-width: 8rem; border-radius: 999px; }
+.page-card > ul.prose { max-width: 52rem; }
