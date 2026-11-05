@@ -949,3 +949,4 @@ form.is-autosaving > button[type=submit] { display: none; }
 .gift-letter-msg { margin: 0; line-height: 1.75; overflow-wrap: anywhere; }
 .gift-letter-actions { margin: 0; padding: 0 20px 16px; }
 @media (max-width: 40rem) { .gift-letter-body { flex-direction: column; align-items: flex-start; } }
+.gift-letter-actions { text-align: center; } .gift-letter-actions .note-send { display: inline-flex; margin: 0; } /* 回禮鈕置中膠囊，不撐滿 */
