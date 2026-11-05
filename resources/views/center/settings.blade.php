@@ -32,7 +32,8 @@
 </form>
 </details>
 
-<form method="POST" action="{{ route('settings.update') }}" class="form form-grid settings-form" aria-labelledby="settings-title" novalidate>
+<form method="POST" action="{{ route('settings.update') }}" class="form form-grid settings-form" aria-labelledby="settings-title" novalidate
+      data-autosave="{{ route('settings.patch') }}" data-autosave-whole>
     @csrf
     @method('PUT')
 

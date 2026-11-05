@@ -6,6 +6,7 @@ use App\Models\AlbumPhoto;
 use App\Models\Diary;
 use App\Models\Feedback;
 use App\Models\Verification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +51,23 @@ class SettingsController extends Controller
         }
 
         return redirect()->to(route('center.account') . '#settings-title')->with('status', $msg);
+    }
+
+    // 即時存檔（熊叔叔 11/5「要走 rest api 即時儲存」）：整張設定送來，驗證和存法跟 update() 一樣，回 JSON。
+    // 字體、語言換了要重新整理畫面才看得到（reload）；帳號關掉要跳出提醒（note）
+    public function patch(Request $request): JsonResponse
+    {
+        $u = $request->user();
+        $before = [$u->font_size, $u->font_family, $request->session()->get('script', $u->script)];
+        $this->update($request);
+        $request->session()->forget('status'); // update() 留下的提示是給整頁送出用的，即時存檔不要帶到下一頁
+        $u->refresh();
+
+        return response()->json([
+            'saved' => ['settings'], 'at' => now()->shown()->format('H:i'),
+            'reload' => $before !== [$u->font_size, $u->font_family, $request->session()->get('script')],
+            'note' => $u->is_active ? null : '帳號已經暫停：其他會員看不到您的檔案和日記。要恢復，把「啟用帳號」打開。',
+        ]);
     }
 
     // 網路檢測（設計稿按鈕）：能看到這頁就表示連得到網站；顯示伺服器時間和這次花多久

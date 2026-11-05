@@ -63,4 +63,22 @@ class AutosaveTest extends TestCase
         auth()->logout();
         $this->patchJson(route('profile.patch'), ['height' => '170'])->assertUnauthorized();
     }
+
+    public function test_settings_and_preferences_patch(): void
+    {
+        $u = $this->me();
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['notify_email' => false, 'is_active' => true, 'font_size' => 'large', 'font_family' => 'system', 'script' => 'hant'])
+            ->assertOk()->assertJsonPath('reload', true)->assertJsonPath('note', null);
+        $this->assertSame('large', $u->fresh()->font_size);
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['notify_email' => false, 'is_active' => false, 'font_size' => 'large', 'font_family' => 'system', 'script' => 'hant'])
+            ->assertOk()->assertJsonPath('reload', false);
+        $this->assertFalse((bool) $u->fresh()->is_active);
+        $this->actingAs($u)->patchJson(route('settings.patch'), ['font_size' => 'huge', 'script' => 'hant'])->assertStatus(422);
+        $this->actingAs($u)->get(route('center.account'))->assertDontSee('設定存好了'); // 即時存檔不留整頁提示
+
+        $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_min' => '30', 'pref_age_max' => '40'])->assertOk();
+        $this->assertSame(30, (int) $u->profile->fresh()->pref_age_min);
+        $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_min' => '45', 'pref_age_max' => '40'])->assertStatus(422)->assertJsonValidationErrors('pref_age_max');
+        $this->assertSame(30, (int) $u->profile->fresh()->pref_age_min);
+    }
 }

@@ -6,15 +6,19 @@
     var token = document.querySelector('meta[name="csrf-token"]');
     var toast = document.getElementById('toast');
     var toastTimer = null;
+    var stored = null;
+    try { stored = sessionStorage.getItem('lu-toast'); sessionStorage.removeItem('lu-toast'); } catch (e) { /* 私密視窗 */ }
 
-    function showToast(text, isError) {
+    function showToast(text, isError, long) {
         if (!toast) { return; }
         toast.textContent = text;
         toast.classList.toggle('toast-error', !!isError);
         toast.hidden = false;
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toast.hidden = true; }, isError ? 6000 : 2500);
+        toastTimer = setTimeout(function () { toast.hidden = true; }, (isError || long) ? 6000 : 2500);
     }
+
+    if (stored) { setTimeout(function () { showToast(stored); }, 50); } // 換字體、語言後重新整理，訊息接著跳
 
     Array.prototype.forEach.call(document.querySelectorAll('form[data-autosave]'), function (form) {
         var url = form.getAttribute('data-autosave');
@@ -73,8 +77,19 @@
             });
         }
 
+        function allNames() {
+            var seen = [];
+            Array.prototype.forEach.call(form.elements, function (e) {
+                if (!e.name || e.name === '_token' || e.name === '_method') { return; }
+                var n = baseName(e);
+                if (seen.indexOf(n) < 0) { seen.push(n); }
+            });
+            return seen;
+        }
+        var whole = form.hasAttribute('data-autosave-whole'); // 整張一起送（設定、交友條件：欄位少、彼此有關）
+
         function save(name) {
-            var names = groupOf(name), body = {};
+            var names = whole ? allNames() : groupOf(name), body = {};
             names.forEach(function (n) { var v = valueOf(n); if (v !== undefined) { body[n] = v; } });
             var key = names.join(' '), sent = JSON.stringify(body);
             if (lastSaved[key] === sent) { return; } // 停手存過、離開欄位又觸發一次：內容一樣就不再送
@@ -88,7 +103,14 @@
                 if (res.ok) {
                     lastSaved[key] = sent;
                     names.forEach(function (n) { setError(n, ''); });
-                    showToast('✓ 已儲存：' + names.map(labelOf).join('、'));
+                    var msg = '✓ 已儲存：' + (whole ? labelOf(name) : names.map(labelOf).join('、'));
+                    if (res.j.note) { msg += '　' + res.j.note; }
+                    if (res.j.reload) {
+                        try { sessionStorage.setItem('lu-toast', msg); } catch (e) { /* 存不了就算了 */ }
+                        location.reload();
+                        return;
+                    }
+                    showToast(msg, false, !!res.j.note);
                     return;
                 }
                 if (res.status === 422 && res.j.errors) {
