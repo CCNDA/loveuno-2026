@@ -105,7 +105,7 @@ class MemberSearchTest extends TestCase
         $me = $this->member('我', ['gender' => '男', 'pref_gender' => '女', 'pref_place' => '花蓮縣']);
         $this->member('台北姊妹');
         $this->list($me)->assertSee('共 0 位')->assertSee('目前沒有符合您交友條件的會員')
-            ->assertSee('回去修改交友條件')->assertDontSee('台北姊妹');
+            ->assertSee('前往變更交友條件')->assertSee('你的條件太嚴苛') // 11/5 照 Figma 405->assertDontSee('台北姊妹');
     }
 
     public function test_name_search_within_preferences(): void
