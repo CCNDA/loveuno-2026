@@ -872,3 +872,4 @@ input.switch:checked::before { transform: translateX(20px); }
 .page-card .story-card h3 a:hover { text-decoration: underline; }
 .page-card .story-date { color: #b5452f; font-size: .85rem; }
 .page-card .story-excerpt { display: none; }
+.page-card .story-card h3 { text-align: left; }
