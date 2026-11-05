@@ -12,6 +12,8 @@ return [
         'line' => 'https://go.nien.co/3VJaTYk',        // LINE 官方帳號
         'telegram' => 'https://go.nien.co/42yZOeN',
         'google_review' => 'https://go.hearty.me/ccnda-gb', // 設計稿的星星：協會 Google 評論
+        'instagram' => 'https://go.hearty.me/ccnda-ig',     // Nien Chen「少了 IG 和 Messenger」（熊叔叔 11/5「要加，都是用協會的」）
+        'messenger' => 'https://m.me/100064814103255',
     ],
 
     // 開放註冊。11/8 會員大會是展示版，不開放；年底正式開放時才打開（熊叔叔 10/29：預計年底）

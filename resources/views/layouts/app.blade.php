@@ -15,6 +15,7 @@
     @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/notifications.js') }}?v={{ $appVersion }}" defer></script>
     {{-- 電腦版上次收起選單：畫面出來前就收好，不會先閃一下 --}}
     <script>try { if (localStorage.getItem('lu-menu') === 'collapsed') { document.documentElement.classList.add('side-menu-collapsed'); } } catch (e) {}</script>@endauth
     <meta name="theme-color" content="#E5BBA2">
@@ -38,9 +39,9 @@
             @endauth
             <a class="brand" href="{{ route('home') }}"><img src="{{ asset('images/brand/logo.svg') }}" alt="愛諾園 首頁" width="115" height="40"></a>
             @auth
-                {{-- 設計稿頁首右邊（Figma Profile 142:22363）：通知鈴（先接傳紙條未讀）、頭像＋暱稱（我的檔案） --}}
+                {{-- 設計稿頁首右邊（Figma Profile 142:22363）：通知鈴（點開浮動框）、頭像＋暱稱（我的檔案） --}}
                 <ul class="header-icons">
-                    <li><a href="{{ route('notes.index') }}" class="header-icon"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/></svg><span class="visually-hidden">傳紙條</span>@if($unreadNotes > 0)<span class="badge header-badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
+                    <li>@include('partials.notifications')</li>
                     <li><a href="{{ route('me') }}" class="header-me">@include('partials.avatar', ['user' => auth()->user(), 'size' => 'sm'])<span class="header-me-name">{{ auth()->user()->name }}<span class="visually-hidden">（我的檔案）</span></span></a></li>
                 </ul>
             @endauth
