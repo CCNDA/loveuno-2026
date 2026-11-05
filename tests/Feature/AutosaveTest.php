@@ -90,4 +90,30 @@ class AutosaveTest extends TestCase
         $this->actingAs($u)->patchJson(route('cover.preset.patch'), ['cover_preset' => '12'])->assertStatus(422);
         $this->assertSame(4, (int) $u->profile->fresh()->cover_preset);
     }
+
+    // 小布 11/5 審查：伺服器不能信任前端的分組（只送一組裡的一欄）
+    public function test_partial_group_patches_are_checked_against_saved_values(): void
+    {
+        $u = $this->me();
+        \Illuminate\Support\Facades\DB::table('bible_verses')->insert([
+            ['book' => 43, 'chapter' => 3, 'verse' => 16, 'text' => '神愛世人'],
+            ['book' => 43, 'chapter' => 3, 'verse' => 17, 'text' => '因為神差他的兒子降世'],
+        ]);
+        $this->actingAs($u)->patchJson(route('profile.intro.patch'), ['verse_book' => '約翰福音', 'verse_chapter' => 3, 'verse_verse' => 16])->assertOk();
+        // 1. 只送「節」：要跟資料庫裡的書卷、章一起驗，經文跟著換
+        $this->actingAs($u)->patchJson(route('profile.intro.patch'), ['verse_verse' => 99])->assertStatus(422);
+        $this->assertSame(16, (int) $u->profile->fresh()->verse_verse);
+        $this->actingAs($u)->patchJson(route('profile.intro.patch'), ['verse_verse' => 17])->assertOk();
+        $this->assertSame('因為神差他的兒子降世', $u->profile->fresh()->verse_text);
+        // 2. 只送「日」：要跟資料庫裡的月份一起檢查
+        $this->actingAs($u)->patchJson(route('profile.patch'), ['birth_month' => 2, 'birth_day' => 10])->assertOk();
+        $this->actingAs($u)->patchJson(route('profile.patch'), ['birth_day' => 31])->assertStatus(422)->assertJsonValidationErrors('birth_day');
+        $this->assertSame(10, (int) $u->profile->fresh()->birth_day);
+        // 3. 交友條件只送一欄：其他條件不能被清掉
+        $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_min' => 30, 'pref_age_max' => 40, 'pref_faith' => '基督徒'])->assertOk();
+        $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_max' => 45])->assertOk();
+        $p = $u->profile->fresh();
+        $this->assertSame([30, 45, '基督徒'], [(int) $p->pref_age_min, (int) $p->pref_age_max, $p->pref_faith]);
+        $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_max' => 20])->assertStatus(422); // 跟資料庫的下限 30 比
+    }
 }

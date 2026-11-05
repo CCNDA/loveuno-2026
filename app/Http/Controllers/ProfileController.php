@@ -104,8 +104,10 @@ class ProfileController extends Controller
     {
         [$rules, $messages, $attributes] = $this->profileRules($request);
         $keys = self::sentKeys($request, $rules);
+        // 生日的月和日是一組：只送一個時，另一個從資料庫補，一起驗（小布 11/5：只送 birth_day=31 會存成 2 月 31 日）
+        $keys = self::withGroup($request, $keys, ['birth_month', 'birth_day'], Profile::where('user_id', $request->user()->id)->first()); // 從資料庫讀現值，不用可能過期的關聯
         $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
-        if (in_array('birth_month', $keys, true) || in_array('birth_day', $keys, true)) {
+        if (in_array('birth_month', $keys, true)) {
             $this->checkBirthday($data);
         }
         $user = $request->user();
@@ -125,6 +127,8 @@ class ProfileController extends Controller
     {
         [$rules, $messages, $attributes] = $this->introRules();
         $keys = self::sentKeys($request, $rules);
+        // 經文的書卷、章、節是一組：只送一個時，其他從資料庫補，一起驗、經文一起重算（小布 11/5：只送 verse_verse=99 會存成跟經文不符）
+        $keys = self::withGroup($request, $keys, ['verse_book', 'verse_chapter', 'verse_verse'], Profile::where('user_id', $request->user()->id)->first()); // 從資料庫讀現值，不用可能過期的關聯
         $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
         $this->checkVerse($data);
         if (in_array('verse_book', $keys, true)) {
@@ -135,6 +139,23 @@ class ProfileController extends Controller
         Points::checkTasks($request->user());
 
         return self::saved($keys);
+    }
+
+    // 一組欄位（彼此要一起驗的）只送了其中幾個：沒送的從資料庫的現值補進 request，整組一起驗、一起存
+    public static function withGroup(Request $request, array $keys, array $group, ?Profile $profile): array
+    {
+        if (! array_intersect($keys, $group)) {
+            return $keys;
+        }
+        $fill = [];
+        foreach ($group as $g) {
+            if (! $request->exists($g)) {
+                $fill[$g] = $profile?->{$g};
+            }
+        }
+        $request->merge($fill);
+
+        return array_values(array_unique([...$keys, ...$group]));
     }
 
     // 這次送了哪些「認得的」欄位；一個都沒有就是 422（不認得的欄位不會被存）

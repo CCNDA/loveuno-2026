@@ -88,6 +88,20 @@ class CenterController extends Controller
     // 即時存檔（熊叔叔 11/5）：整張交友條件送來，驗證和存法跟 updatePreferences() 一樣，回 JSON
     public function patchPreferences(Request $request): JsonResponse
     {
+        // 只送部分欄位時，其他交友條件從資料庫補進來再整張存（小布 11/5：不然沒送的會被清空）
+        $p = Profile::where('user_id', $request->user()->id)->first(); // 從資料庫讀現值
+        $all = ['pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place', 'pref_marital', 'pref_faith',
+            'pref_height_min', 'pref_height_max', 'pref_weight_min', 'pref_weight_max'];
+        if (! array_intersect($all, array_keys($request->all()))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['fields' => '沒有可以存的欄位。']);
+        }
+        $fill = [];
+        foreach ($all as $k) {
+            if (! $request->exists($k)) {
+                $fill[$k] = $p?->{$k};
+            }
+        }
+        $request->merge($fill);
         $this->updatePreferences($request);
         $request->session()->forget('status');
 
