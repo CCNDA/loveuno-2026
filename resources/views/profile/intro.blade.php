@@ -7,7 +7,7 @@
 <h2>自我介紹</h2>
 
 <form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide intro-form" novalidate
-      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse verse_text">
+      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse">
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '自我介紹還沒存好'])
@@ -46,11 +46,9 @@
                 </div>
             @endforeach
         </div>
-        <div class="field">
-            <label for="verse_text">經文</label>
-            <textarea id="verse_text" name="verse_text" rows="3" maxlength="300" @error('verse_text') aria-invalid="true" aria-describedby="verse_text-error" @enderror>{{ old('verse_text', $profile->verse_text) }}</textarea>
-            @error('verse_text')<p id="verse_text-error" class="field-error">{{ $message }}</p>@enderror
-        </div>
+        {{-- 經文自己帶出來，不讓人打（熊叔叔 11/5）：選好書卷、章、節，下面就出現和合本的經文 --}}
+        <p class="verse-preview" id="verse-preview" aria-live="polite" data-url="{{ route('bible.verse') }}">{{ $profile->verse_text !== '' ? $profile->verse_text : '選好書卷、章、節，這裡會帶出經文。' }}</p>
+        <script src="{{ asset('js/bible-verse.js') }}?v={{ $appVersion }}" defer></script>
     </fieldset>
 
     @foreach ([['languages', '慣用語言（必填）', '請選擇 1～3 種慣用的語言。', $O::LANGUAGES], ['hobbies', '興趣（必填）', '請選擇 1～3 種興趣嗜好。', $O::HOBBIES], ['sports', '喜愛的運動', '請選擇 1～3 種喜愛的體育活動（可以不選）。', $O::SPORTS]] as [$key, $label, $hint, $options])

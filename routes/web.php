@@ -157,6 +157,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::get('/album/{photo}', [AlbumController::class, 'show'])->whereNumber('photo')->name('album.show');
     // 即時存檔（REST，PATCH 只送改的欄位；熊叔叔 11/5）
     Route::patch('/me/profile/fields', [ProfileController::class, 'patchProfile'])->middleware('throttle:120,1,autosave')->name('profile.patch');
+    Route::get('/bible/verse', [ProfileController::class, 'bibleVerse'])->middleware('throttle:120,1,bible')->name('bible.verse'); // 最愛經文自動帶出
     Route::patch('/me/intro/fields', [ProfileController::class, 'patchIntro'])->middleware('throttle:120,1,autosave')->name('profile.intro.patch');
     Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
