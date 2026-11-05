@@ -131,7 +131,7 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .pagination a { border: 1px solid var(--line); border-radius: 8px; text-decoration: none; }
 .pagination [aria-disabled="true"] { color: var(--muted); }
 
-.site-footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; padding: 16px 0 calc(16px + env(safe-area-inset-bottom)); }
+.site-footer { background: #664a53; color: #f3dccd; font-size: .9rem; padding: 32px 0 calc(16px + env(safe-area-inset-bottom)); margin-top: 48px; } /* 設計稿 footer 822:12183 深紫；字 #f3dccd 對底 5.97:1（設計稿 #e5bba2 只有 4.48） */
 .site-footer p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
@@ -444,7 +444,18 @@ html.fs-large { font-size: 118.75%; }
 .settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* 公開頁 */
-.footer-links { max-width: 46rem; margin: 0 auto; padding: 0 16px; } /* 跟頁尾其他文字對齊，原本貼著螢幕邊（break-ui 試用 10/30） */
+.footer-row { display: grid; gap: 24px; }
+.footer-brand img { display: block; height: auto; }
+.footer-social { display: flex; gap: 12px; list-style: none; margin: 16px 0 0; padding: 0; }
+.footer-social a { display: inline-flex; border-radius: 50%; }
+.footer-links a { color: #f3dccd; text-decoration: none; }
+.footer-links a:hover { color: #fff; text-decoration: underline; }
+.footer-bottom { margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(243, 220, 205, .3); text-align: center; font-size: .8rem; }
+.site-footer :focus-visible { outline-color: #fff; }
+@media (min-width: 48rem) {
+    .footer-row { grid-template-columns: 220px 1fr; }
+    .footer-links ul { display: grid; grid-template-columns: repeat(4, 1fr); }
+}
 .footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
 .policy h2 { font-size: 1.15rem; margin-top: 24px; }
@@ -471,9 +482,6 @@ html.fs-large { font-size: 118.75%; }
 .story-couple li { display: flex; align-items: center; gap: 8px; }
 .story-photo { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin: 16px 0; }
 .inline-form { display: inline; }
-.welcome-banner { display: grid; gap: 16px; align-items: center; }
-.welcome-banner img { width: 100%; height: auto; }
-@media (min-width: 48rem) { .welcome-banner { grid-template-columns: 1fr 1fr; } }
 
 /* 約會 */
 .meetup-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
@@ -532,3 +540,34 @@ html.fs-large { font-size: 118.75%; }
 .header-me:hover { background: rgba(255,255,255,.55); color: var(--header-text); }
 .header-me .avatar-sm { width: 32px; height: 32px; }
 @media (max-width: 640px) { .header-me-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+
+/* ── 沒登入的封面頁（設計稿 Index2 658:10391／Index - Mobile 803:16909；熊叔叔 11/5「先把封面處理好」） ── */
+.header-login { background: var(--button); color: #fff !important; font-weight: 700; padding: 0 20px !important; }
+.header-login:hover { background: var(--button-dark) !important; }
+.landing { padding: 0; }
+.landing-hero { background: #ffedd4; padding: 32px 0 120px; }
+.landing-hero-row { display: grid; gap: 24px; align-items: center; }
+.landing-hero h1 { margin: 0 0 24px; color: var(--button); font-size: 2.2rem; }
+.landing-hero-text p { color: var(--plum); font-size: 1.15rem; line-height: 1.75; }
+.landing-hero-img { width: 100%; height: auto; }
+.landing-features ul { list-style: none; margin: -96px 0 0; padding: 0; display: grid; gap: 16px; }
+.feature-card { position: relative; overflow: hidden; min-height: 200px; padding: 20px; background: #fffdf4; border: 4px solid #ffcdaf; border-radius: 8px; color: var(--plum); }
+.feature-card h3 { margin: 0 0 12px; font-size: 1.35rem; line-height: 1.35; position: relative; z-index: 1; max-width: 9em; }
+.feature-card p { margin: 0; font-size: .95rem; line-height: 1.6; position: relative; z-index: 1; max-width: 8.5em; }
+.feature-card img { position: absolute; right: 8px; bottom: -8px; width: auto; height: 92%; max-width: 62%; object-fit: contain; object-position: right bottom; }
+.landing-stories h2 { color: var(--button); font-size: 2rem; margin: 48px 0 24px; }
+.landing-story-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px; }
+.landing-story { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); background: #fffdf4; border: 2px solid #ffcdaf; border-radius: 8px; overflow: hidden; color: var(--plum); }
+.landing-story img { width: 100%; height: 100%; min-height: 160px; object-fit: cover; }
+.landing-story-text { padding: 16px; }
+.landing-story h3 { margin: 0 0 8px; font-size: 1.25rem; }
+.landing-story p { margin: 0 0 12px; font-size: .95rem; line-height: 1.6; }
+.pill-link { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid #757575; border-radius: 20px; color: var(--text); text-decoration: none; font-size: .9rem; }
+.pill-link:hover { background: #fdf3ec; color: var(--text); }
+@media (min-width: 48rem) {
+    .landing-hero { padding: 48px 0 160px; }
+    .landing-hero-row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+    .landing-hero h1 { font-size: 2.5rem; }
+    .landing-features ul { grid-template-columns: repeat(3, 1fr); margin-top: -120px; }
+    .landing-story-list { grid-template-columns: 1fr 1fr; }
+}
