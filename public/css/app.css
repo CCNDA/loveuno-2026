@@ -1250,3 +1250,17 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 @media (min-width: 64rem) { .profile-section .profile { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .error-summary:focus { outline: 3px solid var(--focus); outline-offset: 2px; } /* 錯誤摘要拿到焦點時看得到 */
+
+/* 封面經文：電腦版在插圖裡就看得到，所以藏起來；手機版顯示在封面下面（熊叔叔 11/6） */
+.cover-verse { display: none; }
+@media (max-width: 640px) {
+    .cover-verse { display: block; margin: 0; padding: 10px 16px 0; font-size: .85rem; line-height: 1.7; color: #7a5a45; text-align: center; }
+    .cover-verse-ref { display: block; font-size: .8rem; color: #8c6f5c; }
+    .profile-cover picture, .profile-cover picture img { display: block; width: 100%; height: 100%; }
+}
+/* 放大框：✕ 固定在螢幕右上角，不蓋圖；很寬的圖在手機直拿時高度放大、可左右滑（小布 11/6） */
+.zoom-dialog .dialog-close { position: fixed; top: 12px; right: 12px; z-index: 2; width: 44px; height: 44px; }
+@media (max-width: 640px) and (orientation: portrait) {
+    .zoom-dialog.zoom-wide { width: calc(100vw - 16px); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .zoom-dialog.zoom-wide img { width: auto; height: min(60vh, 420px); max-width: none; }
+}
