@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
     'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place',
+    'pref_marital', 'pref_faith', 'pref_height_min', 'pref_height_max', 'pref_weight_min', 'pref_weight_max',
     'real_name', 'home_phone', 'faith', 'marital', 'children', 'education', 'blood_type', 'height', 'weight', 'smoking', 'drinking',
     'family_planning', 'headline', 'verse_book', 'verse_chapter', 'verse_verse', 'verse_text', 'languages', 'hobbies', 'sports', 'love_history'])]
 // 轉成陣列／JSON 時不輸出：生日月日（只拿來算「生日快到了」，10/29「3A」）、真實姓名與住家電話（只有管理員看得到，10/29「1B」）
@@ -122,17 +123,44 @@ class Profile extends Model
     // 年齡放寬到 5 歲一格（跟卡片的年齡層一樣）：下限往下取到格子開頭（最低 18）、上限往上取到格子結尾。
     // 交友條件可以填任何整數，不放寬的話，把條件設成 31～31 歲再看誰出現，就試得出別人的出生年（10/29「3A」不公開生日；
     // 首頁推薦原本就沒放寬，11/4 兩面審查抓到）。
+    // 身高、體重也一樣：別人的身高體重不公開，條件放寬到 5 公分／5 公斤一格，設成 170～170 試不出別人的身高（11/5）。
+    // 想認識：2026-11-05 熊叔叔「直接從個人檔案先判斷，預設就是選擇異性」——沒有存過明確的性別，就配個人資料性別的異性。
     public static function preferenceFilter(?self $p): array
     {
         $min = $p?->pref_age_min;
         $max = $p?->pref_age_max;
+        $down = fn (?int $v) => $v ? intdiv($v, 5) * 5 : null;
+        $up = fn (?int $v) => $v ? intdiv($v, 5) * 5 + 4 : null;
 
         return [
-            'gender' => in_array($p?->pref_gender, ['男', '女'], true) ? $p->pref_gender : null,
+            'gender' => in_array($p?->pref_gender, ['男', '女'], true) ? $p->pref_gender : (['男' => '女', '女' => '男'][$p?->gender ?? ''] ?? null),
             'place' => ($p?->pref_place ?? '') !== '' ? $p->pref_place : null,
             'age_min' => $min ? max(18, intdiv($min, 5) * 5) : null,
             'age_max' => $max ? intdiv($max, 5) * 5 + 4 : null,
+            'marital' => ($p?->pref_marital ?? '') !== '' ? $p->pref_marital : null,
+            'faith' => ($p?->pref_faith ?? '') !== '' ? $p->pref_faith : null,
+            'height_min' => $down($p?->pref_height_min),
+            'height_max' => $up($p?->pref_height_max),
+            'weight_min' => $down($p?->pref_weight_min),
+            'weight_max' => $up($p?->pref_weight_max),
         ];
+    }
+
+    // 會員自己填過任何一項交友條件（不算照性別自動配的異性）：認識朋友「還沒設」的判斷用
+    public function hasExplicitPreferences(): bool
+    {
+        foreach (['pref_gender', 'pref_place', 'pref_marital', 'pref_faith'] as $k) {
+            if ((string) $this->{$k} !== '') {
+                return true;
+            }
+        }
+        foreach (['pref_age_min', 'pref_age_max', 'pref_height_min', 'pref_height_max', 'pref_weight_min', 'pref_weight_max'] as $k) {
+            if ($this->{$k} !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // 符合某人交友條件的個人檔案（$pref 是「看的人」的 profile）
@@ -142,6 +170,12 @@ class Profile extends Model
 
         return $q->when($f['gender'], fn ($w, $g) => $w->where('gender', $g))
             ->when($f['place'], fn ($w, $pl) => $w->where('live_place', $pl))
+            ->when($f['marital'], fn ($w, $m) => $w->where('marital', $m))
+            ->when($f['faith'], fn ($w, $v) => $w->where('faith', $v))
+            ->when($f['height_min'], fn ($w, $v) => $w->where('height', '>=', $v))
+            ->when($f['height_max'], fn ($w, $v) => $w->where('height', '<=', $v))
+            ->when($f['weight_min'], fn ($w, $v) => $w->where('weight', '>=', $v))
+            ->when($f['weight_max'], fn ($w, $v) => $w->where('weight', '<=', $v))
             ->ageBetween($f['age_min'], $f['age_max']);
     }
 
