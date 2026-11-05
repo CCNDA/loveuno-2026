@@ -81,4 +81,13 @@ class AutosaveTest extends TestCase
         $this->actingAs($u)->patchJson(route('center.preferences.patch'), ['pref_age_min' => '45', 'pref_age_max' => '40'])->assertStatus(422)->assertJsonValidationErrors('pref_age_max');
         $this->assertSame(30, (int) $u->profile->fresh()->pref_age_min);
     }
+
+    public function test_cover_preset_patch(): void
+    {
+        $u = $this->me();
+        $this->actingAs($u)->patchJson(route('cover.preset.patch'), ['cover_preset' => '4'])->assertOk();
+        $this->assertSame(4, (int) $u->profile->fresh()->cover_preset);
+        $this->actingAs($u)->patchJson(route('cover.preset.patch'), ['cover_preset' => '12'])->assertStatus(422);
+        $this->assertSame(4, (int) $u->profile->fresh()->cover_preset);
+    }
 }

@@ -117,4 +117,13 @@ class AlbumController extends Controller
 
         return redirect()->to(route('album.edit') . '#cover-title')->with('status', '封面換好了。');
     }
+
+    // 即時存檔（熊叔叔 11/5）：點了封面就存，回 JSON
+    public function patchCoverPreset(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->coverPreset($request);
+        $request->session()->forget('status');
+
+        return response()->json(['saved' => ['cover_preset'], 'at' => now()->shown()->format('H:i')]);
+    }
 }

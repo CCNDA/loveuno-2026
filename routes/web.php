@@ -152,6 +152,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::get('/me/album', [AlbumController::class, 'edit'])->name('album.edit');
     Route::post('/me/album', [AlbumController::class, 'store'])->middleware('throttle:20,60,album-upload')->name('album.store');
     Route::post('/me/cover-preset', [AlbumController::class, 'coverPreset'])->name('cover.preset'); // 個人化封面 10 選 1
+    Route::patch('/me/cover-preset/fields', [AlbumController::class, 'patchCoverPreset'])->middleware('throttle:120,1,autosave')->name('cover.preset.patch');
     Route::delete('/me/album/{photo}', [AlbumController::class, 'destroy'])->whereNumber('photo')->name('album.destroy');
     Route::get('/album/{photo}', [AlbumController::class, 'show'])->whereNumber('photo')->name('album.show');
     // 即時存檔（REST，PATCH 只送改的欄位；熊叔叔 11/5）
