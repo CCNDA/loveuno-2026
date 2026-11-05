@@ -9,6 +9,8 @@
     var img = document.createElement('img');
     dlg.appendChild(close); dlg.appendChild(img);
     document.body.appendChild(dlg);
+    // 很寬的圖（例如封面 551×165）：手機直拿時改成可以左右滑著看（小布 11/6「放大後跟原本一樣寬，經文還是看不清」）
+    img.addEventListener('load', function () { dlg.classList.toggle('zoom-wide', img.naturalWidth > img.naturalHeight * 2); });
     function open(src, alt) { img.src = src; img.alt = alt || ''; if (dlg.showModal) { dlg.showModal(); } else { window.open(src); } }
     close.addEventListener('click', function () { dlg.close(); });
     dlg.addEventListener('click', function (e) { if (e.target === dlg) { dlg.close(); } });
