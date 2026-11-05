@@ -2,12 +2,13 @@
 
 @section('title', '檢舉會員')
 
+@section('main_class', 'wrap wrap-wide center-main page-card')
 @section('content')
 <h1>檢舉會員的不當行為</h1>
 <p class="prose">愛諾園是一個屬神的交友空間，而這樣一個空間的秩序需要您協助我們一起來維持。若您發現有任何不適當的行為，包含在個人檔案、日記或是任何社群留言中撰寫暴力、援交、色情、異端或是商業廣告內容，請您告訴我們，讓我們可以做適當的處理。（所有檢舉內容我們將完全保密，請您放心）</p>
 <p>要檢舉的會員：<strong>{{ $member->name }}</strong></p>
 
-<form method="POST" action="{{ route('reports.store', $member) }}" class="form form-wide" enctype="multipart/form-data" novalidate>
+<form method="POST" action="{{ route('reports.store', $member) }}" class="form form-wide report-form" enctype="multipart/form-data" novalidate>
     @csrf
     @include('partials.errors', ['title' => '檢舉還沒送出'])
 
