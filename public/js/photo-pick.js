@@ -3,7 +3,7 @@
     document.addEventListener('change', function (e) {
         var input = e.target;
         if (!input.classList || !input.classList.contains('photo-pick')) { return; }
-        var box = document.querySelector('label[for="' + input.id + '"]');
+        var box = document.querySelector('label.photo-box[for="' + input.id + '"]'); // 欄位標題也是 label for，要指定框
         if (!box) { return; }
         var text = box.querySelector('.camera-text'), old = box.querySelector('.photo-box-preview');
         if (old) { old.remove(); }
