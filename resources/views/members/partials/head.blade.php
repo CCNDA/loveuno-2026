@@ -1,40 +1,15 @@
-{{-- 個人首頁上面那張白卡（設計稿 Profile 142:22363；熊叔叔 2026-11-05 TG「每個個人的首頁會輪播 slide」「個人帳號的封面圖應該是有做」）：
-     上：輪播（自己上傳、看得到的封面排第一張，接著設計稿三張 slide 69:3461／69:3583／69:4933）
+{{-- 個人首頁上面那張白卡（設計稿 Profile 142:22363）：
+     上：封面——在「個人相簿」選的插圖 10 選 1（熊叔叔 2026-11-05「更正個人的封面是在這邊指定」「自己上傳拿掉」）
      下：大頭照疊在輪播下緣、暱稱、一句話、居住地／年齡、認證盾牌、最近登入／更新；右邊與您關係、解除、檢舉、傳紙條／送禮物／約會。
      $member、$isMe、$iBlocked --}}
 @php
     $cp = $member->profile;
     $blocked = $iBlocked ?? false;
-    $hasCover = ! $blocked && $cp && $cp->coverVisibleTo(auth()->user());
-    $slides = [
-        ['img' => 'slide-1.jpg', 'alt' => '跨出教會聯誼，發現另一半：認識合拍屬靈伴侶、尋找交往對象'],
-        ['img' => 'slide-2.jpg', 'alt' => '嚴謹認證，安心交友：多重認證機制，創造優質交友環境'],
-        ['img' => 'slide-3.jpg', 'alt' => '交通團契，活出信仰：透過日記分享生活見證，互相代禱、彼此關心'],
-    ];
-    $total = count($slides) + ($hasCover ? 1 : 0);
 @endphp
 <section class="card profile-card" aria-labelledby="member-name">
-    <div class="slides" aria-roledescription="輪播" aria-label="封面">
-        <div class="slides-track">
-            @if ($hasCover)
-                <div class="slide" role="group" aria-roledescription="投影片" aria-label="1 / {{ $total }}">
-                    <img src="{{ route('covers.show', $member) }}?v={{ $cp->cover_updated_at?->timestamp }}" alt="{{ $member->name }} 的封面" width="1200" height="400">
-                </div>
-            @endif
-            @foreach ($slides as $i => $s)
-                <div class="slide" role="group" aria-roledescription="投影片" aria-label="{{ $i + 1 + ($hasCover ? 1 : 0) }} / {{ $total }}">
-                    <img src="{{ asset('images/slides/' . $s['img']) }}" alt="{{ $s['alt'] }}" width="1750" height="556" loading="{{ $i === 0 && ! $hasCover ? 'eager' : 'lazy' }}">
-                </div>
-            @endforeach
-        </div>
-        {{-- 按鈕由 js/slides.js 打開（沒有 JS 只看第一張）；會自己換，可以暫停（WCAG 2.2.2） --}}
-        <div class="slides-controls" hidden>
-            <script src="{{ asset('js/slides.js') }}?v={{ $appVersion }}" defer></script>
-            <button type="button" class="slides-pause" aria-pressed="false">暫停輪播</button>
-            @for ($i = 1; $i <= $total; $i++)
-                <button type="button" class="slides-dot" aria-label="看第 {{ $i }} 張"></button>
-            @endfor
-        </div>
+    <div class="profile-cover">
+        @php($preset = $cp?->coverPreset() ?? 1)
+        <img src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
     </div>
 
     <div class="profile-row">

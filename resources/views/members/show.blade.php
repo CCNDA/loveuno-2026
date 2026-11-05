@@ -9,7 +9,7 @@
     <p class="profile-mine">
         <a href="{{ route('center.account') }}">會員中心</a>・<a href="{{ route('friends.index') }}">我的朋友</a>・<a href="{{ route('gifts.index') }}">我的禮物</a>・<a href="{{ route('meetups.index') }}">我的約會</a>・<a href="{{ route('profile.edit') }}">編輯個人檔案</a>
         ・<a href="{{ route('photo.edit') }}">換大頭照</a>@if ($member->profile?->photo_status === 'pending')（審核中）@endif
-        ・<a href="{{ route('cover.edit') }}">換封面</a>@if ($member->profile?->cover_status === 'pending')（審核中）@endif
+        ・<a href="{{ route('album.edit') }}#cover-title">換封面</a>
     </p>
 @endif
 

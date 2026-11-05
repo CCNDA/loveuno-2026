@@ -149,6 +149,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     // 個人相簿（最多 9 張，要審核）
     Route::get('/me/album', [AlbumController::class, 'edit'])->name('album.edit');
     Route::post('/me/album', [AlbumController::class, 'store'])->middleware('throttle:20,60,album-upload')->name('album.store');
+    Route::post('/me/cover-preset', [AlbumController::class, 'coverPreset'])->name('cover.preset'); // 個人化封面 10 選 1
     Route::delete('/me/album/{photo}', [AlbumController::class, 'destroy'])->whereNumber('photo')->name('album.destroy');
     Route::get('/album/{photo}', [AlbumController::class, 'show'])->whereNumber('photo')->name('album.show');
     Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
@@ -199,11 +200,8 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::post('/me/photo', [PhotoController::class, 'update'])->defaults('kind', 'photo')->middleware('throttle:10,60,photo-upload')->name('photo.update');
     Route::delete('/me/photo', [PhotoController::class, 'destroy'])->defaults('kind', 'photo')->name('photo.destroy');
     Route::get('/photos/{user}', [PhotoController::class, 'show'])->defaults('kind', 'photo')->name('photos.show');
-    // 個人化封面（跟大頭照同一支程式，kind=cover）
-    Route::get('/me/cover', [PhotoController::class, 'edit'])->defaults('kind', 'cover')->name('cover.edit');
-    Route::post('/me/cover', [PhotoController::class, 'update'])->defaults('kind', 'cover')->middleware('throttle:10,60,cover-upload')->name('cover.update');
-    Route::delete('/me/cover', [PhotoController::class, 'destroy'])->defaults('kind', 'cover')->name('cover.destroy');
-    Route::get('/covers/{user}', [PhotoController::class, 'show'])->defaults('kind', 'cover')->name('covers.show');
+    // 個人化封面改成「個人相簿」裡 10 選 1（cover.preset）；自己上傳封面 11/5 熊叔叔「自己上傳拿掉」
+    Route::redirect('/me/cover', '/me/album#cover-title');
 
     // 管理員
     Route::middleware('admin')->prefix('admin')->group(function () {

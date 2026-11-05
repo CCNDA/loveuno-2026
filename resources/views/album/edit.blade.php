@@ -46,4 +46,23 @@
 @endif
 
 <p><a href="{{ route('members.show', ['user' => auth()->user(), 'tab' => 'album']) }}">看看別人看到的相簿 →</a></p>
+
+{{-- 設計稿「其他／個人化封面」：10 張插圖選一張，顯示在個人首頁最上面 --}}
+<h2 id="other-title">其他</h2>
+<form method="POST" action="{{ route('cover.preset') }}" class="cover-presets">
+    @csrf
+    @php($chosen = auth()->user()->profile?->coverPreset() ?? 1)
+    <fieldset>
+        <legend id="cover-title">個人化封面</legend>
+        <ul class="cover-preset-grid">
+            @foreach (\App\Models\Profile::COVER_PRESETS as $n => $ref)
+                <li>
+                    <input type="radio" name="cover_preset" id="cover-{{ $n }}" value="{{ $n }}" @checked($chosen === $n)>
+                    <label for="cover-{{ $n }}"><img src="{{ asset('images/covers/cover-' . $n . '.svg') }}" alt="第 {{ $n }} 張（{{ $ref }}）" width="551" height="165" loading="lazy"></label>
+                </li>
+            @endforeach
+        </ul>
+    </fieldset>
+    <button type="submit" class="button pill-submit">儲存封面</button>
+</form>
 @endsection

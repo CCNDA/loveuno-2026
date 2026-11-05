@@ -24,7 +24,7 @@
             <ul class="review-list">
                 @foreach ($pending[$kind] as $p)
                     <li class="review-item">
-                        <img src="{{ route($kind === 'photo' ? 'photos.show' : 'covers.show', $p->user) }}?v={{ $p->{$kind . '_updated_at'}?->timestamp }}"
+                        <img src="{{ route('photos.show', $p->user) }}?v={{ $p->{$kind . '_updated_at'}?->timestamp }}"
                              alt="{{ $p->user->name }} 上傳的{{ $cfg['label'] }}" class="review-{{ $kind }}"
                              width="{{ $kind === 'photo' ? 160 : 300 }}" height="{{ $kind === 'photo' ? 160 : 100 }}">
                         <div>

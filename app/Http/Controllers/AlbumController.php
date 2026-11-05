@@ -106,4 +106,15 @@ class AlbumController extends Controller
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
+
+    // 個人化封面 10 選 1（設計稿 個人相簿「其他／個人化封面」）
+    public function coverPreset(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['cover_preset' => ['required', 'integer', 'between:1,' . count(\App\Models\Profile::COVER_PRESETS)]],
+            [], ['cover_preset' => '封面']);
+        $profile = $request->user()->profile ?? \App\Models\Profile::create(['user_id' => $request->user()->id]);
+        $profile->forceFill(['cover_preset' => (int) $data['cover_preset']])->save();
+
+        return redirect()->to(route('album.edit') . '#cover-title')->with('status', '封面換好了。');
+    }
 }
