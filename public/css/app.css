@@ -1212,3 +1212,38 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
     .points-table td a { padding: 0 10px; font-size: .8rem; }
 }
 .points-table thead th { white-space: nowrap; } /* 「點數」表頭不要斷成兩行 */
+
+/* ── 會員主要流程（小芯 11/6 03:4x 照 Figma 自比） ── */
+/* 送禮物：每格左上角的選取圓點（設計稿 328:7030） */
+.gift-grid li { position: relative; }
+.airmail .gift-card::before { content: ""; position: absolute; top: 8px; left: 8px; width: 14px; height: 14px; border: 1.5px solid #8c857b; border-radius: 50%; background: #fff; }
+.airmail .gift-radio:checked + .gift-card::before { border: 4px solid var(--button); width: 8px; height: 8px; }
+
+/* 認識朋友手機（設計稿 659:22442）：卡片緊湊，頭像 72、名字 15、其他 13 */
+@media (max-width: 40rem) {
+    .friends-panel { padding: 12px; }
+    .friends-panel .member-grid { gap: 12px; }
+    .friends-panel .member-card { gap: 12px; padding: 12px; align-items: center; }
+    .friends-panel .avatar-xl { width: 72px; height: 72px; font-size: 1.8rem; flex: none; }
+    .friends-panel .member-name { font-size: .95rem; }
+    .friends-panel .member-where, .friends-panel .excerpt { font-size: .82rem; }
+    .friends-panel .member-card-main .pill-link { min-height: 32px; font-size: .8rem; }
+}
+
+/* 看別人的個人首頁（設計稿 142:25006 手機）：上半部置中 */
+@media (max-width: 640px) {
+    .profile-row { justify-items: center; text-align: center; padding: 0 16px 16px; }
+    .profile-avatar { margin-top: -56px; }
+    .profile-avatar .avatar-xl { width: 112px; height: 112px; font-size: 2.6rem; border: 4px solid #fff; }
+    .profile-main h1 { font-size: 1.75rem; }
+    .profile-badges { justify-content: center; }
+    .profile-side { width: 100%; border-top: 1px solid var(--line); padding-top: 8px; }
+    .profile-side .relationship { font-size: .9rem; }
+    .profile-side .member-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+    .profile-side .member-actions .pill-action { justify-content: center; padding: 0 6px; }
+    /* 個人資料一列兩組（標題｜內容） */
+    .profile-section .profile { grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .profile-section .profile div { grid-template-columns: 4.5rem minmax(0, 1fr); gap: 4px; padding: 6px 0; font-size: .9rem; }
+}
+/* 電腦：個人資料一列三組（設計稿 142:22363） */
+@media (min-width: 64rem) { .profile-section .profile { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

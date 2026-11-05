@@ -41,14 +41,16 @@
     <div class="field">
         <label for="message">簡訊（可以不寫）</label>
         <p id="message-hint" class="hint">您可以寫一句 20 個中文字以內的簡訊與禮物一起傳送。</p>
-        <input id="message" name="message" type="text" maxlength="20" value="{{ old('message') }}"
+        <input id="message" name="message" type="text" maxlength="20" value="{{ old('message') }}" data-count
                @if (session('gift_edit')) autofocus @endif {{-- 從確認頁「回去修改」回來：游標直接在簡訊欄 --}}
-               aria-describedby="message-hint @error('message') message-error @enderror"
+               aria-describedby="message-hint message-count @error('message') message-error @enderror"
                @error('message') aria-invalid="true" @enderror>
+        <p id="message-count" class="char-count" aria-live="off"><span>{{ mb_strlen(old('message', '')) }}</span>/20</p>
         @error('message')<p id="message-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
     <button type="submit" class="button">送出</button>
 </form>
 <p><a href="{{ route('members.show', $member) }}">← 回 {{ $member->name }} 的檔案</a></p>
+<script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
 @endsection
