@@ -41,7 +41,10 @@ class EmailChangeController extends Controller
             defer(fn () => Notification::route('mail', $new)->notify(new VerifyNewEmail($user->name, $url))); // 回應後才寄：有沒有人用，花的時間一樣
         }
 
-        return redirect()->to(route('center.account') . '#settings-title')
+        // 退信（email 未驗證）的人是從驗證頁送出的，回驗證頁；會員中心他還進不去
+        $back = $user->hasVerifiedEmail() ? route('center.account') . '#settings-title' : route('verification.notice');
+
+        return redirect()->to($back)
             ->with('status', '確認信已經寄到新的電子郵件（60 分鐘內有效），點了信裡的連結才會換。');
     }
 
@@ -56,7 +59,8 @@ class EmailChangeController extends Controller
             return redirect()->route('center.account')->with('status', '這個電子郵件剛剛被別的帳號用了，沒有換。');
         }
         $old = $user->email;
-        $user->forceFill(['email' => $user->email_pending, 'email_pending' => null, 'email_verified_at' => now()])->save();
+        $user->forceFill(['email' => $user->email_pending, 'email_pending' => null, 'email_verified_at' => now(),
+            'email_bounced_at' => null, 'email_bounce_reason' => ''])->save(); // 新信箱點過確認信＝收得到，退信標記一起清
         Notification::route('mail', $old)->notify(new EmailChanged($user->name));
 
         return redirect()->to(route('center.account') . '#settings-title')->with('status', '電子郵件換好了，下次請用新的電子郵件登入。');
