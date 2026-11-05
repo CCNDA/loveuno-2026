@@ -22,7 +22,9 @@
   }
 
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !key) {
-    say('這個瀏覽器還不能收推播。iPhone 請先用 Safari 的「分享 → 加入主畫面」，再從主畫面打開愛諾園。');
+    say(/iPhone|iPad/.test(navigator.userAgent)
+      ? 'iPhone 要先用 Safari 的「分享 → 加入主畫面」，再從主畫面打開愛諾園，才能開推播。'
+      : '這個瀏覽器不能收推播，請改用 Chrome、Edge 或 Firefox。');
     return;
   }
 

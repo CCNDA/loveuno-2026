@@ -49,7 +49,7 @@
     <fieldset class="field" id="push-box" data-key="{{ config('loveuno.push.public_key') }}">
         <legend>推播</legend>
         <p id="push-status" class="hint" role="status">要先開啟 JavaScript 才能設定推播。</p>
-        <p class="hint">推播是一台裝置一台裝置開的。iPhone 請先用 Safari 的「分享 → 加入主畫面」，再從主畫面打開愛諾園，才能開推播（iOS 16.4 以上）。</p>
+        <p class="hint">推播是一台裝置一台裝置開的：按「在這台裝置開啟推播」，瀏覽器會跳出詢問，按「允許」就好。Android 手機（Chrome）、電腦的 Chrome／Edge／Firefox 都可以直接開；iPhone 要先用 Safari 的「分享 → 加入主畫面」，再從主畫面打開愛諾園才能開（iOS 16.4 以上）。</p>
         <button type="button" id="push-on" class="button button-light" hidden>在這台裝置開啟推播</button>
         <button type="button" id="push-off" class="button button-light" hidden>在這台裝置關閉推播</button>
     </fieldset>
