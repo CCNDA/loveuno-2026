@@ -752,6 +752,8 @@ main { min-height: calc(100vh - 160px); box-sizing: border-box; }
     :root { --dock-left: max(0px, calc((100vw - 1480px) / 2)); }
     body.has-side-menu { padding-left: 0; }
     .has-side-menu .side-menu, .has-side-menu .side-menu[hidden] { left: var(--dock-left); }
+    /* 比 1480 寬的螢幕：選單左邊那塊用選單的顏色補滿，不要露一條白（小布 11/6 1568 寬複測） */
+    .has-side-menu .side-menu-panel { box-shadow: calc(-1 * var(--dock-left)) 0 0 0 var(--header), 4px 0 16px rgba(0, 0, 0, .12); }
     html:not(.side-menu-collapsed) .has-side-menu .site-header .wrap,
     html:not(.side-menu-collapsed) .has-side-menu main,
     html:not(.side-menu-collapsed) .has-side-menu .site-footer .wrap { margin-left: calc(var(--dock-left) + 280px); margin-right: var(--dock-left); max-width: none; }
