@@ -1211,3 +1211,4 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
     .points-table tbody th { text-align: left; }
     .points-table td a { padding: 0 10px; font-size: .8rem; }
 }
+.points-table thead th { white-space: nowrap; } /* 「點數」表頭不要斷成兩行 */
