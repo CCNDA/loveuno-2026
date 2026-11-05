@@ -36,6 +36,20 @@ class Profile extends Model
         10 => '凡事都不可虧欠人，惟有彼此相愛要常以為虧欠，因為愛人的就完全了律法。',
     ];
 
+    // 手機版封面：經文疊在插圖上的位置（left／center／right、離邊幾 %）與插圖下面補的底色（熊叔叔 11/6 選 C）
+    public const COVER_LAYOUT = [
+        1 => ['center', 0, 'linear-gradient(90deg, #c5c7e2 50%, #fff7e6 50%)'],
+        2 => ['center', 0, 'linear-gradient(90deg, #f9e3c6 50%, #d9e8e1 50%)'],
+        3 => ['left', 8.3, '#fff1d0'],
+        4 => ['left', 8.7, '#c3ecec'],
+        5 => ['left', 8.3, '#e1e7c3'],
+        6 => ['center', 0, 'linear-gradient(90deg, #fff7e6 50%, #f9e3c6 50%)'],
+        7 => ['left', 8.3, '#fff7e6'],
+        8 => ['right', 8.3, '#c2ebeb'],
+        9 => ['left', 8.3, '#f4e3d3'],
+        10 => ['right', 7.6, '#f7d8e9'],
+    ];
+
     public function coverPreset(): int
     {
         return isset(self::COVER_PRESETS[(int) $this->cover_preset]) ? (int) $this->cover_preset : 1;
