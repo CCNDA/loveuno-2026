@@ -1074,3 +1074,4 @@ label.camera-box.photo-box { display: flex; flex-direction: column; align-items:
 .story-focus-pic img { display: block; max-width: 100%; height: auto; cursor: crosshair; border-radius: 6px; }
 .story-focus-dot { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #c4513b; pointer-events: none; }
 .story-focus-nums { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.field select, .field input, .field textarea { max-width: 100%; box-sizing: border-box; } /* 選項文字很長的下拉（戀愛履歷）在手機不要撐出畫面 */
