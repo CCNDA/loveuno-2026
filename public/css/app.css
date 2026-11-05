@@ -1021,3 +1021,6 @@ main.auth-card .button-secondary { background: #fff; color: var(--plum); border:
 .diary-page > :not(h1) { max-width: 52rem; margin-left: auto !important; margin-right: auto !important; }
 .diary-page-write { text-align: right; }
 .diary-page .diary-list h2 a, .diary-page .diary-list h3 a { color: var(--button-dark); }
+
+/* 會員中心的檔案上傳（個人相簿、大頭照；設計稿 69:6213 相機上傳框）：虛線框 */
+.center-main input[type=file] { display: block; width: 100%; box-sizing: border-box; padding: 24px; border: 1px dashed #8c857b; border-radius: 6px; background: #fff; text-align: center; }
