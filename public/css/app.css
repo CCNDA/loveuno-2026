@@ -1075,3 +1075,5 @@ label.camera-box.photo-box { display: flex; flex-direction: column; align-items:
 .story-focus-dot { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #c4513b; pointer-events: none; }
 .story-focus-nums { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
 .field select, .field input, .field textarea { max-width: 100%; box-sizing: border-box; } /* 選項文字很長的下拉（戀愛履歷）在手機不要撐出畫面 */
+/* 照片框的藏起來的檔案欄：要比 .form-grid／.report-form 的 width:100% 更具體，不然電腦版撐出橫向捲動（0.39.6 投稿、檢舉） */
+form .field input[type=file].camera-input.photo-pick { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; border: 0; overflow: hidden; opacity: 0; }
