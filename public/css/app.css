@@ -213,6 +213,11 @@ fieldset.field legend { font-weight: 700; margin-bottom: 4px; padding: 0; }
 .age-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .age-range input { width: 6rem; min-height: 48px; padding: 8px; font-size: 1rem; border: 2px solid #8c857b; border-radius: 8px; }
 .age-range label { font-weight: 400; margin: 0; }
+/* 交友條件（設計稿 交友條件_M）：「從～到」兩格同一列平分；.field input[type=number] 的 width:100% 會蓋過上面那條，這裡要更具體 */
+.field .age-range { flex-wrap: nowrap; }
+.field .age-range input[type="number"] { flex: 1 1 0; width: auto; min-width: 0; }
+.field .age-range span { white-space: nowrap; }
+.pref-form .field select { width: 100%; }
 @media (max-width: 400px) { .center-tabs a { width: 76px; height: 76px; font-size: .9rem; } }
 
 /* 螢幕閱讀器才念的文字 */
