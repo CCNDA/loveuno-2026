@@ -15,7 +15,6 @@
             <img data-zoom src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
         </picture>
     </div>
-    <p class="cover-verse">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
 
     <div class="profile-row">
         <div class="profile-avatar">@include('partials.avatar', ['user' => $member, 'size' => 'xl'])</div>
@@ -60,4 +59,6 @@
             @endif
         </div>
     </div>
+    {{-- 手機版：封面上的經文改在卡片最下面用網頁文字顯示（封面圖裡的字太小；放在封面正下方會被大頭照蓋住） --}}
+    <p class="cover-verse">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
 </section>
