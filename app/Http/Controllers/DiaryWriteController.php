@@ -16,9 +16,10 @@ use RuntimeException;
 // 寫日記、改日記、刪日記：只有作者本人可以（別人一律 404，不讓人知道這篇存在）
 class DiaryWriteController extends Controller
 {
-    public function create(): View
+    // ?kind=prayer：動態牆「寫代禱事項」按鈕進來，預先勾「這是代禱」
+    public function create(Request $request): View
     {
-        return view('diaries.form', ['diary' => new Diary(['visibility' => 'public'])]);
+        return view('diaries.form', ['diary' => new Diary(['visibility' => 'public', 'is_prayer' => $request->query('kind') === 'prayer'])]);
     }
 
     public function store(Request $request): RedirectResponse

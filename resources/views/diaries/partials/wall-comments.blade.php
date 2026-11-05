@@ -5,9 +5,11 @@
     $recent = $d->comments->slice(-3);
 @endphp
 <div class="wall-comments">
+    @if ($d->commentableBy(auth()->user()))
     <form method="POST" action="{{ route('diaries.comments.store', $d) }}" class="wall-comment-form" novalidate>
         @csrf
         <input type="hidden" name="from" value="wall">
+        @include('diaries.partials.wall-filter-inputs')
         <label for="comment-body-{{ $d->id }}" class="visually-hidden">留言給〈{{ $d->title }}〉</label>
         <input id="comment-body-{{ $d->id }}" name="body" type="text" maxlength="500" placeholder="請輸入留言" required
                value="{{ $bag->any() ? old('body') : '' }}"
@@ -15,6 +17,9 @@
         <button type="submit" class="icon-button"><img src="{{ asset('images/brand/return.svg') }}" alt="送出留言" width="36" height="36"></button>
     </form>
     @if ($bag->has('body'))<p id="comment-error-{{ $d->id }}" class="field-error" role="alert">{{ $bag->first('body') }}</p>@endif
+    @else
+    <p class="hint">成為 {{ $d->user->name }} 的朋友以後才能留言。</p>
+    @endif
 
     @if ($recent->isNotEmpty())
         <ol class="comment-list">

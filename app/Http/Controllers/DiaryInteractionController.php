@@ -20,6 +20,8 @@ class DiaryInteractionController extends Controller
     public function pray(Request $request, Diary $diary): RedirectResponse
     {
         $this->authorizeReach($request, $diary);
+        // 熊叔叔 2026-11-05：心情日記跟代禱事項分開，「為你禱告」只在代禱事項上（舊站心情日記也只有回應）
+        abort_unless($diary->is_prayer, 404);
         $me = $request->user();
 
         $deleted = DiaryPrayer::where('diary_id', $diary->id)->where('user_id', $me->id)->delete();
@@ -38,12 +40,17 @@ class DiaryInteractionController extends Controller
     {
         $this->authorizeReach($request, $diary);
         $fromWall = $request->input('from') === 'wall';
+        if (! $diary->commentableBy($request->user())) {
+            $to = $fromWall ? $this->wallUrl($request) . '#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
+
+            return redirect()->to($to)->with('status', '只有作者的朋友可以留言。');
+        }
         // 日記牆一頁有 10 張卡片、10 個留言框：錯誤放在這一篇自己的 error bag，才知道是哪一張
         $v = Validator::make($request->all(), [
             'body' => ['required', 'string', 'max:500'],
         ], [], ['body' => '留言']);
         if ($v->fails()) {
-            $to = $fromWall ? $this->wallUrl() . '#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
+            $to = $fromWall ? $this->wallUrl($request) . '#d' . $diary->id : route('diaries.show', $diary) . '#comments-title';
 
             return redirect()->to($to)->withErrors($v, $fromWall ? 'comment' . $diary->id : 'default')->withInput();
         }
@@ -51,7 +58,7 @@ class DiaryInteractionController extends Controller
         $comment = new DiaryComment(['body' => $v->validated()['body']]);
         $comment->forceFill(['diary_id' => $diary->id, 'user_id' => $request->user()->id])->save();
 
-        $to = $fromWall ? $this->wallUrl() . '#d' . $diary->id : route('diaries.show', $diary) . '#comment-' . $comment->id;
+        $to = $fromWall ? $this->wallUrl($request) . '#d' . $diary->id : route('diaries.show', $diary) . '#comment-' . $comment->id;
 
         return redirect()->to($to)->with('status', '留言送出了。');
     }
@@ -90,7 +97,7 @@ class DiaryInteractionController extends Controller
     {
         $page = max(1, (int) $request->input('page', 1));
         $url = match ($request->input('from')) {
-            'wall' => $this->wallUrl(),
+            'wall' => $this->wallUrl($request),
             'list' => route('diaries.index', $page > 1 ? ['page' => $page] : []),
             default => route('diaries.show', $diary),
         };
@@ -98,9 +105,15 @@ class DiaryInteractionController extends Controller
         return redirect()->to($url . '#d' . $diary->id)->with('status', $status);
     }
 
-    // route('home') 是「https://網域」沒有結尾的 /，補上才是「/#d1」
-    private function wallUrl(): string
+    // route('home') 是「https://網域」沒有結尾的 /，補上才是「/#d1」。
+    // 動態牆的篩選（只看朋友、哪一種）由表單帶 wall_scope／wall_kind，只認白名單裡的值
+    private function wallUrl(Request $request): string
     {
-        return rtrim(route('home'), '/') . '/';
+        $q = array_filter([
+            'scope' => $request->input('wall_scope') === 'friends' ? 'friends' : null,
+            'kind' => in_array($request->input('wall_kind'), ['diary', 'prayer'], true) ? $request->input('wall_kind') : null,
+        ]);
+
+        return rtrim(route('home'), '/') . '/' . ($q ? '?' . http_build_query($q) : '');
     }
 }

@@ -8,7 +8,7 @@
     <p class="meta">
         <a href="{{ route('members.show', $diary->user) }}">{{ $diary->user->name }}</a>
         ・<time datetime="{{ $diary->published_on->toDateString() }}">{{ $diary->published_on->format('Y 年 n 月 j 日') }}</time>
-        @if ($diary->is_prayer)・<span class="tag tag-prayer">代禱</span>@endif
+        ・<span class="tag {{ $diary->is_prayer ? 'tag-prayer' : 'tag-diary' }}">{{ $diary->is_prayer ? '代禱事項' : '心情日記' }}</span>
         @if ($diary->visibility === 'private')・<span class="tag">只有自己看得到</span>@endif
     </p>
     <div class="diary-body">{!! nl2br(e($diary->body)) !!}</div>
@@ -26,6 +26,7 @@
 <section aria-labelledby="comments-title" class="comments">
     <h2 id="comments-title" tabindex="-1">留言（{{ $comments->count() }}）</h2>
 
+    @if ($diary->commentableBy(auth()->user()))
     <form method="POST" action="{{ route('diaries.comments.store', $diary) }}" class="form comment-form" novalidate>
         @csrf
         @include('partials.errors', ['title' => '留言還沒送出'])
@@ -39,6 +40,9 @@
         </div>
         <button type="submit" class="button">送出留言</button>
     </form>
+    @else
+    <p class="hint">成為 {{ $diary->user->name }} 的朋友以後才能留言。</p>
+    @endif
 
     @if ($comments->isEmpty())
         <p>還沒有留言。</p>
