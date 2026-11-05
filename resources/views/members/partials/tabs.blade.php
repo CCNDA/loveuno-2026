@@ -38,7 +38,9 @@
         <section aria-labelledby="verse-title">
             <h3 id="verse-title">最愛的經句</h3>
             <blockquote class="verse">
-                @if ($p->verse_text !== '')<p>{!! nl2br(e($p->verse_text)) !!}</p>@endif
+                {{-- 舊站搬來的只有書卷章節、沒有經文：當下從經文庫查（熊叔叔 11/6「最愛經句沒有顯示經句內容」） --}}
+                @php($vt = $p->verse_text !== '' ? $p->verse_text : (\App\Support\Bible::verse((string) $p->verse_book, (int) $p->verse_chapter, (int) $p->verse_verse) ?? ''))
+                @if ($vt !== '')<p>{!! nl2br(e($vt)) !!}</p>@endif
                 <footer>{{ $p->verse_book }} {{ $p->verse_chapter }}@if ($p->verse_verse):{{ $p->verse_verse }}@endif</footer>
             </blockquote>
         </section>
