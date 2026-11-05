@@ -7,15 +7,16 @@
     $blocked = $iBlocked ?? false;
 @endphp
 <section class="card profile-card" aria-labelledby="member-name">
-    <div class="profile-cover">
-        @php($preset = $cp?->coverPreset() ?? 1)
+    @php($preset = $cp?->coverPreset() ?? 1)
+    @php([$vSide, $vPos, $vBand] = \App\Models\Profile::COVER_LAYOUT[$preset ?? 1] ?? ['left', 8, '#f6f0e7'])
+    <div class="profile-cover" style="--band: {{ $vBand }}; --vx: {{ $vPos }}%;">
         {{-- 手機用沒有經文字的版本，經文改在下面用網頁文字（熊叔叔 11/6「手機版封面圖字會太小」）；點圖放大的是有經文的原圖 --}}
         <picture>
             <source media="(max-width: 640px)" srcset="{{ asset('images/covers/cover-' . $preset . '-art.svg') }}">
             <img data-zoom src="{{ asset('images/covers/cover-' . $preset . '.svg') }}" alt="封面插圖（經文：{{ \App\Models\Profile::COVER_PRESETS[$preset] }}）" width="551" height="165">
         </picture>
-        {{-- 手機版：經文用網頁文字接在插圖下面（同一塊封面裡，下面留空給大頭照疊上來；熊叔叔 11/6「排版不行」） --}}
-        <p class="cover-verse">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
+        {{-- 手機版：經文用網頁文字疊在插圖空白處（熊叔叔 11/6 選 C），封面下面補同色的底給大頭照 --}}
+        <p class="cover-verse v-{{ $vSide }}">{{ \App\Models\Profile::COVER_VERSES[$preset] }}<span class="cover-verse-ref">{{ \App\Models\Profile::COVER_PRESETS[$preset] }}</span></p>
     </div>
 
     <div class="profile-row">
