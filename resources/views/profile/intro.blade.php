@@ -7,7 +7,7 @@
 <h2>自我介紹</h2>
 
 <form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide intro-form" novalidate
-      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse">
+      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse" data-autosave-together="verse_book verse_chapter verse_verse">
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '自我介紹還沒存好'])

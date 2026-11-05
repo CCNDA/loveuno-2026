@@ -92,6 +92,12 @@
         function save(name) {
             var names = whole ? allNames() : groupOf(name), body = {};
             names.forEach(function (n) { var v = valueOf(n); if (v !== undefined) { body[n] = v; } });
+            // data-autosave-together：這一組要嘛全填、要嘛全空才存（例如經文的書卷、章、節，填到一半不要跳錯誤）
+            var together = (form.getAttribute('data-autosave-together') || '').split(/\s+/).filter(Boolean);
+            if (together.indexOf(names[0]) >= 0) {
+                var filled = names.filter(function (n) { var v = body[n]; return v !== undefined && v !== '' && v !== null; }).length;
+                if (filled > 0 && filled < names.length) { return; }
+            }
             var key = names.join(' '), sent = JSON.stringify(body);
             if (lastSaved[key] === sent) { return; } // 停手存過、離開欄位又觸發一次：內容一樣就不再送
             fetch(url, {
