@@ -34,42 +34,18 @@
                 </button>
             @endauth
             <a class="brand" href="{{ route('home') }}"><img src="{{ asset('images/brand/logo.svg') }}" alt="愛諾園 首頁" width="115" height="40"></a>
+            @auth
+                {{-- 設計稿頁首右邊（Figma Profile 142:22363）：通知鈴（先接傳紙條未讀）、頭像＋暱稱（我的檔案） --}}
+                <ul class="header-icons">
+                    <li><a href="{{ route('notes.index') }}" class="header-icon"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/></svg><span class="visually-hidden">傳紙條</span>@if($unreadNotes > 0)<span class="badge header-badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
+                    <li><a href="{{ route('me') }}" class="header-me">@include('partials.avatar', ['user' => auth()->user(), 'size' => 'sm'])<span class="header-me-name">{{ auth()->user()->name }}<span class="visually-hidden">（我的檔案）</span></span></a></li>
+                </ul>
+            @endauth
             <nav aria-label="主選單">
                 <ul class="nav">
-                    <li @auth class="nav-dup" @endauth><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首頁</a></li>
-                    @auth
-                        <li class="nav-dup"><a href="{{ route('diaries.index') }}" @if(request()->routeIs('diaries.*')) aria-current="page" @endif>心情日記</a></li>
-                        <li class="nav-dup"><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif>認識朋友</a></li>
-                        <li class="nav-dup"><a href="{{ route('me') }}" @if(request()->routeIs('members.show') && request()->route('user')?->is(auth()->user())) aria-current="page" @endif>我的檔案</a></li>
-                        <li class="nav-dup"><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif>傳紙條@if($unreadNotes > 0) <span class="badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
-                        <li class="nav-dup"><a href="{{ route('center.account') }}" @if(request()->is('center*', 'me/edit', 'me/photo')) aria-current="page" @endif>會員中心</a></li>
-                        @if (auth()->user()->is_admin)
-                            <li class="nav-dup"><a href="{{ route('admin.members') }}" @if(request()->routeIs('admin.members*')) aria-current="page" @endif>會員管理</a></li>
-                            @php($openFeedback = \App\Models\Feedback::where('status', 'open')->count())
-                            <li class="nav-dup"><a href="{{ route('admin.feedback') }}" @if(request()->routeIs('admin.feedback*')) aria-current="page" @endif>回報@if($openFeedback)（{{ $openFeedback }}<span class="visually-hidden"> 則還沒處理</span>）@endif</a></li>
-                            <li class="nav-dup"><a href="{{ route('admin.photos') }}" @if(request()->routeIs('admin.photos')) aria-current="page" @endif>審核照片</a></li>
-                            <li class="nav-dup"><a href="{{ route('admin.contacts') }}" @if(request()->routeIs('admin.contacts')) aria-current="page" @endif>來信</a></li>
-                            <li class="nav-dup"><a href="{{ route('admin.news') }}" @if(request()->routeIs('admin.news*')) aria-current="page" @endif>公告</a></li>
-                            <li class="nav-dup"><a href="{{ route('admin.meetups') }}" @if(request()->routeIs('admin.meetups')) aria-current="page" @endif>約會紀錄</a></li>
-                            @php($pendingStories = \App\Models\LoveStory::where('status', 'pending')->count())
-                            <li class="nav-dup"><a href="{{ route('admin.love-stories') }}" @if(request()->routeIs('admin.love-stories')) aria-current="page" @endif>愛的見證@if($pendingStories)（{{ $pendingStories }}<span class="visually-hidden"> 篇待審核</span>）@endif</a></li>
-                            @php($pendingVerify = \App\Models\Verification::where('status', 'pending')->count())
-                            <li class="nav-dup"><a href="{{ route('admin.verifications') }}" @if(request()->routeIs('admin.verifications')) aria-current="page" @endif>審核認證@if($pendingVerify)（{{ $pendingVerify }}<span class="visually-hidden"> 件</span>）@endif</a></li>
-                            @php($openReports = \App\Models\Report::where('status', 'open')->count())
-                            <li class="nav-dup"><a href="{{ route('admin.reports') }}" @if(request()->routeIs('admin.reports')) aria-current="page" @endif>檢舉@if($openReports)（{{ $openReports }}<span class="visually-hidden"> 件還沒處理</span>）@endif</a></li>
-                        @endif
-                        <li class="nav-dup">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="link-button">登出</button>
-                            </form>
-                        </li>
-                    @else
-                        <li><a href="{{ route('login') }}" @if(request()->routeIs('login')) aria-current="page" @endif>登入</a></li>
-                        @if (config('loveuno.registration_open'))
-                            <li><a href="{{ route('register') }}" @if(request()->routeIs('register')) aria-current="page" @endif>加入會員</a></li>
-                        @endif
-                    @endauth
+                    @guest
+                        <li><a class="header-login" href="{{ route('login') }}" @if(request()->routeIs('login')) aria-current="page" @endif>登入@if (config('loveuno.registration_open'))<span aria-hidden="true">/</span><span class="visually-hidden">或</span>註冊@endif</a></li>
+                    @endguest
                     <li>
                         @if (session('script') === 'hans')
                             <a href="{{ route('script', 'hant') }}" data-keep-script lang="zh-Hant" class="script-toggle">繁體<span class="visually-hidden">（切換成繁體中文）</span></a>
@@ -83,7 +59,7 @@
     </header>
     @auth @include('partials.side-menu') @endauth
 
-    <main id="main" tabindex="-1" class="wrap">
+    <main id="main" tabindex="-1" class="@yield('main_class', 'wrap')">
         @if (session('status'))
             <p class="notice" role="status">{{ session('status') }}</p>
         @endif
@@ -104,9 +80,18 @@
     @endauth
 
     <footer class="site-footer">
+        <div class="wrap wrap-wide footer-row">
+        <div class="footer-brand">
+            <img src="{{ asset('images/brand/footer-logo.svg') }}" alt="愛諾園 LoveUNO" width="207" height="72" loading="lazy">
+            {{-- 設計稿四個圓形圖示：Facebook、LINE、Telegram、星號；LINE 和星號還不知道連到哪，先放協會的 Facebook、Telegram --}}
+            <ul class="footer-social">
+                <li><a href="https://www.facebook.com/CCNDA" rel="noopener"><img src="{{ asset('images/brand/social-facebook.svg') }}" alt="協會 Facebook" width="40" height="40" loading="lazy"></a></li>
+                <li><a href="https://t.me/ccnda" rel="noopener"><img src="{{ asset('images/brand/social-telegram.svg') }}" alt="協會 Telegram" width="40" height="40" loading="lazy"></a></li>
+            </ul>
+        </div>
         <nav aria-label="網站資訊" class="footer-links">
             <ul>
-                {{-- 設計稿 MainFooter；下載 APP 兩項不做（新版是網頁，見 #42） --}}
+                {{-- 設計稿 MainFooter；下載 APP 四項不做（新版是網頁，見 #42；熊叔叔 11/5「下載APP現在不用」） --}}
                 <li><a href="{{ route('about') }}">關於愛諾園</a></li>
                 <li><a href="{{ route('news.index') }}">站務公告</a></li>
                 <li><a href="{{ route('love-stories.index') }}">愛的見證</a></li>
@@ -121,11 +106,13 @@
             <ul>
                 <li><a href="https://www.ccnda.org" rel="noopener">網路發展協會</a></li>
                 <li><a href="https://church.oursweb.net" rel="noopener">教會名錄</a></li>
+                <li><a href="https://oursweb.net" rel="noopener">Oursweb</a></li>
                 <li><a href="https://www.taiwanbible.com/web/first.jsp" rel="noopener">台灣聖經網</a></li>
             </ul>
         </nav>
-        <div class="wrap">
-            <p>社團法人中華基督教網路發展協會 CCNDA</p>
+        </div>
+        <div class="wrap wrap-wide footer-bottom">
+            <p>網站服務由 中華基督教網路發展協會 提供　<span lang="en">Serve by Chinese Christian Network Development Association</span></p>
             <p class="version">版本 {{ $appVersion }}</p>
         </div>
     </footer>

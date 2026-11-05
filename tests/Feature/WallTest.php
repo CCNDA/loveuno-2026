@@ -21,7 +21,7 @@ class WallTest extends TestCase
 
     public function test_guest_sees_intro_member_sees_wall(): void
     {
-        $this->get('/')->assertOk()->assertSee('在信仰裡，認識另一半')->assertDontSee('好友推薦');
+        $this->get('/')->assertOk()->assertSee('我們需要您的支持')->assertDontSee('好友推薦');
         $me = $this->member('我');
         $other = $this->member('別人');
         $other->diaries()->create(['title' => '牆上的日記', 'body' => '內容', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
@@ -103,7 +103,7 @@ class WallTest extends TestCase
         $this->writeDiary($other, '今天的心情', false);
         $this->writeDiary($other, '請為我禱告', true);
 
-        $this->actingAs($me)->get('/')->assertOk()->assertSee('動態牆')
+        $this->actingAs($me)->get('/')->assertOk()->assertSee('生活日記牆')
             ->assertSee('今天的心情')->assertSee('請為我禱告')
             ->assertSee('<span class="tag tag-diary">心情日記</span>', false)
             ->assertSee('<span class="tag tag-prayer">代禱事項</span>', false);

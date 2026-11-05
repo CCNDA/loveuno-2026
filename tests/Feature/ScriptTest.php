@@ -31,13 +31,13 @@ class ScriptTest extends TestCase
 
     public function test_toggle_switches_whole_page_and_back(): void
     {
-        $this->get('/')->assertSee('在信仰裡，認識另一半')->assertSee('lang="zh-Hant-TW"', false);
+        $this->get('/')->assertSee('嚴謹認證')->assertSee('lang="zh-Hant-TW"', false);
 
         $this->from('/')->get('/script/hans')->assertRedirect('/');
-        $this->get('/')->assertSee('在信仰里，认识另一半')->assertSee('lang="zh-Hans"', false)->assertSee('繁體', false);
+        $this->get('/')->assertSee('严谨认证')->assertSee('lang="zh-Hans"', false)->assertSee('繁體', false);
 
         $this->get('/script/hant')->assertRedirect();
-        $this->get('/')->assertSee('在信仰裡，認識另一半');
+        $this->get('/')->assertSee('嚴謹認證');
     }
 
     public function test_bad_value_and_offsite_back_are_ignored(): void
