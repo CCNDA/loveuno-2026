@@ -160,6 +160,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::patch('/me/profile/fields', [ProfileController::class, 'patchProfile'])->middleware('throttle:120,1,autosave')->name('profile.patch');
     Route::get('/bible/verse', [ProfileController::class, 'bibleVerse'])->middleware('throttle:120,1,bible')->name('bible.verse'); // 最愛經文自動帶出
     Route::patch('/me/intro/fields', [ProfileController::class, 'patchIntro'])->middleware('throttle:120,1,autosave')->name('profile.intro.patch');
+    Route::get('/churches/search', [\App\Http\Controllers\DirectoryChurchController::class, 'search'])->middleware('throttle:120,1')->name('churches.search'); // 自我介紹教會名稱的建議（熊叔叔 11/6 #11）
     Route::put('/me/intro', [ProfileController::class, 'updateIntro'])->middleware('throttle:30,60,profile-save')->name('profile.intro.update');
     Route::put('/me', [ProfileController::class, 'update'])->middleware('throttle:30,60,profile-save')->name('profile.update');
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');

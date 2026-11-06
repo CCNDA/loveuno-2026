@@ -40,6 +40,9 @@ return [
         'script' => env('LOVEUNO_FACE_SCRIPT', '/opt/loveuno-face/face_focus.py'),
     ],
 
+    // 名錄公開的機構清單（每天同步教會，自我介紹選教會用；熊叔叔 11/6 決定 #11 甲）
+    'directory_churches_url' => env('DIRECTORY_CHURCHES_URL', 'https://church.oursweb.net/data/church.json'),
+
     // 聯絡我們的「我不是機器人」（Cloudflare Turnstile）：兩個都有值才檢查。Secret 不進 git、不經過信／TG
     'turnstile' => [
         'site' => env('TURNSTILE_SITE_KEY', ''),

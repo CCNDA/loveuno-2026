@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'job', 'intro', 'hope',
+#[Fillable(['user_id', 'gender', 'birth_year', 'birth_month', 'birth_day', 'live_place', 'church', 'church_visible', 'church_country', 'church_oid', 'job', 'intro', 'hope',
     'pref_gender', 'pref_age_min', 'pref_age_max', 'pref_place',
     'pref_marital', 'pref_faith', 'pref_height_min', 'pref_height_max', 'pref_weight_min', 'pref_weight_max',
     'real_name', 'home_phone', 'faith', 'marital', 'children', 'education', 'blood_type', 'height', 'weight', 'smoking', 'drinking',
@@ -64,6 +64,7 @@ class Profile extends Model
         return [
             'preferences_saved_at' => 'datetime',
             'church_visible' => 'boolean',
+            'church_oid' => 'integer',
             'birth_year' => 'integer',
             'height' => 'integer',
             'weight' => 'integer',

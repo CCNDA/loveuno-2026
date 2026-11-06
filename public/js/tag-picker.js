@@ -1,0 +1,73 @@
+// 慣用語言、興趣、喜愛的運動：設計稿是「標籤輸入」（熊叔叔 11/6 決定 #11）。
+// 沒有 JS 時照舊是勾選框；有 JS 時把勾選框藏起來，改成「已選的標籤（按一下拿掉）＋輸入框（打字或點一下列出還沒選的）」，最多 3 個。
+// 真正送出的還是那些勾選框：這裡只是幫忙勾、取消勾，再發 change 事件，自動存檔照舊。
+(function () {
+    Array.prototype.forEach.call(document.querySelectorAll('fieldset[data-tags]'), function (fs) {
+        var boxes = Array.prototype.slice.call(fs.querySelectorAll('input[type=checkbox]'));
+        var grid = fs.querySelector('.check-grid');
+        if (!boxes.length || !grid) { return; }
+        var max = parseInt(fs.getAttribute('data-tags'), 10) || 3;
+        var name = fs.querySelector('legend').textContent.replace(/（.*?）/g, '');
+
+        var box = document.createElement('div');
+        box.className = 'tag-box';
+        var chips = document.createElement('ul');
+        chips.className = 'tag-chips';
+        chips.setAttribute('aria-label', '已選的' + name);
+        var label = document.createElement('label');
+        label.className = 'visually-hidden';
+        label.htmlFor = fs.id + '-add';
+        label.textContent = '加一個' + name;
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.id = fs.id + '-add';
+        input.className = 'tag-add';
+        input.autocomplete = 'off';
+        input.setAttribute('list', fs.id + '-options');
+        if (document.getElementById(fs.id + '-hint')) { input.setAttribute('aria-describedby', fs.id + '-hint'); }
+        var list = document.createElement('datalist');
+        list.id = fs.id + '-options';
+        box.appendChild(chips);
+        box.appendChild(label);
+        box.appendChild(input);
+        box.appendChild(list);
+        grid.parentNode.insertBefore(box, grid.nextSibling);
+        fs.classList.add('is-tags');
+
+        function toggle(b, on) {
+            b.checked = on;
+            b.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        function render(focusLast) {
+            var chosen = boxes.filter(function (b) { return b.checked; });
+            chips.textContent = '';
+            list.textContent = '';
+            chosen.forEach(function (b) {
+                var li = document.createElement('li'), btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tag-chip';
+                btn.textContent = b.value;
+                btn.setAttribute('aria-label', '拿掉「' + b.value + '」');
+                btn.addEventListener('click', function () { toggle(b, false); render(); input.focus(); });
+                li.appendChild(btn);
+                chips.appendChild(li);
+            });
+            boxes.forEach(function (b) {
+                if (!b.checked) { var o = document.createElement('option'); o.value = b.value; list.appendChild(o); }
+            });
+            var full = chosen.length >= max;
+            input.disabled = full;
+            input.placeholder = full ? '最多 ' + max + ' 個' : '打字或點這裡選';
+            if (focusLast && full && chips.lastChild) { chips.lastChild.firstChild.focus(); }
+        }
+        input.addEventListener('input', function () {
+            var hit = boxes.filter(function (b) { return !b.checked && b.value === input.value; })[0];
+            if (!hit) { return; }
+            toggle(hit, true);
+            input.value = '';
+            render(true);
+            if (!input.disabled) { input.focus(); }
+        });
+        render();
+    });
+})();

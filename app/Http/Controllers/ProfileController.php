@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DirectoryChurch;
 use App\Models\Profile;
 use App\Support\Bible;
 use App\Support\Points;
@@ -129,6 +130,8 @@ class ProfileController extends Controller
         $keys = self::sentKeys($request, $rules);
         // 經文的書卷、章、節是一組：只送一個時，其他從資料庫補，一起驗、經文一起重算（小布 11/5：只送 verse_verse=99 會存成跟經文不符）
         $keys = self::withGroup($request, $keys, ['verse_book', 'verse_chapter', 'verse_verse'], Profile::where('user_id', $request->user()->id)->first()); // 從資料庫讀現值，不用可能過期的關聯
+        // 教會的國家、名稱、名錄編號是一組（熊叔叔 11/6 #11）：只改名稱時其他從資料庫補，名稱對不上名錄就不留編號
+        $keys = self::withGroup($request, $keys, ['church_country', 'church', 'church_oid'], Profile::where('user_id', $request->user()->id)->first());
         $data = $request->validate(self::only($rules, $keys), $messages, $attributes);
         $this->checkVerse($data);
         if (in_array('verse_book', $keys, true)) {
@@ -200,10 +203,11 @@ class ProfileController extends Controller
     private static function introValues(Request $request, array $data): array
     {
         $text = fn (string $k) => self::trimmed($data, $k);
+        [$church, $oid, $country] = self::church($data);
 
         return [
             'headline' => $text('headline'),
-            'church' => $text('church'), 'church_visible' => $request->boolean('church_visible'),
+            'church' => $church, 'church_oid' => $oid, 'church_country' => $country, 'church_visible' => $request->boolean('church_visible'),
             'verse_book' => $text('verse_book'),
             'verse_chapter' => $data['verse_chapter'] ?? null, 'verse_verse' => $data['verse_verse'] ?? null,
             // 經文從聖經帶出來，不收使用者打的字（熊叔叔 11/5「聖經要自己帶出來」）
@@ -216,6 +220,20 @@ class ProfileController extends Controller
         ];
     }
 
+    // 教會（熊叔叔 11/6 決定 #11）：挑了名錄的教會、名稱也對得上（建議後面可能帶「（縣市 區）」）→ 存名錄編號、國家，名稱換回名錄全名；
+    // 名稱改過、對不上 → 當作自己打的（名錄找不到的教會），名錄編號不留
+    private static function church(array $data): array
+    {
+        $name = self::trimmed($data, 'church');
+        $country = strtoupper(self::trimmed($data, 'church_country')) ?: null;
+        $dc = ! empty($data['church_oid']) ? DirectoryChurch::find((int) $data['church_oid']) : null;
+        if ($dc && ($name === $dc->name || str_starts_with($name, $dc->name . '（'))) {
+            return [$dc->name, $dc->oid, $dc->country_code ?: $country];
+        }
+
+        return [$name, null, $country];
+    }
+
     private function introRules(): array
     {
         $picks = ['array', 'max:' . Opt::MAX_PICKS]; // 「請選擇1-3種」
@@ -223,6 +241,8 @@ class ProfileController extends Controller
         return [[
             'headline' => ['required', 'string', 'max:50'],
             'church' => ['nullable', 'string', 'max:100'],
+            'church_country' => ['nullable', 'string', 'size:2', 'alpha'],
+            'church_oid' => ['nullable', 'integer', 'min:1'],
             'church_visible' => ['nullable', 'boolean'],
             'verse_book' => ['nullable', Rule::in(Opt::BIBLE_BOOKS)],
             'verse_chapter' => ['nullable', 'integer', 'between:1,150', 'required_with:verse_book'],
@@ -243,7 +263,7 @@ class ProfileController extends Controller
             'verse_chapter.required_with' => '選了書卷，請一起填「章」。',
             'verse_verse.required_with' => '選了書卷，請一起填「節」。',
         ], [
-            'headline' => '個人標題', 'church' => '教會名稱', 'verse_book' => '聖經書卷', 'verse_chapter' => '章', 'verse_verse' => '節',
+            'headline' => '個人標題', 'church' => '教會名稱', 'church_country' => '教會所在國家', 'verse_book' => '聖經書卷', 'verse_chapter' => '章', 'verse_verse' => '節',
             'verse_text' => '經文', 'languages' => '慣用語言', 'hobbies' => '興趣', 'sports' => '喜愛的運動', 'intro' => '自我介紹', 'hope' => '期待認識的人',
         ]];
     }
