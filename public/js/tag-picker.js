@@ -14,7 +14,6 @@
         box.className = 'tag-box';
         box.tabIndex = -1; // 加滿時焦點放這裡：放在「拿掉」鈕上，同一個 Enter 會把它按下去（小霏 11/6）；.tag-chips 是 display:contents 拿不到焦點
         box.setAttribute('role', 'group');
-        box.setAttribute('aria-label', name + '（已選滿）');
         var chips = document.createElement('ul');
         chips.className = 'tag-chips';
         chips.setAttribute('aria-label', '已選的' + name);
@@ -64,6 +63,7 @@
             var full = chosen.length >= max;
             input.disabled = full;
             input.placeholder = full ? '最多 ' + max + ' 個' : '打字或點這裡選';
+            box.setAttribute('aria-label', name + (full ? '（已選滿 ' + max + ' 個）' : ''));
             if (focusLast && full) { box.focus(); }
         }
         function addTyped() {
