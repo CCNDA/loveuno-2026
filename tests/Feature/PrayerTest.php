@@ -205,7 +205,7 @@ class PrayerTest extends TestCase
             ->assertRedirect('/#d' . $other->id)->assertSessionHasErrorsIn('comment' . $other->id, 'body');
     }
 
-    public function test_wall_card_shows_latest_three_comments(): void
+    public function test_wall_card_shows_latest_two_comments_and_more(): void
     {
         $author = $this->member('作者');
         $d = $this->diary($author);
@@ -215,10 +215,11 @@ class PrayerTest extends TestCase
             $c->forceFill(['diary_id' => $d->id, 'user_id' => $v->id, 'created_at' => now()->subMinutes(10 - $i)])->save();
         }
 
+        // 熊叔叔 11/6：先顯示最新 2 則，其餘收在「更多」裡（原本是最新 3 則＋看全部連結）
         $html = $this->actingAs($v)->get('/')->getContent();
-        $this->assertStringNotContainsString('第一則', $html);
+        $this->assertStringContainsString('更多 2 則留言', $html);
         $this->assertStringContainsString('第四則', $html);
-        $this->assertStringContainsString('看全部 4 則留言', $html);
+        $this->assertStringNotContainsString('看全部', $html);
     }
 
     public function test_wall_comment_error_shows_on_that_card(): void

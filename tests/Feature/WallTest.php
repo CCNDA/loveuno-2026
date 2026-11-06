@@ -222,4 +222,24 @@ class WallTest extends TestCase
         $this->actingAs($me)->post('/diaries', ['title' => '下拉選心情', 'body' => '今天很好', 'is_prayer' => '0', 'visibility' => 'public'])->assertRedirect();
         $this->assertFalse((bool) $me->diaries()->where('title', '下拉選心情')->value('is_prayer'));
     }
+
+    // 熊叔叔 11/6：日記牆每篇先顯示最新 2 則留言，其餘收在「更多」裡
+    public function test_wall_shows_two_comments_and_more(): void
+    {
+        $me = \App\Models\User::factory()->create();
+        \App\Models\Profile::create(['user_id' => $me->id, 'gender' => '女', 'birth_year' => 1990]);
+        $d = new \App\Models\Diary;
+        $d->forceFill(['user_id' => $me->id, 'title' => '留言很多的日記', 'body' => '內容', 'visibility' => 'public', 'published_on' => now()->toDateString()])->save();
+        foreach (['第一則', '第二則', '第三則', '第四則'] as $i => $body) {
+            $c = new \App\Models\DiaryComment;
+            $c->forceFill(['diary_id' => $d->id, 'user_id' => $me->id, 'body' => $body, 'created_at' => now()->subMinutes(10 - $i)])->save();
+        }
+        $html = $this->actingAs($me)->get('/')->assertOk()->getContent();
+        $this->assertStringContainsString('更多 2 則留言', $html);
+        $more = substr($html, strpos($html, 'class="comment-more"'), strpos($html, '</details>', strpos($html, 'class="comment-more"')) - strpos($html, 'class="comment-more"'));
+        $this->assertStringContainsString('第一則', $more);
+        $this->assertStringContainsString('第二則', $more);
+        $this->assertStringNotContainsString('第四則', $more); // 最新 2 則在外面
+        $this->assertStringContainsString('第四則', $html);
+    }
 }
