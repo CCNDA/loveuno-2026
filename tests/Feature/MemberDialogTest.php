@@ -45,6 +45,14 @@ class MemberDialogTest extends TestCase
         $this->assertStringContainsString('data-dialog="date"', $html);
         $this->assertStringContainsString('id="dlg-date"', $html);
 
+        // 送禮物：一直出現；今天送過 → 灰色「今天已送」、不能按（熊叔叔 11/6 選甲）
+        $this->assertStringContainsString('data-dialog="gift"', $html);
+        $g = new \App\Models\Gift;
+        $g->forceFill(['sender_id' => $a->id, 'recipient_id' => $b->id, 'item' => 1, 'message' => '', 'sent_on' => now()->toDateString()])->save();
+        $html = $this->actingAs($a)->get("/members/{$b->id}")->getContent();
+        $this->assertStringContainsString('今天已送', $html);
+        $this->assertStringNotContainsString('data-dialog="gift"', $html);
+
         // 自己的檔案頁沒有對話框
         $this->actingAs($a)->get("/members/{$a->id}")->assertDontSee('id="dlg-gift"', false);
     }
