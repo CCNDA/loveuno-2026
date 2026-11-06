@@ -31,6 +31,9 @@ class PageController extends Controller
             'subject.in' => '請選擇聯絡事項。',
             'body.min' => '請詳述您的問題，至少 10 個字。',
         ], ['name' => '姓名', 'email' => 'Email', 'subject' => '聯絡事項', 'body' => '聯絡內容']);
+        if (! \App\Support\Turnstile::verify($request->input('cf-turnstile-response'), $request->ip())) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['turnstile' => '請先完成「我不是機器人」驗證，再按送出。']);
+        }
 
         $msg = new ContactMessage($data);
         $msg->user_id = $request->user()?->id;
