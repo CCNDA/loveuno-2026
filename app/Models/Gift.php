@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HiddenPerSide;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // 禮物。所有欄位由 GiftController 指定，沒有表單直接寫進來，所以不開 Fillable。
 class Gift extends Model
 {
+    use HiddenPerSide;
+
     // 設計稿的 12 種，照 SendGiftDialog.tsx 的 id 與順序（熊叔叔 10/29「2A」）；名字以 Figma 為準（第 4 種 Figma 是
     // 「恩膏葡萄酒」，前台程式寫「恩賜葡萄酒」）。圖是 Figma 01_UNO_Website「gift」框（330:9182）匯出的，
     // 縮成 192px 的 WebP 放在 public/images/gifts/<id>.webp（五餅二魚那一張第一份不完整，用第二份 342:39614）。
@@ -34,6 +37,8 @@ class Gift extends Model
             'item' => 'integer',
             'sent_on' => 'date',
             'opened_at' => 'datetime',
+            'sender_deleted_at' => 'datetime',
+            'recipient_deleted_at' => 'datetime',
         ];
     }
 
@@ -59,7 +64,7 @@ class Gift extends Model
 
     public static function unopenedCountFor(User $user): int
     {
-        return self::where('recipient_id', $user->id)->whereNull('opened_at')
+        return self::where('recipient_id', $user->id)->whereNull('opened_at')->whereNull('recipient_deleted_at')
             ->whereNotIn('sender_id', $user->blockRelatedIds())->count();
     }
 }

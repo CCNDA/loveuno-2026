@@ -24,14 +24,33 @@ class MeetupController extends Controller
 {
     public const COST_TYPE = 'date';
 
+    // 勾選刪除：只把我這邊標成刪掉，對方還看得到（熊叔叔 11/6 #9）
+    public function destroy(Request $request): RedirectResponse
+    {
+        $ids = (array) $request->input('ids', []);
+        if (! $ids) {
+            return redirect()->route('meetups.index')->with('status', '請先勾選要刪除的約會邀請。');
+        }
+        $n = Meetup::hideFor($request->user(), $ids);
+
+        return redirect()->route('meetups.index')->with('status', "刪掉了 {$n} 個約會邀請。");
+    }
+
     public function index(Request $request): View
     {
         $me = $request->user();
         $blocked = $me->blockRelatedIds();
-        $q = fn ($col, $other) => Meetup::with($other)->where($col, $me->id)->whereNotIn($col === 'sender_id' ? 'recipient_id' : 'sender_id', $blocked)
-            ->orderByDesc('meet_on')->orderByDesc('id')->limit(50)->get();
+        // 熊叔叔 11/6 決定 #9：左邊清單（收到＋送出，新的在前，可勾選刪除），右邊卡片；?with=會員 只看跟那位的
+        $letters = Meetup::with(['sender', 'recipient'])->visibleTo($me)
+            ->where(fn ($w) => $w->where(fn ($r) => $r->where('recipient_id', $me->id)->whereNotIn('sender_id', $blocked))
+                ->orWhere(fn ($s) => $s->where('sender_id', $me->id)->whereNotIn('recipient_id', $blocked)))
+            ->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get();
+        $with = (int) $request->query('with', 0);
+        $other = $with ? $letters->map(fn (Meetup $m) => $m->otherThan($me))->filter()->first(fn (User $u) => (int) $u->id === $with) : null;
+        $cards = $other ? $letters->filter(fn (Meetup $m) => $m->involves($other))->values() : $letters;
+        $newCount = $letters->filter(fn (Meetup $m) => $m->recipient_id === (int) $me->id && $m->state() === 'pending')->count();
 
-        return view('meetups.index', ['received' => $q('recipient_id', 'sender'), 'sent' => $q('sender_id', 'recipient')]);
+        return view('meetups.index', ['letters' => $letters, 'cards' => $cards, 'other' => $other, 'newCount' => $newCount]);
     }
 
     public function create(Request $request, User $user): View

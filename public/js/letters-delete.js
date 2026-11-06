@@ -4,7 +4,8 @@
     if (!form) return;
     form.addEventListener('submit', function (e) {
         var n = form.querySelectorAll('input[name="ids[]"]:checked').length;
-        if (n > 0 && !window.confirm('要刪除勾選的 ' + n + ' 封信嗎？只會從您這邊刪除，對方還看得到。')) {
+        var msg = form.getAttribute('data-confirm') || '要刪除勾選的 {n} 封信嗎？只會從您這邊刪除，對方還看得到。';
+        if (n > 0 && !window.confirm(msg.replace('{n}', n))) {
             e.preventDefault();
         }
     });

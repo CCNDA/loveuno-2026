@@ -1351,3 +1351,9 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .letter-link:hover .letter-title { text-decoration: underline; }
 .note .note-head { flex-wrap: wrap; }
 .note .note-title { order: 3; flex-basis: 100%; margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--plum); min-width: 0; overflow-wrap: anywhere; }
+
+/* 查看禮物、約會邀請兩欄（設計稿 2529:20867、2529:26799；熊叔叔 11/6 #9）：左清單沿用情書樣式，右邊卡片 */
+.letters-heart { color: #b5452f; font-size: 1.2rem; line-height: 1; }
+.letter-title .tag { font-weight: 400; }
+.gift-pane > h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.gift-pane .gift-cards { gap: 24px; }
