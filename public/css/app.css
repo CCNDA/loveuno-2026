@@ -1303,3 +1303,10 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .radio-opt input { width: 20px; height: 20px; margin: 0; accent-color: var(--button); }
 .radio-opt label { margin: 0; font-weight: 400; cursor: pointer; }
 .radio-field[aria-invalid="true"] legend, .radio-field:has(input[aria-invalid="true"]) legend { color: var(--error); }
+
+/* 日記牆留言：先顯示 2 則，其餘「更多」展開（熊叔叔 11/6） */
+.comment-more { margin: 4px 0; }
+.comment-more > summary { display: inline-flex; align-items: center; min-height: 44px; color: var(--button); cursor: pointer; font-size: .9rem; list-style: none; }
+.comment-more > summary::-webkit-details-marker { display: none; }
+.comment-more > summary::before { content: "▸ "; white-space: pre; }
+.comment-more[open] > summary::before { content: "▾ "; }
