@@ -13,9 +13,9 @@ use Illuminate\View\View;
 // 戀愛履歷（熊叔叔 10/29「3A」：照舊站 member/profile3.php 做問卷）。選擇題必填、文字題可以不填（跟舊站一樣）。
 class LoveHistoryController extends Controller
 {
-    public function edit(Request $request): View
+    public function edit(Request $request): RedirectResponse
     {
-        return view('profile.love', ['answers' => $request->user()->profile?->love_history ?? []]);
+        return redirect()->to(route('profile.edit') . '#love-title'); // 熊叔叔 11/6：戀愛履歷搬到個人資料頁下半
     }
 
     public function update(Request $request): RedirectResponse
@@ -40,6 +40,6 @@ class LoveHistoryController extends Controller
         Profile::updateOrCreate(['user_id' => $user->id], ['love_history' => $answers]);
         Points::checkTasks($user); // 完成戀愛履歷建檔 +10
 
-        return redirect()->route('members.show', ['user' => $user, 'tab' => 'intro'])->with('status', '戀愛履歷存好了。');
+        return redirect()->to(route('profile.edit') . '#love-title')->with('status', '戀愛履歷存好了。');
     }
 }

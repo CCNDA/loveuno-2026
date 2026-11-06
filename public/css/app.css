@@ -1324,3 +1324,9 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .contact-preview dt { font-size: .85rem; color: var(--muted); }
 .contact-preview dd { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .contact-preview dd.is-empty { color: var(--error); }
+
+/* 個人資料頁下半的戀愛履歷、自我介紹頁上方的大頭照（熊叔叔 11/6：個人檔案 4 個子頁） */
+.love-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+.photo-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.photo-section .member-head { display: flex; align-items: center; gap: 16px; }
+.photo-section .member-head h2 { margin: 0; }

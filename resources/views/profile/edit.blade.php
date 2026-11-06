@@ -85,4 +85,5 @@
 </form>
 
 <p><a href="{{ route('me') }}">← 回我的檔案</a></p>
+@include('profile.partials.love-section')
 @endsection

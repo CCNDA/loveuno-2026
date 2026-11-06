@@ -27,10 +27,11 @@ class LoveHistoryTest extends TestCase
     {
         $u = User::factory()->create(['name' => '我']);
         Profile::create(['user_id' => $u->id, 'gender' => '女', 'birth_year' => 1990]);
-        $this->actingAs($u)->get('/me/love')->assertOk()->assertSee('目前的感情狀態')->assertSee('對於與非基督徒交往的感覺');
+        $this->actingAs($u)->get('/me/love')->assertRedirect(route('profile.edit') . '#love-title'); // 熊叔叔 11/6：戀愛履歷搬到個人資料頁下半
+        $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee('目前的感情狀態')->assertSee('對於與非基督徒交往的感覺');
 
         $this->actingAs($u)->put('/me/love', $this->answers(['cvcurrent' => '保留', 'cvnote' => '希望一起服事']))
-            ->assertRedirect("/members/{$u->id}?tab=intro");
+            ->assertRedirect(route('profile.edit') . '#love-title');
         $this->assertSame('希望一起服事', $u->profile->fresh()->love_history['cvnote']);
         $this->assertSame(10, (int) DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'love')->value('amount'));
 
