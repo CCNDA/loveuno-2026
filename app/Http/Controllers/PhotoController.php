@@ -21,14 +21,14 @@ class PhotoController extends Controller
 {
     // 寬、高、最小寬、最小高、名稱、回到哪個編輯頁。封面最小 900×300：再小就會被放大超過 1.33 倍、變模糊
     public const KINDS = [
-        'photo' => ['w' => 600, 'h' => 600, 'min_w' => 200, 'min_h' => 200, 'label' => '大頭照', 'edit' => 'photo.edit'],
+        'photo' => ['w' => 600, 'h' => 600, 'min_w' => 200, 'min_h' => 200, 'label' => '大頭照', 'edit' => 'profile.intro'],
     ];
 
-    public function edit(Request $request): View
+    public function edit(Request $request): RedirectResponse
     {
         $kind = $this->kind($request);
 
-        return view('photos.edit', ['profile' => $this->profileOf($request->user()), 'kind' => $kind, 'cfg' => self::KINDS[$kind]]);
+        return redirect()->to(route(self::KINDS[$kind]['edit']) . '#photo-title'); // 熊叔叔 11/6：大頭照併進自我介紹頁
     }
 
     public function update(Request $request): RedirectResponse
@@ -64,7 +64,7 @@ class PhotoController extends Controller
             Storage::disk('avatars')->delete($old);
         }
 
-        return redirect()->route($cfg['edit'])->with('status', $cfg['label'] . '上傳好了，管理員審核通過後其他會員就看得到。');
+        return redirect()->to(route($cfg['edit']) . '#photo-title')->with('status', $cfg['label'] . '上傳好了，管理員審核通過後其他會員就看得到。');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -76,7 +76,7 @@ class PhotoController extends Controller
         }
         $profile->forceFill([$kind . '_path' => null, $kind . '_status' => '', $kind . '_updated_at' => now()])->save();
 
-        return redirect()->route(self::KINDS[$kind]['edit'])->with('status', self::KINDS[$kind]['label'] . '刪掉了。');
+        return redirect()->to(route(self::KINDS[$kind]['edit']) . '#photo-title')->with('status', self::KINDS[$kind]['label'] . '刪掉了。');
     }
 
     public function show(Request $request, User $user): Response

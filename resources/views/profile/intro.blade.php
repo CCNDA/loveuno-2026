@@ -4,6 +4,7 @@
 
 @section('content')
 @include('center.tabs', ['current' => 'profile', 'sub' => 'intro'])
+@include('photos.partials.photo-section')
 <h2>自我介紹</h2>
 
 <form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide intro-form" novalidate

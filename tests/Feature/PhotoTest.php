@@ -40,7 +40,7 @@ class PhotoTest extends TestCase
         $u = $this->member();
         $file = UploadedFile::fake()->image('me.png', 800, 600);
 
-        $this->actingAs($u)->post('/me/photo', ['photo' => $file])->assertRedirect('/me/photo');
+        $this->actingAs($u)->post('/me/photo', ['photo' => $file])->assertRedirect(route('profile.intro') . '#photo-title');
 
         $p = $u->profile->fresh();
         $this->assertSame('pending', $p->photo_status);
@@ -125,7 +125,7 @@ class PhotoTest extends TestCase
         Storage::disk('avatars')->assertExists($second);
         $this->assertSame('pending', $u->profile->fresh()->photo_status); // 換照片要重新審核
 
-        $this->actingAs($u)->delete('/me/photo')->assertRedirect('/me/photo');
+        $this->actingAs($u)->delete('/me/photo')->assertRedirect(route('profile.intro') . '#photo-title');
         Storage::disk('avatars')->assertMissing($second);
         $this->assertNull($u->profile->fresh()->photo_path);
     }

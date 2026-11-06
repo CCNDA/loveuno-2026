@@ -70,7 +70,7 @@ class CenterController extends Controller
             'user' => $user,
             'tab' => $tab,
             'status' => Points::taskStatus($user),
-            'links' => ['profile' => 'profile.edit', 'preferences' => 'center.preferences', 'love' => 'profile.love', 'photo' => 'photo.edit', 'phone' => 'verify.index', 'job' => 'verify.index', 'id' => 'verify.index', 'church' => 'verify.index'],
+            'links' => ['profile' => 'profile.edit', 'preferences' => 'center.preferences', 'love' => 'profile.edit', 'photo' => 'profile.intro', 'phone' => 'verify.index', 'job' => 'verify.index', 'id' => 'verify.index', 'church' => 'verify.index'],
             'records' => $records,
         ]);
     }

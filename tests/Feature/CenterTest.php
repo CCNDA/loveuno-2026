@@ -28,7 +28,8 @@ class CenterTest extends TestCase
         $this->assertMatchesRegularExpression('#aria-current="page"\s*><span class="ui-icon icon-center-account" aria-hidden="true"></span>帳號管理#u', $html);
         $this->actingAs($u)->get('/me/edit')->assertOk()->assertSee(route('profile.intro'), false);
         $this->actingAs($u)->get('/me/intro')->assertOk()->assertSee('最愛經文');
-        $this->actingAs($u)->get('/me/photo')->assertOk()->assertSee(route('verify.index'), false);
+        $this->actingAs($u)->get('/me/photo')->assertRedirect(route('profile.intro') . '#photo-title'); // 熊叔叔 11/6：大頭照併進自我介紹
+        $this->actingAs($u)->get('/me/intro')->assertOk()->assertSee('個人大頭貼照片')->assertSee(route('verify.index'), false)->assertDontSee('>戀愛履歷</a>', false);
         $this->actingAs($u)->get('/center/points')->assertOk()->assertSee('我目前的愛諾積點');
     }
 

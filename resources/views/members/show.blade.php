@@ -13,7 +13,7 @@
         <li><a href="{{ route('gifts.index') }}">我的禮物</a></li>
         <li><a href="{{ route('meetups.index') }}">我的約會</a></li>
         <li><a href="{{ route('profile.edit') }}">編輯個人檔案</a></li>
-        <li><a href="{{ route('photo.edit') }}">換大頭照@if ($member->profile?->photo_status === 'pending')（審核中）@endif</a></li>
+        <li><a href="{{ route('profile.intro') }}#photo-title">換大頭照@if ($member->profile?->photo_status === 'pending')（審核中）@endif</a></li>
         <li><a href="{{ route('album.edit') }}#cover-title">換封面</a></li>
     </ul>
 @endif
