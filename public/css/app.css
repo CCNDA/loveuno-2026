@@ -1376,6 +1376,7 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .church-row .field { margin: 0; }
 @media (max-width: 40rem) { .church-row { grid-template-columns: 1fr; } }
 .is-tags .check-grid { display: none !important; } /* 原本的 .chip-checks 是 display:flex !important（沒有 JS 時的樣子） */
+.tag-box:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 .tag-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 44px; padding: 6px 8px; border: 2px solid #8c857b; border-radius: 8px; background: #fff; box-sizing: border-box; }
 .tag-chips { display: contents; list-style: none; margin: 0; padding: 0; }
 .tag-chips li { list-style: none; }
