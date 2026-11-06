@@ -16,7 +16,7 @@
     @include('partials.errors', ['title' => '大頭照' . '沒有上傳成功'])
     <div class="field">
         <label for="photo">選一張照片</label>
-        <p id="photo-hint" class="hint">JPG、PNG 或 WebP，5MB 以下。會裁成 正方形；照片裡的拍攝地點等資訊會被拿掉。</p>
+        <p id="photo-hint" class="hint">JPG、PNG 或 WebP，5MB 以下。會裁成正方形；照片裡的拍攝地點等資訊會被拿掉。</p>
         <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required class="camera-input photo-pick"
                aria-describedby="photo-hint @error('photo') photo-error @enderror"
                @error('photo') aria-invalid="true" @enderror>
