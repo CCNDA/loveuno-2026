@@ -5,7 +5,7 @@
     dlg.className = 'zoom-dialog';
     dlg.setAttribute('aria-label', '放大的圖片');
     var close = document.createElement('button');
-    close.type = 'button'; close.className = 'dialog-close'; close.setAttribute('aria-label', '關閉'); close.textContent = '✕';
+    close.type = 'button'; close.className = 'dialog-close'; close.setAttribute('aria-label', '關閉'); close.textContent = '×';
     var img = document.createElement('img');
     dlg.appendChild(close); dlg.appendChild(img);
     document.body.appendChild(dlg);

@@ -92,7 +92,7 @@
 <dialog id="write-dialog" class="write-dialog" aria-labelledby="write-dialog-title">
     <div class="write-dialog-head">
         <h2 id="write-dialog-title">心情日記 / 需要代禱</h2>
-        <button type="button" class="dialog-close" data-close><span aria-hidden="true">✕</span><span class="visually-hidden">關閉</span></button>
+        <button type="button" class="dialog-close" data-close><span aria-hidden="true">×</span><span class="visually-hidden">關閉</span></button>
     </div>
     <form method="POST" action="{{ route('diaries.store') }}" class="diary-form" enctype="multipart/form-data" novalidate>
         @csrf
