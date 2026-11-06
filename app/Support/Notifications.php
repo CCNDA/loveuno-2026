@@ -47,6 +47,13 @@ class Notifications
             $items[] = ['kind' => 'gift', 'at' => $g->created_at, 'unread' => $g->opened_at === null, 'user' => $g->sender,
                 'text' => $g->sender->name . ' 送了一份禮物給你。', 'action' => '快來看看', 'url' => route('gifts.index')];
         }
+        // 對方刪除了我送的、還沒回禮的禮物（熊叔叔 11/7）：通知我積點已退回
+        foreach (Gift::with('recipient')->where('sender_id', $me->id)->whereNotNull('refunded_at')->whereNotIn('recipient_id', $blocked)
+            ->where('refunded_at', '>=', $since)->latest('refunded_at')->limit(3)->get() as $g) {
+            $items[] = ['kind' => 'gift_refund', 'at' => $g->refunded_at, 'unread' => false, 'user' => $g->recipient,
+                'text' => $g->recipient->name . ' 沒有收下你的禮物，' . Points::COSTS['gift'][0] . ' 點已退回。', 'action' => '看積點紀錄',
+                'url' => route('center.points')];
+        }
         foreach (Meetup::with('sender')->where('recipient_id', $me->id)->where('status', 'pending')
             ->where('meet_on', '>', today())->whereNotIn('sender_id', $blocked)->latest()->limit(3)->get() as $m) {
             $items[] = ['kind' => 'meetup', 'at' => $m->created_at, 'unread' => true, 'user' => $m->sender,

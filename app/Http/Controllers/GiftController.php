@@ -27,9 +27,30 @@ class GiftController extends Controller
         if (! $ids) {
             return redirect()->route('gifts.index')->with('status', '請先勾選要刪除的禮物。');
         }
-        $n = Gift::hideFor($request->user(), $ids);
+        $me = $request->user();
+        // 熊叔叔 11/7 TG「收到禮物的處理應該要有一個回禮和刪除，刪除可以退對方點數」（按甲）：
+        // 刪除「還沒回禮」的禮物＝婉拒，退送禮的人 3 點並通知他；已經回禮（成為朋友）的只從自己這邊拿掉、不退。
+        // Points::award 同一個 type＋ref 只會給一次，再按一次刪除也不會重複退。
+        $refunded = 0;
+        $mine = Gift::with('sender')->whereIn('id', collect($ids)->map(fn ($v) => (int) $v)->filter()->unique()->take(200)->all())
+            ->where('recipient_id', $me->id)->whereNull('recipient_deleted_at')->whereNull('refunded_at')->get();
+        foreach ($mine as $g) {
+            // 回禮過＝我送過禮物給他，或已經是朋友；這兩種都不退
+            $returned = $me->friendLevelWith($g->sender ?? $me) >= 1
+                || Gift::where('sender_id', $me->id)->where('recipient_id', $g->sender_id)->exists();
+            if (! $g->sender || $returned) {
+                continue;
+            }
+            $amount = Points::COSTS['gift'][0];
+            if (Points::award($g->sender, 'gift_refund', 'gift:' . $g->id, $amount, $me->name . ' 沒有收下禮物，退回積點')) {
+                $g->forceFill(['refunded_at' => now()])->save();
+                $refunded++;
+            }
+        }
+        $n = Gift::hideFor($me, $ids);
 
-        return redirect()->route('gifts.index')->with('status', "刪掉了 {$n} 份禮物。");
+        return redirect()->route('gifts.index')->with('status', "刪掉了 {$n} 份禮物。"
+            . ($refunded ? sprintf('其中 %d 份還沒回禮，已退 %d 點給送禮的人。', $refunded, Points::COSTS['gift'][0]) : ''));
     }
 
     public function index(Request $request): View
