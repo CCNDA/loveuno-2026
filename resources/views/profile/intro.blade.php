@@ -8,7 +8,7 @@
 <h2>自我介紹</h2>
 
 <form method="POST" action="{{ route('profile.intro.update') }}" class="form form-wide intro-form" novalidate
-      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse" data-autosave-together="verse_book verse_chapter verse_verse">
+      data-autosave="{{ route('profile.intro.patch') }}" data-autosave-groups="verse_book verse_chapter verse_verse;church_country church church_oid" data-autosave-together="verse_book verse_chapter verse_verse">
     @csrf
     @method('PUT')
     @include('partials.errors', ['title' => '自我介紹還沒存好'])
@@ -23,12 +23,23 @@
         @error('headline')<p id="headline-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="field">
-        <label for="church">我的教會（教會名稱）</label>
-        <input id="church" name="church" type="text" maxlength="100" value="{{ old('church', $profile->church) }}"
-               @error('church') aria-invalid="true" aria-describedby="church-error" @enderror>
-        @error('church')<p id="church-error" class="field-error">{{ $message }}</p>@enderror
-    </div>
+    {{-- 設計稿 69:5836「我的教會(非必填)」：先選國家，教會名稱打字會列出名錄的教會（熊叔叔 11/6 決定 #11 甲）；找不到的可以自己打 --}}
+    <fieldset class="field church-pick">
+        <legend>我的教會（可以不填）</legend>
+        <div class="church-row">
+            @include('partials.select-field', ['name' => 'church_country', 'label' => '教會所在國家', 'options' => \App\Models\DirectoryChurch::countries(), 'value' => $profile->church_country ?? 'TW'])
+            <div class="field">
+                <label for="church">教會名稱</label>
+                <p id="church-hint" class="hint">打幾個字，會列出名錄裡這個國家的教會；找不到也可以自己打名稱。</p>
+                <input id="church" name="church" type="text" maxlength="100" list="church-list" autocomplete="off" data-search="{{ route('churches.search') }}"
+                       value="{{ old('church', $profile->church) }}"
+                       aria-describedby="church-hint @error('church') church-error @enderror" @error('church') aria-invalid="true" @enderror>
+                <datalist id="church-list"></datalist>
+                <input type="hidden" id="church_oid" name="church_oid" value="{{ old('church_oid', $profile->church_oid) }}">
+                @error('church')<p id="church-error" class="field-error">{{ $message }}</p>@enderror
+            </div>
+        </div>
+    </fieldset>
     <div class="field field-check">
         {{-- 送出失敗回來時，沒勾的 checkbox 不會出現在 old()，要用這次送的值，不是資料庫的舊值 --}}
         <input id="church_visible" name="church_visible" type="checkbox" value="1" @checked($errors->any() ? old('church_visible') : $profile->church_visible)>
@@ -56,7 +67,7 @@
     @foreach ([['languages', '慣用語言（必填）', '請選擇 1～3 種慣用的語言。', $O::LANGUAGES], ['hobbies', '興趣（必填）', '請選擇 1～3 種興趣嗜好。', $O::HOBBIES], ['sports', '喜愛的運動', '請選擇 1～3 種喜愛的體育活動（可以不選）。', $O::SPORTS]] as [$key, $label, $hint, $options])
         @php($chosen = $errors->any() ? (array) old($key, []) : ($profile->{$key} ?? []))
         @php($groupError = $errors->first($key) ?: $errors->first($key . '.*'))
-        <fieldset class="field" id="{{ $key }}" tabindex="-1" aria-describedby="{{ $key }}-hint{{ $groupError ? ' ' . $key . '-error' : '' }}">
+        <fieldset class="field" id="{{ $key }}" tabindex="-1" data-tags="{{ $O::MAX_PICKS }}" aria-describedby="{{ $key }}-hint{{ $groupError ? ' ' . $key . '-error' : '' }}">
             <legend>{{ $label }}</legend>
             <p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>
             <div class="check-grid chip-checks">
@@ -70,6 +81,9 @@
             @if ($groupError)<p id="{{ $key }}-error" class="field-error">{{ $groupError }}</p>@endif
         </fieldset>
     @endforeach
+
+    <script src="{{ asset('js/church-pick.js') }}?v={{ $appVersion }}" defer></script>
+    <script src="{{ asset('js/tag-picker.js') }}?v={{ $appVersion }}" defer></script>
 
     @foreach ([['intro', '自我介紹（必填）', 2000, $profile->intro, '請簡短的寫一篇 30 字以上的自我介紹。'], ['hope', '期待認識的人', 1000, $profile->hope, '可以不填。']] as [$key, $label, $max, $value, $extra])
         <div class="field">
