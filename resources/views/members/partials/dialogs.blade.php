@@ -22,6 +22,7 @@
         'sentToday' => $dialogs['sentToday'], 'fieldPrefix' => 'g-', 'inDialog' => true, 'errors' => $which === 'gift' ? $errors : $noErrors])
 </dialog>
 
+@if ($dialogs['level'] >= 2) {{-- 約會：聊天好友以上才有（熊叔叔 11/6「都要按照條件顯示」） --}}
 <dialog id="dlg-date" class="member-dialog airmail" aria-labelledby="dlg-date-title" @if ($which === 'date') data-open @endif>
     <div class="member-dialog-head">
         <h2 id="dlg-date-title">相約見面：{{ $member->name }}</h2>
@@ -35,6 +36,7 @@
     @include('meetups.partials.form', ['level' => $dialogs['level'], 'cost' => $dialogs['dateCost'], 'balance' => $dialogs['points'],
         'fieldPrefix' => 'd-', 'inDialog' => true, 'errors' => $which === 'date' ? $errors : $noErrors])
 </dialog>
+@endif
 
 @if ($dialogs['canNote'])
     @php($ne = $which === 'note' ? $errors : $noErrors)

@@ -27,8 +27,8 @@ class MemberDialogTest extends TestCase
         $html = $this->actingAs($a)->get("/members/{$b->id}")->assertOk()->getContent();
         $this->assertStringContainsString('id="dlg-gift"', $html);
         $this->assertStringContainsString('data-dialog="gift"', $html);
-        $this->assertStringContainsString('id="dlg-date"', $html);
-        $this->assertStringContainsString('要先跟 乙 成為「聊天好友」才能邀請約會', $html);
+        $this->assertStringNotContainsString('id="dlg-date"', $html);    // 還不是聊天好友：沒有約會（熊叔叔 11/6「都要按照條件顯示」）
+        $this->assertStringNotContainsString('data-dialog="date"', $html);
         $this->assertStringNotContainsString('id="dlg-note"', $html);   // 還沒互送禮物：沒有傳情書
         $this->assertStringNotContainsString('data-open', $html);
         $this->assertSame(1, substr_count($html, 'id="g-item-1"'));    // 對話框的欄位有自己的 id，不跟別的撞
@@ -37,6 +37,13 @@ class MemberDialogTest extends TestCase
         $html = $this->actingAs($a)->get("/members/{$b->id}")->getContent();
         $this->assertStringContainsString('id="dlg-note"', $html);
         $this->assertStringContainsString('data-dialog="note"', $html);
+        $this->assertStringNotContainsString('data-dialog="date"', $html);   // 普通好友還不能約會
+
+        \App\Models\Friendship::raise($a, $b, 2);                           // 聊天好友：約會鈕、對話框出現
+        \App\Models\User::forgetFriendLevels($a, $b);
+        $html = $this->actingAs($a)->get("/members/{$b->id}")->getContent();
+        $this->assertStringContainsString('data-dialog="date"', $html);
+        $this->assertStringContainsString('id="dlg-date"', $html);
 
         // 自己的檔案頁沒有對話框
         $this->actingAs($a)->get("/members/{$a->id}")->assertDontSee('id="dlg-gift"', false);

@@ -59,7 +59,9 @@
                         <a class="pill-action pill-note" href="{{ route('notes.show', $member) }}" data-dialog="note">傳紙條<span class="visually-hidden">給 {{ $member->name }}</span></a>
                     @endif
                     <a class="pill-action pill-gift" href="{{ route('gifts.create', $member) }}" data-dialog="gift"><img src="{{ asset('images/brand/gift.svg') }}" alt="" width="18" height="18"> 送禮物</a>
-                    <a class="pill-action pill-date" href="{{ route('meetups.create', $member) }}" data-dialog="date">約會<span class="visually-hidden">（邀請 {{ $member->name }}）</span></a>
+                    @if (auth()->user()->friendLevelWith($member) >= 2) {{-- 約會：聊天好友以上才出現（熊叔叔 11/6「都要按照條件顯示」） --}}
+                        <a class="pill-action pill-date" href="{{ route('meetups.create', $member) }}" data-dialog="date">約會<span class="visually-hidden">（邀請 {{ $member->name }}）</span></a>
+                    @endif
                 </p>
             @endif
         </div>
