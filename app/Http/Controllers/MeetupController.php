@@ -112,10 +112,10 @@ class MeetupController extends Controller
         abort_unless($meetup->recipient_id === (int) $me->id, 403);
         $data = $request->validate([
             'decision' => ['required', 'in:accept,decline'],
-            'reply' => ['required', 'string', 'max:500'],
-        ], ['decision.required' => '請按「接受」或「婉拒」其中一個按鈕。', 'decision.in' => '請按「接受」或「婉拒」其中一個按鈕。'], ['reply' => '想對對方說的話']);
+            'reply' => ['nullable', 'string', 'max:500'], // 熊叔叔 11/6：清單上直接按「參加／不參加」，想說的話可以不寫
+        ], ['decision.required' => '請按「參加」或「不參加」其中一個按鈕。', 'decision.in' => '請按「參加」或「不參加」其中一個按鈕。'], ['reply' => '想對對方說的話']);
         $status = $data['decision'] === 'accept' ? 'accepted' : 'declined';
-        if (! $this->transition($meetup, 'pending', ['status' => $status, 'reply' => $data['reply'], 'responded_at' => now()])) {
+        if (! $this->transition($meetup, 'pending', ['status' => $status, 'reply' => (string) ($data['reply'] ?? ''), 'responded_at' => now()])) {
             return $this->changed($meetup);
         }
         $this->notifyOther($meetup->sender, $meetup, '約會邀請的回覆');

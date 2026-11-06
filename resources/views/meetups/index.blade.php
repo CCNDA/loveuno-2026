@@ -30,7 +30,17 @@
                             <div><dt>活動</dt><dd>{{ \App\Models\Meetup::ACTIVITIES[$m->activity] ?? $m->activity }}</dd></div>
                             @if (($m->message ?? '') !== '')<div><dt>內容</dt><dd>{{ $m->message }}</dd></div>@endif
                         </dl>
-                        <p class="gift-letter-actions"><a class="button note-send" href="{{ route('meetups.show', $m) }}">{{ $key === 'received' && $m->state() === 'pending' ? '回覆邀請' : '看詳細' }}<span class="visually-hidden">：{{ $m->meet_on->format('Y/n/j') }} {{ $m->meet_time }}・{{ $who?->name ?? '已註銷會員' }}</span></a></p>
+                        @if ($key === 'received' && $m->state() === 'pending')
+                            {{-- 照設計稿 2529:26799：清單上直接「不參加」「參加」（熊叔叔 11/6）；想寫一句話的到詳細頁 --}}
+                            <form method="POST" action="{{ route('meetups.respond', $m) }}" class="meetup-quick">
+                                @csrf
+                                <button type="submit" name="decision" value="decline" class="button button-light">不參加<span class="visually-hidden">：{{ $m->meet_on->format('Y/n/j') }} {{ $who?->name ?? '已註銷會員' }} 的邀請</span></button>
+                                <button type="submit" name="decision" value="accept" class="button note-send">參加<span class="visually-hidden">：{{ $m->meet_on->format('Y/n/j') }} {{ $who?->name ?? '已註銷會員' }} 的邀請</span></button>
+                            </form>
+                            <p class="meetup-more"><a href="{{ route('meetups.show', $m) }}">想先寫一句話再回覆<span class="visually-hidden">（{{ $who?->name ?? '已註銷會員' }}）</span></a></p>
+                        @else
+                            <p class="gift-letter-actions"><a class="button note-send" href="{{ route('meetups.show', $m) }}">看詳細<span class="visually-hidden">：{{ $m->meet_on->format('Y/n/j') }} {{ $m->meet_time }}・{{ $who?->name ?? '已註銷會員' }}</span></a></p>
+                        @endif
                     </li>
                 @endforeach
             </ul>

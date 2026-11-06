@@ -1286,3 +1286,10 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
     .gift-letter-head .note-time { grid-area: time; font-size: .8rem; color: var(--muted); }
     .gift-letter-body { padding: 12px 16px; gap: 12px; }
 }
+
+/* 約會邀請清單：「不參加」「參加」兩顆鈕（設計稿 2529:26799，熊叔叔 11/6） */
+.meetup-quick { display: flex; justify-content: center; gap: 16px; margin: 12px 0 4px; }
+.meetup-quick .button { min-width: 7rem; min-height: 40px; border-radius: 999px; justify-content: center; }
+.meetup-quick .button-light { background: #fff; color: #c4513b; border: 1px solid #c4513b; }
+.meetup-more { margin: 0 0 8px; text-align: center; font-size: .9rem; }
+.meetup-more a { display: inline-flex; align-items: center; min-height: 44px; }
