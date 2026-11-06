@@ -67,7 +67,7 @@
     @foreach ([['languages', '慣用語言（必填）', '請選擇 1～3 種慣用的語言。', $O::LANGUAGES], ['hobbies', '興趣（必填）', '請選擇 1～3 種興趣嗜好。', $O::HOBBIES], ['sports', '喜愛的運動', '請選擇 1～3 種喜愛的體育活動（可以不選）。', $O::SPORTS]] as [$key, $label, $hint, $options])
         @php($chosen = $errors->any() ? (array) old($key, []) : ($profile->{$key} ?? []))
         @php($groupError = $errors->first($key) ?: $errors->first($key . '.*'))
-        <fieldset class="field" id="{{ $key }}" tabindex="-1" data-tags="{{ $O::MAX_PICKS }}" aria-describedby="{{ $key }}-hint{{ $groupError ? ' ' . $key . '-error' : '' }}">
+        <fieldset class="field" id="{{ $key }}" tabindex="-1" data-tags="{{ $O::MAX_PICKS }}" @if (in_array($key, ['languages', 'hobbies'], true)) data-tags-min="1" @endif aria-describedby="{{ $key }}-hint{{ $groupError ? ' ' . $key . '-error' : '' }}">
             <legend>{{ $label }}</legend>
             <p id="{{ $key }}-hint" class="hint">{{ $hint }}</p>
             <div class="check-grid chip-checks">
