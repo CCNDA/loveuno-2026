@@ -56,7 +56,7 @@ class HomeController extends Controller
             'newcomers' => $this->newcomers($me, $blocked),
             'newGifts' => Gift::unopenedCountFor($me),
             // 等我回覆的約會邀請（日期還沒到的）
-            'pendingDates' => \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->where('meet_on', '>', today())
+            'pendingDates' => \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->where('meet_on', '>', today())->whereNull('recipient_deleted_at')
                 ->whereNotIn('sender_id', $blocked)->count(),
             'occasions' => Occasions::for($me),
         ]);

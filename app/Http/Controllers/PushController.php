@@ -57,7 +57,7 @@ class PushController extends Controller
         $me = $request->user();
         $notes = Note::unreadCountFor($me);
         $gifts = Gift::unopenedCountFor($me);
-        $dates = \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->whereDate('meet_on', '>', today())->count();
+        $dates = \App\Models\Meetup::where('recipient_id', $me->id)->where('status', 'pending')->whereDate('meet_on', '>', today())->whereNull('recipient_deleted_at')->count();
         $parts = array_filter([$notes ? $notes . ' 封新紙條' : null, $gifts ? $gifts . ' 份新禮物' : null, $dates ? $dates . ' 個約會邀請等您回覆' : null]);
 
         return response()->json([

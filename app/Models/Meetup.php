@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HiddenPerSide;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // 舊站「沒參加」跟「取消」都存 -2、過期要有人打開才改，新版分開存（absent），過期用日期算（state()），不用排程。
 class Meetup extends Model
 {
+    use HiddenPerSide;
+
     // 舊站 private_date.php 的活動選項（設計稿只有「主日崇拜」一個，見 docs #46）
     public const ACTIVITIES = ['sunday' => '主日聚會', 'group' => '小組聚會', 'evangelism' => '佈道會', 'special' => '特別聚會', 'agape' => '愛宴'];
 
@@ -23,7 +26,7 @@ class Meetup extends Model
 
     protected function casts(): array
     {
-        return ['meet_on' => 'date', 'responded_at' => 'datetime', 'closed_at' => 'datetime', 'sender_id' => 'integer', 'recipient_id' => 'integer'];
+        return ['meet_on' => 'date', 'responded_at' => 'datetime', 'closed_at' => 'datetime', 'sender_deleted_at' => 'datetime', 'recipient_deleted_at' => 'datetime', 'sender_id' => 'integer', 'recipient_id' => 'integer'];
     }
 
     public function sender(): BelongsTo

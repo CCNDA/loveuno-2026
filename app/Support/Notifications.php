@@ -70,7 +70,7 @@ class Notifications
     public static function badgeCount(User $me): int
     {
         return Note::unreadCountFor($me) + Gift::unopenedCountFor($me)
-            + Meetup::where('recipient_id', $me->id)->where('status', 'pending')->where('meet_on', '>', today())
+            + Meetup::where('recipient_id', $me->id)->where('status', 'pending')->where('meet_on', '>', today())->whereNull('recipient_deleted_at')
                 ->whereNotIn('sender_id', $me->blockRelatedIds())->count();
     }
 

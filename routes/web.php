@@ -171,8 +171,10 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::delete('/members/{user}/block', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
     // 送禮物（一次 3 點、同一位會員一天一份；互送＝普通好友）
     Route::get('/gifts', [GiftController::class, 'index'])->name('gifts.index');
+    Route::post('/gifts/delete', [GiftController::class, 'destroy'])->middleware('throttle:30,1')->name('gifts.destroy'); // 熊叔叔 11/6 #9 勾選刪除（只刪自己這邊）
     // 約會（Asana 1220005805400335）
     Route::get('/dates', [\App\Http\Controllers\MeetupController::class, 'index'])->name('meetups.index');
+    Route::post('/dates/delete', [\App\Http\Controllers\MeetupController::class, 'destroy'])->middleware('throttle:30,1')->name('meetups.destroy'); // 熊叔叔 11/6 #9 勾選刪除（只刪自己這邊）
     Route::get('/dates/{meetup}', [\App\Http\Controllers\MeetupController::class, 'show'])->whereNumber('meetup')->name('meetups.show');
     Route::post('/dates/{meetup}/respond', [\App\Http\Controllers\MeetupController::class, 'respond'])->whereNumber('meetup')->name('meetups.respond');
     Route::post('/dates/{meetup}/cancel', [\App\Http\Controllers\MeetupController::class, 'cancel'])->whereNumber('meetup')->name('meetups.cancel');

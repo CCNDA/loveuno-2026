@@ -20,17 +20,35 @@ use Illuminate\View\View;
 // 一次 3 點、同一位會員一天一份、簡訊 20 字內；對方也送過我禮物，就成為「普通好友」（熊叔叔 10/29「1A」）。
 class GiftController extends Controller
 {
+    // 勾選刪除：只把我這邊標成刪掉，對方還看得到（熊叔叔 11/6 #9）
+    public function destroy(Request $request): RedirectResponse
+    {
+        $ids = (array) $request->input('ids', []);
+        if (! $ids) {
+            return redirect()->route('gifts.index')->with('status', '請先勾選要刪除的禮物。');
+        }
+        $n = Gift::hideFor($request->user(), $ids);
+
+        return redirect()->route('gifts.index')->with('status', "刪掉了 {$n} 份禮物。");
+    }
+
     public function index(Request $request): View
     {
         $me = $request->user();
         $blocked = $me->blockRelatedIds();
-        $received = Gift::with('sender')->where('recipient_id', $me->id)->whereNotIn('sender_id', $blocked)
-            ->orderByDesc('created_at')->limit(50)->get();
-        $sent = Gift::with('recipient')->where('sender_id', $me->id)->whereNotIn('recipient_id', $blocked)
-            ->orderByDesc('created_at')->limit(50)->get();
-        $unopened = $received->whereNull('opened_at')->pluck('id');
+        // 熊叔叔 11/6 決定 #9：左邊清單（收到＋送出，新的在前，可勾選刪除），右邊卡片；?with=會員 只看跟那位的
+        $letters = Gift::with(['sender', 'recipient'])->visibleTo($me)
+            ->where(fn ($w) => $w->where(fn ($r) => $r->where('recipient_id', $me->id)->whereNotIn('sender_id', $blocked))
+                ->orWhere(fn ($s) => $s->where('sender_id', $me->id)->whereNotIn('recipient_id', $blocked)))
+            ->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get()
+            ->filter(fn (Gift $g) => $g->sender && $g->recipient)->values();
+        $with = (int) $request->query('with', 0);
+        $other = $with ? $letters->map(fn (Gift $g) => $g->sender_id === (int) $me->id ? $g->recipient : $g->sender)
+            ->first(fn (User $u) => (int) $u->id === $with) : null;
+        $cards = $other ? $letters->filter(fn (Gift $g) => in_array((int) $other->id, [$g->sender_id, $g->recipient_id], true))->values() : $letters;
+        $unopened = $letters->where('recipient_id', (int) $me->id)->whereNull('opened_at')->pluck('id');
 
-        $view = view('gifts.index', ['received' => $received, 'sent' => $sent, 'newIds' => $unopened->all()]);
+        $view = view('gifts.index', ['letters' => $letters, 'cards' => $cards, 'other' => $other, 'newIds' => $unopened->all()]);
         // 打開這頁就算看過了（畫面上先標「新」，下次就不標）
         if ($unopened->isNotEmpty()) {
             Gift::whereIn('id', $unopened)->update(['opened_at' => now()]);
