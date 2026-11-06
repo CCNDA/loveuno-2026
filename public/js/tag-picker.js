@@ -63,13 +63,21 @@
             input.placeholder = full ? '最多 ' + max + ' 個' : '打字或點這裡選';
             if (focusLast && full && chips.lastChild) { chips.lastChild.firstChild.focus(); }
         }
-        input.addEventListener('input', function () {
-            var hit = boxes.filter(function (b) { return !b.checked && b.value === input.value; })[0];
-            if (!hit) { return; }
+        function addTyped() {
+            var hit = boxes.filter(function (b) { return !b.checked && b.value === input.value.trim(); })[0];
+            if (!hit) { return false; }
             toggle(hit, true);
             input.value = '';
             render(true);
             if (!input.disabled) { input.focus(); }
+            return true;
+        }
+        input.addEventListener('input', addTyped);
+        // Enter 在標籤欄是「加入這個標籤」，不是送出整張表（小霏 11/6：按 Enter 表單被送出，存到一半的資料）
+        input.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') { return; }
+            e.preventDefault();
+            addTyped();
         });
         render();
     });

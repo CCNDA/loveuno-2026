@@ -86,6 +86,11 @@ class DirectoryChurchTest extends TestCase
         $p = $u->profile->fresh();
         $this->assertSame([2002, 'TW', '新竹示範長老教會'], [$p->church_oid, $p->church_country, $p->church]);
 
+        // 必填的興趣、慣用語言 0 個不能存（小霏 11/6）
+        $this->actingAs($u)->put(route('profile.intro.update'), array_diff_key($this->introForm(), ['hobbies' => 1]))->assertSessionHasErrors('hobbies');
+        $this->actingAs($u)->put(route('profile.intro.update'), $this->introForm(['hobbies' => []]))->assertSessionHasErrors('hobbies');
+        $this->actingAs($u)->put(route('profile.intro.update'), $this->introForm(['languages' => []]))->assertSessionHasErrors('languages');
+
         // 自我介紹頁：國家選單、教會建議、標籤輸入
         $html = $this->actingAs($u)->get(route('profile.intro'))->assertOk()->getContent();
         $this->assertStringContainsString('id="church_country"', $html);
