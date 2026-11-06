@@ -62,7 +62,7 @@
     </fieldset>
 
     @php($O = \App\Support\ProfileOptions::class)
-    @include('partials.select-field', ['name' => 'faith', 'label' => '信仰（必填）', 'required' => true, 'options' => $O::FAITH, 'value' => $profile->faith])
+    @include('partials.radio-field', ['name' => 'faith', 'label' => '信仰（必填）', 'required' => true, 'options' => $O::FAITH, 'value' => $profile->faith])
     @include('partials.select-field', ['name' => 'marital', 'label' => '婚姻狀況（必填）', 'required' => true, 'options' => $O::maritalFor((string) $profile->marital), 'value' => $profile->marital])
     @include('partials.select-field', ['name' => 'children', 'label' => '子女人數（必填）', 'required' => true, 'options' => $O::CHILDREN, 'value' => $profile->children])
     @include('partials.select-field', ['name' => 'education', 'label' => '教育程度（必填）', 'required' => true, 'options' => $O::EDUCATION, 'value' => $profile->education])
@@ -79,7 +79,7 @@
 
     @include('partials.select-field', ['name' => 'smoking', 'label' => '是否抽菸（必填）', 'required' => true, 'options' => $O::SMOKING, 'value' => $profile->smoking])
     @include('partials.select-field', ['name' => 'drinking', 'label' => '是否喝酒（必填）', 'required' => true, 'options' => $O::DRINKING, 'value' => $profile->drinking])
-    @include('partials.select-field', ['name' => 'family_planning', 'label' => '計劃生育', 'options' => $O::FAMILY_PLANNING, 'value' => $profile->family_planning, 'hint' => '婚後想不想要有孩子。'])
+    @include('partials.radio-field', ['name' => 'family_planning', 'label' => '計劃生育', 'options' => $O::FAMILY_PLANNING, 'value' => $profile->family_planning, 'hint' => '婚後想不想要有孩子。'])
 
     <button type="submit" class="button">存檔</button>
 </form>

@@ -1294,3 +1294,12 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .meetup-quick .button-light { background: #fff; color: #c4513b; border: 1px solid #c4513b; }
 .meetup-more { margin: 0 0 8px; text-align: center; font-size: .9rem; }
 .meetup-more a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 圓點單選欄位（個人資料 信仰、計劃生育；設計稿 69:5636） */
+.radio-field { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
+.radio-field legend { padding: 0; margin-bottom: 6px; font-weight: 700; }
+.radio-row { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.radio-opt { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.radio-opt input { width: 20px; height: 20px; margin: 0; accent-color: var(--button); }
+.radio-opt label { margin: 0; font-weight: 400; cursor: pointer; }
+.radio-field[aria-invalid="true"] legend, .radio-field:has(input[aria-invalid="true"]) legend { color: var(--error); }
