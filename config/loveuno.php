@@ -40,5 +40,11 @@ return [
         'script' => env('LOVEUNO_FACE_SCRIPT', '/opt/loveuno-face/face_focus.py'),
     ],
 
+    // 聯絡我們的「我不是機器人」（Cloudflare Turnstile）：兩個都有值才檢查。Secret 不進 git、不經過信／TG
+    'turnstile' => [
+        'site' => env('TURNSTILE_SITE_KEY', ''),
+        'secret' => env('TURNSTILE_SECRET', ''),
+    ],
+
     'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'support@loveuno.com'),
 ];

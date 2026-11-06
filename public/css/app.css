@@ -1310,3 +1310,17 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .comment-more > summary::-webkit-details-marker { display: none; }
 .comment-more > summary::before { content: "▸ "; white-space: pre; }
 .comment-more[open] > summary::before { content: "▾ "; }
+
+/* 聯絡我們：預覽＋送出兩顆、預覽對話框、機器人驗證（設計稿 785:10490） */
+.contact-buttons { display: flex; justify-content: center; gap: 16px; grid-column: 1 / -1; margin: 8px 0 0; }
+.contact-buttons .button { min-width: 7rem; border-radius: 999px; justify-content: center; }
+.contact-buttons .button-light { background: #fff; color: var(--button); border: 1px solid var(--button); }
+.contact-turnstile { grid-column: 1 / -1; }
+.contact-preview { width: min(560px, calc(100vw - 32px)); border: 0; border-radius: 8px; padding: 20px 24px; }
+.contact-preview::backdrop { background: rgba(43, 33, 29, .55); }
+.contact-preview h2 { margin-top: 0; font-size: 1.2rem; }
+.contact-preview dl { margin: 0; }
+.contact-preview dl > div { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.contact-preview dt { font-size: .85rem; color: var(--muted); }
+.contact-preview dd { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.contact-preview dd.is-empty { color: var(--error); }

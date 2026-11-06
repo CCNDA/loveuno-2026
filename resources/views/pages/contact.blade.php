@@ -41,7 +41,33 @@
         <label for="website">請不要填這一格</label>
         <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
     </div>
-    <button type="submit" class="button">送出</button>
+    {{-- 機器人驗證（Cloudflare Turnstile；熊叔叔 11/6 照設計 785:10490 加）：有設金鑰才出現 --}}
+    @if (\App\Support\Turnstile::enabled())
+        <div id="turnstile" tabindex="-1" class="field contact-turnstile">
+            <div class="cf-turnstile" data-sitekey="{{ config('loveuno.turnstile.site') }}" data-language="zh-tw"></div>
+            @error('turnstile')<p id="turnstile-error" class="field-error">{{ $message }}</p>@enderror
+        </div>
+    @endif
+    <p class="contact-buttons">
+        <button type="button" id="contact-preview-btn" class="button button-light" hidden>預覽</button>
+        <button type="submit" class="button">送出</button>
+    </p>
 </form>
+{{-- 預覽對話框：內容由 contact-preview.js 用 textContent 填 --}}
+<dialog id="contact-preview" class="contact-preview" aria-labelledby="contact-preview-title">
+    <h2 id="contact-preview-title">確認要送出的內容</h2>
+    <dl>
+        <div><dt>姓名</dt><dd data-preview="name"></dd></div>
+        <div><dt>回覆用的 Email</dt><dd data-preview="email"></dd></div>
+        <div><dt>聯絡事項</dt><dd data-preview="subject"></dd></div>
+        <div><dt>聯絡內容</dt><dd data-preview="body"></dd></div>
+    </dl>
+    <p class="contact-buttons">
+        <button type="button" class="button button-light" data-preview-edit>修改</button>
+        <button type="button" class="button" data-preview-send>送出</button>
+    </p>
+</dialog>
 <script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
+<script src="{{ asset('js/contact-preview.js') }}?v={{ $appVersion }}" defer></script>
+@if (\App\Support\Turnstile::enabled())<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>@endif
 @endsection
