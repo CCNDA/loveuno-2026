@@ -56,12 +56,12 @@ class PhoneVerifyTest extends TestCase
 
         $wrong = $code === '000000' ? '111111' : '000000';
         $this->actingAs($u)->post('/phone/verify', ['code' => $wrong])->assertSessionHasErrors(['code' => '認證碼不對，還可以再試 4 次。']);
-        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/diaries');
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/');
         $u->refresh();
         $this->assertSame('0912345678', $u->phone);
         $this->assertNotNull($u->phone_verified_at);
         $this->assertNull($u->phone_code_hash);
-        $this->actingAs($u)->get('/diaries')->assertOk();
+        $this->actingAs($u)->get('/')->assertOk();
         $this->assertArrayNotHasKey('phone', $u->toArray());
     }
 
@@ -71,7 +71,7 @@ class PhoneVerifyTest extends TestCase
         $u = $this->newMember();
         $code = $this->sendAndCatchCode($u);
         $this->assertSame(0, \DB::table('point_transactions')->where('user_id', $u->id)->where('ref', 'once')->where('type', 'phone')->count());
-        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/diaries');
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/');
         $this->assertSame(1, \DB::table('point_transactions')->where('user_id', $u->id)->where('ref', 'once')->where('type', 'phone')->count());
     }
 
@@ -135,7 +135,7 @@ class PhoneVerifyTest extends TestCase
         });
         $this->actingAs($u)->post('/phone/send', ['phone' => '0922222222', 'current_password' => 'password'])->assertRedirect('/phone/verify');
         $this->actingAs($u)->get('/phone/verify')->assertSee('更換手機號碼');
-        $this->actingAs($u)->get('/diaries')->assertOk(); // 換號碼中，原本的認證還在
+        $this->actingAs($u)->get('/')->assertOk(); // 換號碼中，原本的認證還在
         $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/me/verify');
         $this->assertSame('0922222222', $u->fresh()->phone);
     }
@@ -219,7 +219,7 @@ class PhoneVerifyTest extends TestCase
         $this->actingAs($u)->get('/phone/verify')->assertSee('請重新認證一次')->assertSee('value="0911111111"', false);
         $u = $u->fresh();
         $code = $this->sendAndCatchCode($u, '0911111111');
-        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/diaries');
+        $this->actingAs($u)->post('/phone/verify', ['code' => $code])->assertRedirect('/');
         $this->assertTrue($u->fresh()->hasValidPhone());
 
         // 每天的排程：很久沒登入的也拿掉

@@ -12,7 +12,7 @@
             <p>全球華人的基督徒弟兄姊妹交友平台。「中華基督教網路發展協會」2024年最新推出網路交友事工「愛諾園」，期待成為基督徒未婚男女交友、步入婚姻的媒合平台。</p>
             <p><a class="button" href="{{ config('loveuno.links.devote') }}" rel="noopener">支持奉獻<span class="visually-hidden">（到中華基督教網路發展協會的奉獻頁）</span></a></p>
             @auth
-                <p><a href="{{ route('diaries.index') }}">看大家的心情日記 →</a></p>
+                <p><a href="{{ route('home') }}">到生活日記牆 →</a></p>
             @endauth
         </div>
         <img class="landing-hero-img" src="{{ asset('images/welcome-hero.svg') }}" alt="" width="763" height="389" fetchpriority="high">

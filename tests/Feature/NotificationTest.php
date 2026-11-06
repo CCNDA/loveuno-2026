@@ -25,7 +25,7 @@ class NotificationTest extends TestCase
     {
         $me = $this->member("我");
         $other = $this->member("留言的人");
-        $this->actingAs($me)->get("/diaries")->assertSee("<details class=\"notif\">", false)->assertSee("最近兩週沒有新通知");
+        $this->actingAs($me)->get("/")->assertSee("<details class=\"notif\">", false)->assertSee("最近兩週沒有新通知");
 
         $d = $me->diaries()->create(["title" => "我的日記", "body" => "內容", "visibility" => "public", "published_on" => now()->toDateString()]);
         $c = new DiaryComment(["body" => "加油"]);
@@ -37,7 +37,7 @@ class NotificationTest extends TestCase
         $mine->diary_id = $d->id;
         $mine->save();
 
-        $html = $this->actingAs($me)->get("/diaries")->getContent();
+        $html = $this->actingAs($me)->get("/")->getContent();
         $this->assertStringContainsString("留言的人 回應了你的日記〈我的日記〉。", $html);
         $this->assertStringContainsString("/diaries/" . $d->id . "#comments-title", $html);
         $this->assertStringNotContainsString("我 回應了你的日記", $html); // 自己留的不算

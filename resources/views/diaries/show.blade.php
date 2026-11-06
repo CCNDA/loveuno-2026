@@ -71,5 +71,5 @@
     @endif
 </section>
 
-<p><a href="{{ route('diaries.index') }}">← 回心情日記</a></p>
+<p><a href="{{ route('home') }}">← 回生活日記牆</a></p>
 @endsection

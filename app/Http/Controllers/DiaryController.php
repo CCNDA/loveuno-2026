@@ -3,15 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Diary;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DiaryController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         // ?mine=1：側邊選單「我的日記」（設計稿 Figma 1156:11227）只列自己的
         $mine = $request->boolean('mine');
+        // 大家的日記就是生活日記牆（/）：舊的「心情日記」列表頁拿掉（熊叔叔 11/6 TG「/diaries 應該直接在生活日記牆，心情日記這個應該拿掉了」）
+        if (! $mine) {
+            return redirect()->route('home');
+        }
         $diaries = Diary::visibleTo($request->user())
             ->when($mine, fn ($q) => $q->where('user_id', $request->user()->id))
             ->whereNotIn('user_id', $request->user()->blockRelatedIds())

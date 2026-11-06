@@ -133,7 +133,7 @@ class PhoneVerifyController extends Controller
 
         return $changing
             ? redirect()->route('verify.index')->with('status', '手機號碼換好了。')
-            : redirect()->route('diaries.index')->with('status', '手機認證好了，歡迎來到愛諾園！');
+            : redirect()->route('home')->with('status', '手機認證好了，歡迎來到愛諾園！');
     }
 
     // 重新輸入手機號碼（打錯號碼，或換號碼時改變主意）：原本認證過的號碼不受影響

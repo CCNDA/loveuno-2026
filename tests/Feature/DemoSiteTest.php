@@ -37,7 +37,7 @@ class DemoSiteTest extends TestCase
         $user = User::factory()->create(['email' => 'a@example.com', 'password' => 'secret-pass']);
 
         $this->post('/login', ['email' => 'A@Example.com', 'password' => 'secret-pass'])
-            ->assertRedirect('/diaries');
+            ->assertRedirect('/');
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->fresh()->last_login_at);
     }
@@ -74,11 +74,11 @@ class DemoSiteTest extends TestCase
         $public = Diary::factory()->for($owner)->create(['title' => '公開的那篇']);
         $private = Diary::factory()->for($owner)->private()->create(['title' => '私密的那篇']);
 
-        $this->actingAs($other)->get('/diaries')->assertSee('公開的那篇')->assertDontSee('私密的那篇');
+        $this->actingAs($other)->get('/')->assertSee('公開的那篇')->assertDontSee('私密的那篇');
         $this->actingAs($other)->get("/diaries/{$private->id}")->assertNotFound();
         $this->actingAs($other)->get("/members/{$owner->id}")->assertDontSee('私密的那篇');
 
-        $this->actingAs($owner)->get('/diaries')->assertSee('私密的那篇')->assertSee('只有自己看得到');
+        $this->actingAs($owner)->get('/diaries?mine=1')->assertSee('私密的那篇')->assertSee('只有自己看得到');
         $this->actingAs($owner)->get("/diaries/{$private->id}")->assertOk();
         $this->actingAs($owner)->get("/diaries/{$public->id}")->assertOk();
     }
@@ -99,7 +99,7 @@ class DemoSiteTest extends TestCase
         $user = User::factory()->create(['email' => 'amy+church@example.com', 'password' => 'secret-pass']);
 
         $this->post('/login', ['email' => 'amy+church@example.com', 'password' => 'secret-pass'])
-            ->assertRedirect('/diaries');
+            ->assertRedirect('/');
         $this->assertAuthenticatedAs($user);
     }
 
@@ -159,7 +159,7 @@ class DemoSiteTest extends TestCase
         $this->assertSame(1, User::where('legacy_id', 1000010)->count());
 
         // 匯入的帳號可以用舊密碼登入
-        $this->post('/login', ['email' => 'old@example.com', 'password' => 'plain1234'])->assertRedirect('/diaries');
+        $this->post('/login', ['email' => 'old@example.com', 'password' => 'plain1234'])->assertRedirect('/');
     }
 
     public function test_import_refuses_non_test_database(): void

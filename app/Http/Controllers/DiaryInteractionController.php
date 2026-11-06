@@ -98,7 +98,7 @@ class DiaryInteractionController extends Controller
         $page = max(1, (int) $request->input('page', 1));
         $url = match ($request->input('from')) {
             'wall' => $this->wallUrl($request),
-            'list' => route('diaries.index', $page > 1 ? ['page' => $page] : []),
+            'list' => route('diaries.index', ['mine' => 1] + ($page > 1 ? ['page' => $page] : [])),
             default => route('diaries.show', $diary),
         };
 
