@@ -52,6 +52,7 @@ class PushTest extends TestCase
         $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => 'http://insecure.example.com/x', 'keys' => ['p256dh' => 'p', 'auth' => 'a']])->assertStatus(422);
         $this->assertSame(2, PushSubscription::count());
 
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
         Http::assertSent(function ($req) {
             if ($req->url() !== 'https://fcm.googleapis.com/fcm/send/abc') {
@@ -114,6 +115,7 @@ class PushTest extends TestCase
         $a = $this->member();
         $b = $this->member();
         $this->actingAs($b)->postJson('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/abc', 'keys' => ['p256dh' => 'p', 'auth' => 'a']]);
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']); // 沒有 VAPID 金鑰：不送
         Http::assertNothingSent();
         $this->actingAs($b)->postJson('/push/unsubscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/abc'])->assertOk();

@@ -26,6 +26,7 @@ class BlockTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
         $d = $b->diaries()->create(['title' => '乙的日記', 'body' => 'x', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
+        $this->befriend($b, $a);
         $this->actingAs($b)->post("/notes/{$a->id}", ['body' => '乙給甲的紙條']);
 
         $this->actingAs($a)->get("/members/{$b->id}/block")->assertOk()->assertSee('確定要封鎖 乙 嗎');
@@ -84,6 +85,7 @@ class BlockTest extends TestCase
     {
         $a = $this->member('甲');
         $b = $this->member('乙');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '甲先寄給乙']);
         $this->actingAs($b)->post("/notes/{$a->id}", ['body' => '乙寄給甲']);
         // 甲封鎖乙：乙打不開甲的對話，所以甲寄的那張不再算乙的未讀
@@ -102,6 +104,7 @@ class BlockTest extends TestCase
         $this->actingAs($a)->post("/members/{$b->id}/block");
         $this->actingAs($a)->delete("/members/{$b->id}/block")->assertRedirect();
         $this->actingAs($b)->get("/members/{$a->id}")->assertOk();
+        $this->befriend($b, $a);
         $this->actingAs($b)->post("/notes/{$a->id}", ['body' => '和好'])->assertRedirect("/notes/{$a->id}");
     }
 

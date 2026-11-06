@@ -34,6 +34,7 @@ class NoteLetterTest extends TestCase
     public function test_send_with_title_and_list_shows_each_letter(): void
     {
         [$a, $b] = [$this->member('甲'), $this->member('乙')];
+        $this->befriend($a, $b);
         $this->actingAs($a)->post(route('notes.store', $b), ['title' => '週末聚會', 'body' => '要一起去嗎？'])->assertRedirect();
         $this->assertSame('週末聚會', Note::sole()->title);
         $this->actingAs($a)->post(route('notes.store', $b), ['title' => str_repeat('長', 21), 'body' => '太長'])->assertSessionHasErrors('title');

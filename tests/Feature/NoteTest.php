@@ -25,6 +25,7 @@ class NoteTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
 
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => "你好\n第二行"])->assertRedirect("/notes/{$b->id}");
         $n = Note::firstOrFail();
         $this->assertSame([$a->id, $b->id, null], [$n->sender_id, $n->recipient_id, $n->read_at]);
@@ -43,6 +44,7 @@ class NoteTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
         $c = $this->member('丙');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '甲給乙的祕密']);
 
         // 丙看自己跟甲的對話，看不到甲給乙的
@@ -61,6 +63,7 @@ class NoteTest extends TestCase
         $this->actingAs($a)->post("/notes/{$pending->id}", ['body' => 'x'])->assertNotFound();
 
         $b = $this->member('乙');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => ''])->assertSessionHasErrors('body');
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => str_repeat('字', 1001)])->assertSessionHasErrors('body');
         // sender／recipient 不能從表單偽造
@@ -73,6 +76,7 @@ class NoteTest extends TestCase
     {
         $a = $this->member('甲');
         $b = $this->member('乙');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '<script>alert(1)</script>']);
         $this->actingAs($b)->get("/notes/{$a->id}")->assertDontSee('<script>alert(1)</script>', false)->assertSee('&lt;script&gt;', false);
 
@@ -93,6 +97,8 @@ class NoteTest extends TestCase
         // 檔案頁不出現按鈕
         $this->actingAs($a)->get("/members/{$noProfile->id}")->assertDontSee('pill-note', false);
         $b = $this->member('乙');
+        $this->actingAs($a)->get("/members/{$b->id}")->assertDontSee('pill-note', false); // 還沒互送禮物：沒有傳紙條鈕（熊叔叔 11/6）
+        $this->befriend($a, $b);
         $this->actingAs($a)->get("/members/{$b->id}")->assertSee('傳紙條<span class="visually-hidden">給 乙</span>', false); // 設計稿按鈕字短，給誰念給螢幕閱讀器
         $this->actingAs($a)->get("/members/{$a->id}")->assertDontSee('pill-note', false);
     }
@@ -102,6 +108,8 @@ class NoteTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
         $c = $this->member('丙');
+        $this->befriend($a, $b);
+        $this->befriend($c, $a);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '給乙']);
         $this->actingAs($a)->get("/notes/{$b->id}");
         $this->assertNull(\App\Models\Note::first()->read_at); // 自己打開自己寄的，不算對方讀過
@@ -120,6 +128,7 @@ class NoteTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
         // 寄 30 張紙條（用完傳紙條的額度）之後，換密碼、存檔還是可以
+        $this->befriend($a, $b);
         for ($i = 0; $i < 30; $i++) {
             $this->actingAs($a)->post("/notes/{$b->id}", ['body' => "第{$i}張"]);
         }
@@ -131,6 +140,7 @@ class NoteTest extends TestCase
     {
         $a = $this->member('甲');
         $b = $this->member('乙');
+        $this->befriend($a, $b);
         for ($i = 0; $i < 30; $i++) {
             $this->actingAs($a)->post("/notes/{$b->id}", ['body' => "第{$i}張"]);
         }
@@ -142,6 +152,7 @@ class NoteTest extends TestCase
     {
         $a = $this->member('甲');
         $b = $this->member('乙');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => 'hi']);
         $html = $this->actingAs($b)->get('/diaries')->assertSee('傳紙條')->getContent();
         // 底部選單、側邊選單各一次；頁首鈴 11/5 起是「通知」總數（念「有 1 則新通知」）。數字本身 aria-hidden
