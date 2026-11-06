@@ -1386,3 +1386,7 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .tag-chip:disabled::after { content: ""; }
 .tag-add { flex: 1; min-width: 8rem; min-height: 32px; border: 0; padding: 4px; font: inherit; background: transparent; }
 .tag-add:disabled { background: transparent; color: #8c857b; }
+
+/* 送禮物鈕：今天已送（熊叔叔 11/6 選甲） */
+.pill-action.is-done { background: #d6d0cb; color: #6b625b; cursor: default; }
+.pill-action.is-done img { opacity: .5; }
