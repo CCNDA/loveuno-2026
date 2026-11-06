@@ -1330,3 +1330,23 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .photo-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .photo-section .member-head { display: flex; align-items: center; gap: 16px; }
 .photo-section .member-head h2 { margin: 0; }
+
+/* 傳紙條「情書」樣式（設計稿 402:13701；熊叔叔 11/6） */
+.letters-head { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 1rem; font-weight: 500; }
+.letters-head .threads-count { color: #c4513b; font-size: 1.15rem; }
+.letters-head .letters-del { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: #ff8b7e; color: #fff; cursor: pointer; }
+.letters-head .letters-del:hover { background: #c4513b; }
+.letter-list { list-style: none; margin: 0; padding: 0; }
+.letter-item { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.letter-item.is-current { background: #fff6ee; }
+.letter-item input[type=checkbox] { width: 18px; height: 18px; margin: 12px 0 0; }
+.letter-link { display: block; color: inherit; text-decoration: none; min-width: 0; }
+.letter-top { display: flex; align-items: center; gap: 8px; }
+.letter-top .avatar { flex: none; }
+.letter-who { color: #b5452f; font-size: .9rem; min-width: 0; overflow-wrap: anywhere; }
+.letter-date { margin-left: auto; color: #b5452f; font-size: .8rem; white-space: nowrap; }
+.letter-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0574a; flex: none; }
+.letter-title { margin: 6px 0 2px; color: #a3442f; font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.letter-excerpt { margin: 0; color: var(--text); font-size: .88rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.letter-link:hover .letter-title { text-decoration: underline; }
+.note .note-title { margin: 0 0 0 8px; font-size: 1.05rem; font-weight: 500; color: var(--plum); flex: 1; min-width: 0; overflow-wrap: anywhere; }

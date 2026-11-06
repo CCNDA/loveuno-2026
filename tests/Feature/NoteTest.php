@@ -30,7 +30,7 @@ class NoteTest extends TestCase
         $this->assertSame([$a->id, $b->id, null], [$n->sender_id, $n->recipient_id, $n->read_at]);
 
         // 乙的清單有一則未讀
-        $this->actingAs($b)->get('/notes')->assertOk()->assertSee('甲')->assertSee('，1 則未讀');
+        $this->actingAs($b)->get('/notes')->assertOk()->assertSee('甲')->assertSee('（未讀）');
         // 乙打開對話 → 讀過、內容換行保留
         $this->actingAs($b)->get("/notes/{$a->id}")->assertOk()->assertSee('你好<br />', false);
         $this->assertNotNull($n->fresh()->read_at);
@@ -112,8 +112,7 @@ class NoteTest extends TestCase
         $html = $this->actingAs($a)->get('/notes')->getContent();
         // 丙最新、排第一；丙 2 則未讀、乙 1 則
         $this->assertLessThan(strpos($html, '乙回甲'), strpos($html, '丙給甲2'));
-        $this->assertStringContainsString('，2 則未讀', $html);
-        $this->assertStringContainsString('，1 則未讀', $html);
+        $this->assertSame(3, substr_count($html, '（未讀）')); // 情書清單一封一列：丙 2 封、乙 1 封
     }
 
     public function test_rate_limits_are_independent(): void

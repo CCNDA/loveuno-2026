@@ -122,6 +122,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
     Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');
     Route::get('/notes/{user}', [NoteController::class, 'show'])->whereNumber('user')->name('notes.show');
     Route::post('/notes/{user}', [NoteController::class, 'store'])->whereNumber('user')->middleware('throttle:30,10,note-send')->name('notes.store');
+    Route::post('/notes/delete', [NoteController::class, 'destroy'])->middleware('throttle:30,1')->name('notes.destroy'); // 熊叔叔 11/6 勾選刪除（只刪自己這邊）
 
     // 會員中心（帳號管理／個人檔案／愛積點／交友條件）
     Route::redirect('/center', '/center/account');
