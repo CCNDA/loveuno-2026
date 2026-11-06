@@ -53,7 +53,8 @@ class DemoSeeder extends Seeder
     {
         DB::transaction(function () {
             // 只刪示範會員；從舊站測試庫匯入的帳號（legacy_id 有值）也是 is_demo，但不在這裡刪，免得重種就要重匯
-            User::where('is_demo', true)->whereNull('legacy_id')->delete(); // profiles、diaries 會跟著刪（cascade）
+            // 11/6 起同工演故事的帳號（真實信箱）也標 is_demo：只刪 .invalid 信箱的示範會員，同工帳號不會被重種刪掉
+            User::where('is_demo', true)->whereNull('legacy_id')->where('email', 'like', '%.invalid')->delete(); // profiles、diaries 會跟著刪（cascade）
 
             $users = [];
             foreach (self::MEMBERS as $i => [$name, $gender, $year, $place, $job, $intro, $hope]) {
