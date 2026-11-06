@@ -5,7 +5,7 @@
 @php($me = auth()->user())
 <div class="side-menu" id="side-menu" hidden>
     <div class="side-menu-panel">
-        <button type="button" class="side-menu-close"><span aria-hidden="true">✕</span><span class="visually-hidden">關閉選單</span></button>
+        <button type="button" class="side-menu-close"><span aria-hidden="true">×</span><span class="visually-hidden">關閉選單</span></button>
         <a class="side-menu-me" href="{{ route('center.account') }}">
             @include('partials.avatar', ['user' => $me])
             <span id="side-menu-title" class="side-menu-name">{{ $me->name }}<span class="visually-hidden">（會員中心）</span></span>

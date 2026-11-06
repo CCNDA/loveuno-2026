@@ -10,7 +10,7 @@
 <dialog id="dlg-gift" class="member-dialog airmail" aria-labelledby="dlg-gift-title" @if ($which === 'gift') data-open @endif>
     <div class="member-dialog-head">
         <h2 id="dlg-gift-title">送禮物給 {{ $member->name }}</h2>
-        <button type="button" class="dialog-close" data-close aria-label="關閉">✕</button>
+        <button type="button" class="dialog-close" data-close aria-label="關閉">×</button>
     </div>
     <ul class="member-dialog-notes">
         <li>送一份禮物給陌生網友是對他(她)表達好感的第一步。</li>
@@ -25,7 +25,7 @@
 <dialog id="dlg-date" class="member-dialog airmail" aria-labelledby="dlg-date-title" @if ($which === 'date') data-open @endif>
     <div class="member-dialog-head">
         <h2 id="dlg-date-title">相約見面：{{ $member->name }}</h2>
-        <button type="button" class="dialog-close" data-close aria-label="關閉">✕</button>
+        <button type="button" class="dialog-close" data-close aria-label="關閉">×</button>
     </div>
     <ul class="member-dialog-notes">
         <li>為了約會安全，您只可以約對方參加教會舉辦的活動。</li>
@@ -42,7 +42,7 @@
     <dialog id="dlg-note" class="member-dialog airmail" aria-labelledby="dlg-note-title" @if ($which === 'note') data-open @endif>
         <div class="member-dialog-head">
             <h2 id="dlg-note-title">傳情書給 {{ $member->name }}</h2>
-            <button type="button" class="dialog-close" data-close aria-label="關閉">✕</button>
+            <button type="button" class="dialog-close" data-close aria-label="關閉">×</button>
         </div>
         <form method="POST" action="{{ route('notes.store', $member) }}" class="form form-wide" novalidate>
             @csrf
