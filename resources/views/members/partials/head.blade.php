@@ -26,7 +26,7 @@
             <h1 id="member-name">{{ $member->name }}@if ($approved->isNotEmpty()) <img src="{{ asset('images/brand/verified-badge.svg') }}" alt="已認證" width="20" height="20" class="verified-badge">@endif @if($isMe) <span class="tag">我</span>@endif</h1>
             @if (! $blocked)
                 @if (($cp?->headline ?? '') !== '')<p class="headline">{{ $cp->headline }}</p>@endif
-                @php($where = collect([$cp?->live_place, $cp?->ageGroup()])->filter()->implode(' / '))
+                @php($where = collect([$cp?->live_place, $cp?->ageLabel()])->filter()->implode(' / '))
                 @if ($where !== '')<p class="profile-where"><span aria-hidden="true">📍</span> {{ $where }}</p>@endif
                 @php($badges = array_filter([
                     'phone' => $member->hasValidPhone() ? ['verify-phone', '手機已認證'] : null,
