@@ -78,7 +78,7 @@ class ImportLegacyExportTest extends TestCase
         Storage::disk('avatars')->assertMissing($old);
 
         // 可以用舊密碼登入
-        $this->post('/login', ['email' => 'staff@example.com', 'password' => 'old-pass'])->assertRedirect('/diaries');
+        $this->post('/login', ['email' => 'staff@example.com', 'password' => 'old-pass'])->assertRedirect('/');
     }
 
     public function test_rejects_plaintext_or_bad_rows_and_path_tricks(): void

@@ -61,7 +61,7 @@ class DiaryWriteController extends Controller
         $this->deleteImage($diary);
         $diary->delete(); // 禱告、留言跟著刪（cascade）
 
-        return redirect()->route('diaries.index')->with('status', '日記刪掉了。');
+        return redirect()->route('diaries.index', ['mine' => 1])->with('status', '日記刪掉了。');
     }
 
     private function validated(Request $request): array

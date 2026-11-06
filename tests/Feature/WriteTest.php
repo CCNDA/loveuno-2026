@@ -57,7 +57,7 @@ class WriteTest extends TestCase
         $this->actingAs($u)->put("/diaries/{$d->id}", ['title' => '改過', 'body' => '新內容', 'visibility' => 'public'])->assertRedirect("/diaries/{$d->id}");
         $this->assertSame(['改過', 'public'], [$d->fresh()->title, $d->fresh()->visibility]);
 
-        $this->actingAs($u)->delete("/diaries/{$d->id}")->assertRedirect('/diaries');
+        $this->actingAs($u)->delete("/diaries/{$d->id}")->assertRedirect('/diaries?mine=1');
         $this->assertNull(Diary::find($d->id));
     }
 

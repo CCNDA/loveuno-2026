@@ -15,7 +15,7 @@ class VerifyEmailController extends Controller
     public function notice(Request $request): View|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route('diaries.index');
+            return redirect()->route('home');
         }
 
         return view('auth.verify-email');

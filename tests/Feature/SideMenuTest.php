@@ -58,6 +58,7 @@ class SideMenuTest extends TestCase
         $me->diaries()->create(['title' => '我寫的', 'body' => '內容', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
         $other->diaries()->create(['title' => '別人寫的', 'body' => '內容', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
         $this->actingAs($me)->get('/diaries?mine=1')->assertSee('我的日記')->assertSee('我寫的')->assertDontSee('別人寫的');
-        $this->actingAs($me)->get('/diaries')->assertSee('我寫的')->assertSee('別人寫的');
+        $this->actingAs($me)->get('/diaries')->assertRedirect('/'); // 大家的日記＝生活日記牆（熊叔叔 11/6）
+        $this->actingAs($me)->get('/')->assertSee('我寫的')->assertSee('別人寫的');
     }
 }

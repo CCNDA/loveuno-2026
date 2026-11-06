@@ -60,7 +60,7 @@ class LoginController extends Controller
         $request->user()->forceFill(['last_login_at' => now()])->save();
         $request->session()->put('script', $request->user()->script ?: 'hant'); // 帳號設定的「顯示語言」
 
-        return redirect()->intended(route('diaries.index'));
+        return redirect()->intended(route('home'));
     }
 
     public function destroy(Request $request): RedirectResponse

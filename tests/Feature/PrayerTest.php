@@ -45,7 +45,7 @@ class PrayerTest extends TestCase
 
         $viewer = $this->member('讀者');
         $this->actingAs($viewer)->get('/')->assertSee('<span class="tag tag-prayer">代禱事項</span>', false);
-        $this->actingAs($viewer)->get('/diaries')->assertSee('代禱');
+        $this->actingAs($viewer)->get('/')->assertSee('代禱');
 
         // 改的時候取消勾選
         $this->actingAs($a)->put("/diaries/{$d->id}", ['title' => '請為我禱告', 'body' => '下週面試', 'visibility' => 'public'])->assertRedirect();
@@ -60,7 +60,7 @@ class PrayerTest extends TestCase
         $this->actingAs($v)->post("/diaries/{$d->id}/pray", ['from' => 'wall'])->assertRedirect('/#d' . $d->id)->assertSessionHas('status', '謝謝您為這篇日記禱告。');
         $this->actingAs($v)->get('/')->assertSee('aria-pressed="true"', false)->assertSee('1<span class="visually-hidden"> 人禱告</span>', false);
 
-        $this->actingAs($v)->post("/diaries/{$d->id}/pray", ['from' => 'list', 'page' => 2])->assertRedirect('/diaries?page=2#d' . $d->id);
+        $this->actingAs($v)->post("/diaries/{$d->id}/pray", ['from' => 'list', 'page' => 2])->assertRedirect('/diaries?mine=1&page=2#d' . $d->id);
         $this->assertSame(0, DB::table('diary_prayers')->count());
 
         // from 只認三種，其他一律回日記內頁（不能被帶去外站）
@@ -241,7 +241,7 @@ class PrayerTest extends TestCase
         $this->actingAs($v)->post("/diaries/{$d->id}/comments", ['body' => 'hi']);
 
         $path = $d->image_path;
-        $this->actingAs($a)->delete("/diaries/{$d->id}")->assertRedirect('/diaries');
+        $this->actingAs($a)->delete("/diaries/{$d->id}")->assertRedirect('/diaries?mine=1');
         Storage::disk('avatars')->assertMissing($path);
         $this->assertSame(0, DB::table('diary_prayers')->count() + DiaryComment::count());
     }

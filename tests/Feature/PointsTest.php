@@ -31,7 +31,7 @@ class PointsTest extends TestCase
     {
         $u = $this->member();
         $this->actingAs($u)->get('/');
-        $this->actingAs($u)->get('/diaries');
+        $this->actingAs($u)->get('/diaries?mine=1');
         $this->assertSame(1, $this->balance($u));
 
         $this->travel(1)->days();
