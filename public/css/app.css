@@ -1289,7 +1289,8 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 
 /* 約會邀請清單：「不參加」「參加」兩顆鈕（設計稿 2529:26799，熊叔叔 11/6） */
 .meetup-quick { display: flex; justify-content: center; gap: 16px; margin: 12px 0 4px; }
-.meetup-quick .button { min-width: 7rem; min-height: 40px; border-radius: 999px; justify-content: center; }
+.meetup-quick { align-items: center; }
+.meetup-quick .button { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 7rem; height: 40px; min-height: 40px; margin: 0; padding: 0 20px; border: 1px solid #c4513b; border-radius: 999px; font-size: 1rem; }
 .meetup-quick .button-light { background: #fff; color: #c4513b; border: 1px solid #c4513b; }
 .meetup-more { margin: 0 0 8px; text-align: center; font-size: .9rem; }
 .meetup-more a { display: inline-flex; align-items: center; min-height: 44px; }
