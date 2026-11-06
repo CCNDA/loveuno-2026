@@ -62,6 +62,7 @@ class SettingsTest extends TestCase
         $a = $this->member('甲');
         $b = $this->member('乙');
         Points::award($a, 'test', 'x', 10, '測試');
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
         $this->actingAs($a)->post("/members/{$b->id}/gift", ['step' => 'send', 'item' => 1]);
         Notification::assertSentToTimes($b, NewActivity::class, 2);
@@ -84,6 +85,7 @@ class SettingsTest extends TestCase
 
         $this->actingAs($other)->get("/photos/{$me->id}")->assertNotFound();
         $this->actingAs($other)->get("/diaries/{$d->id}")->assertDontSee('暫停者的留言');
+        $this->befriend($me, $other);
         $this->actingAs($me)->post("/notes/{$other->id}", ['body' => 'x'])->assertNotFound(); // 暫停的人也不能主動傳
     }
 
@@ -117,6 +119,7 @@ class SettingsTest extends TestCase
 
         // 別人收到的紙條要留著（證據）
         $victim = $this->member('收紙條的人');
+        $this->befriend($u, $victim);
         $this->actingAs($u)->post("/notes/{$victim->id}", ['body' => '要留下來的紙條']);
         \Illuminate\Support\Facades\Notification::fake();
         $this->actingAs($u)->delete('/center/account', ['current_password' => 'password', 'confirm' => '1', 'reason' => $reason])->assertRedirect('/');

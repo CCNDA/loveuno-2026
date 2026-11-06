@@ -19,6 +19,16 @@ abstract class TestCase extends BaseTestCase
         return parent::setUpTraits();
     }
 
+    // 讓每兩位都成為「普通好友」（互送過禮物）：熊叔叔 11/6 起傳紙條要先互送禮物，測紙條的人先用這個
+    protected function befriend(\App\Models\User ...$users): void
+    {
+        foreach ($users as $i => $a) {
+            foreach (array_slice($users, $i + 1) as $b) {
+                \App\Models\Friendship::raise($a, $b, 1);
+            }
+        }
+    }
+
     // PUT /me 的必填欄位（Figma 有「*」的，0.19.0 起）＋ $over
     protected function profileForm(array $over = []): array
     {

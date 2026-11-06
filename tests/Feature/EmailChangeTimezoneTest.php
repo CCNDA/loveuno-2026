@@ -61,6 +61,7 @@ class EmailChangeTimezoneTest extends TestCase
         $a = $this->member();
         $b = $this->member();
         \Illuminate\Support\Carbon::setTestNow('2026-10-29 21:30:00'); // 台北
+        $this->befriend($a, $b);
         $this->actingAs($a)->post("/notes/{$b->id}", ['body' => '你好']);
 
         $this->actingAs($b)->withUnencryptedCookie('tz', 'Asia/Tokyo')->get("/notes/{$a->id}")->assertSee('22:30');

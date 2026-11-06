@@ -29,6 +29,12 @@ class NoteController extends Controller
             && $user->profile()->exists() && ! $me->blockedEitherWay($user);
     }
 
+    // 可以寄紙條：上面的條件，再加上已經互送禮物成為「普通好友」（熊叔叔 11/6 TG「傳紙條需要相互完成送禮物才能開啟」，交友三步驟第二步）
+    public static function canSendNote(User $me, User $user): bool
+    {
+        return self::canNote($me, $user) && $me->friendLevelWith($user) >= 1;
+    }
+
     public function show(Request $request, User $user): View
     {
         $me = $request->user();
@@ -41,13 +47,18 @@ class NoteController extends Controller
 
         $notes = Note::between($me, $user)->visibleTo($me)->orderBy('created_at')->orderBy('id')->get();
 
-        return view('notes.index', ['letters' => $this->letters($me), 'other' => $user, 'notes' => $notes, 'readOnly' => $readOnly]);
+        $needGifts = ! $readOnly && ! self::canSendNote($me, $user);
+
+        return view('notes.index', ['letters' => $this->letters($me), 'other' => $user, 'notes' => $notes, 'readOnly' => $readOnly, 'needGifts' => $needGifts]);
     }
 
     public function store(Request $request, User $user): RedirectResponse
     {
         $me = $request->user();
         abort_unless(self::canNote($me, $user), 404);
+        if (! self::canSendNote($me, $user)) {
+            return redirect()->route('notes.show', $user)->with('status', '要先互送禮物成為「普通好友」，才能傳紙條。');
+        }
 
         $data = $request->validate(
             ['title' => ['nullable', 'string', 'max:20'], 'body' => ['required', 'string', 'max:1000']],

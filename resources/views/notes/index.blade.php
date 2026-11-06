@@ -71,7 +71,12 @@
                 </ol>
             @endif
 
-            @if ($readOnly ?? false)
+            @if ($needGifts ?? false)
+            <div class="notice" role="status">
+                <p>要先互送禮物成為「普通好友」，才能傳紙條（交友三步驟：送禮物 → 傳紙條 → 約會）。</p>
+                <p><a class="button note-send" href="{{ route('gifts.create', $other) }}">送禮物給 {{ $other->name }}</a></p>
+            </div>
+            @elseif ($readOnly ?? false)
             <p class="notice" role="status">{{ auth()->user()->hasBlocked($other) ? '您已封鎖這位會員' : ($other->deleted_at ? '這位會員已經註銷帳號' : '這位會員暫停了帳號') }}，這裡只能看以前的紙條，不能再寄。要檢舉的話，這些紙條可以當作證據。</p>
             @else
             <form method="POST" action="{{ route('notes.store', $other) }}" class="form note-form" novalidate>
