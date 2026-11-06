@@ -100,4 +100,5 @@
     </section>
 </div>
 <script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
+<script src="{{ asset('js/letters-delete.js') }}?v={{ $appVersion }}" defer></script>
 @endsection
