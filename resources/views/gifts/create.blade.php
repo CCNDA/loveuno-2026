@@ -12,45 +12,7 @@
     <li>每天只可送一份禮物給同一個會員</li>
 </ul>
 
-@if ($sentToday)
-    <p class="notice" role="status">今天已經送過禮物給 {{ $member->name }} 了，明天再送吧。</p>
-@endif
-
-<form method="POST" action="{{ route('gifts.store', $member) }}" class="form form-wide" novalidate>
-    @csrf
-    @include('partials.errors', ['title' => '禮物還沒送出'])
-
-    <fieldset id="item" tabindex="-1" class="field">
-        <legend>請選擇禮物</legend>
-        <ul class="gift-grid">
-            @foreach ($items as $id => $name)
-                <li>
-                    <input id="item-{{ $id }}" name="item" type="radio" value="{{ $id }}" class="gift-radio"
-                           @checked((int) old('item') === $id)
-                           @error('item') aria-invalid="true" aria-describedby="item-error" @enderror>
-                    <label for="item-{{ $id }}" class="gift-card">
-                        <img src="{{ \App\Models\Gift::imageUrl($id) }}" alt="" width="96" height="96" loading="lazy">
-                        <span>{{ $name }}</span>
-                    </label>
-                </li>
-            @endforeach
-        </ul>
-        @error('item')<p id="item-error" class="field-error">{{ $message }}</p>@enderror
-    </fieldset>
-
-    <div class="field">
-        <label for="message">簡訊（可以不寫）</label>
-        <p id="message-hint" class="hint">您可以寫一句 20 個中文字以內的簡訊與禮物一起傳送。</p>
-        <input id="message" name="message" type="text" maxlength="20" value="{{ old('message') }}" data-count
-               @if (session('gift_edit')) autofocus @endif {{-- 從確認頁「回去修改」回來：游標直接在簡訊欄 --}}
-               aria-describedby="message-hint message-count @error('message') message-error @enderror"
-               @error('message') aria-invalid="true" @enderror>
-        <p id="message-count" class="char-count" aria-live="off"><span>{{ mb_strlen(old('message', '')) }}</span>/20</p>
-        @error('message')<p id="message-error" class="field-error">{{ $message }}</p>@enderror
-    </div>
-
-    <button type="submit" class="button">送出</button>
-</form>
+@include('gifts.partials.form')
 <p><a href="{{ route('members.show', $member) }}">← 回 {{ $member->name }} 的檔案</a></p>
 <script src="{{ asset('js/char-count.js') }}?v={{ $appVersion }}" defer></script>
 @endsection

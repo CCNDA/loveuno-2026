@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\AlbumPhoto;
+use App\Models\Gift;
 use App\Models\Profile;
 use App\Models\User;
+use App\Support\Points;
 use App\Support\ProfileOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,7 +81,25 @@ class MemberController extends Controller
             'diaries' => $diaries,
             'isMe' => $viewer->is($user),
             'iBlocked' => false,
+            'dialogs' => $this->dialogs($viewer, $user),
         ]);
+    }
+
+    // 個人首頁上跳出的送禮物／約會／傳情書對話框要用的資料（熊叔叔 11/6 決定 #7）；不能送的人（自己、沒檔案、封鎖…）回 null，就不放對話框
+    private function dialogs(User $me, User $user): ?array
+    {
+        if ($me->is($user) || ! NoteController::canNote($me, $user) || ! $me->profile()->exists()) {
+            return null;
+        }
+
+        return [
+            'points' => (int) $me->fresh()->points,
+            'giftCost' => Points::COSTS['gift'][0],
+            'dateCost' => Points::COSTS[MeetupController::COST_TYPE][0],
+            'level' => $me->friendLevelWith($user),
+            'sentToday' => Gift::where('sender_id', $me->id)->where('recipient_id', $user->id)->whereDate('sent_on', now()->toDateString())->exists(),
+            'canNote' => NoteController::canSendNote($me, $user),
+        ];
     }
 
     public function me(Request $request): RedirectResponse
