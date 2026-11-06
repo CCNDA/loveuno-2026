@@ -84,7 +84,7 @@ class Profile extends Model
 
         return array_filter([
             '性別' => $this->gender !== '' ? $this->genderLabel() : null,
-            '年齡' => $this->ageGroup(),
+            '年齡' => $this->ageLabel(),
             '居住地' => $this->live_place,
             '信仰' => $this->faith,
             '婚姻狀況' => $this->marital,
@@ -149,7 +149,7 @@ class Profile extends Model
         return ['男' => '弟兄', '女' => '姊妹'][$this->gender] ?? '';
     }
 
-    // 用出生年篩年齡（跟 ageGroup() 同一種算法）：認識朋友的條件搜尋、日記牆的好友推薦共用
+    // 用出生年篩年齡（只看年，不看生日月日；顯示用的實際年齡是 age()）：認識朋友的條件搜尋、日記牆的好友推薦共用
     public function scopeAgeBetween(\Illuminate\Database\Eloquent\Builder $q, ?int $min, ?int $max): \Illuminate\Database\Eloquent\Builder
     {
         $year = (int) now()->format('Y');
@@ -218,14 +218,27 @@ class Profile extends Model
             ->ageBetween($f['age_min'], $f['age_max']);
     }
 
-    // 只顯示年齡層，不顯示生日（舊站直接秀出生日與真實姓名，新版不這樣做）
-    public function ageGroup(): ?string
+    // 實際年齡（熊叔叔 11/6「個人檔案年齡是真實年齡，不是範圍」；原本只顯示 5 歲一格的年齡層）。
+    // 有生日就算到今天滿幾歲，只有出生年就用今年減出生年。生日本身還是不公開（10/29「3A」）
+    public function age(): ?int
     {
         if (! $this->birth_year) {
             return null;
         }
-        $age = (int) now()->format('Y') - $this->birth_year;
+        $today = today();
+        $age = $today->year - $this->birth_year;
+        if ($this->birth_month && $this->birth_day
+            && [$today->month, $today->day] < [(int) $this->birth_month, (int) $this->birth_day]) {
+            $age--;
+        }
 
-        return intdiv($age, 5) * 5 . '～' . (intdiv($age, 5) * 5 + 4) . ' 歲';
+        return $age;
+    }
+
+    public function ageLabel(): ?string
+    {
+        $age = $this->age();
+
+        return $age === null ? null : $age . ' 歲';
     }
 }

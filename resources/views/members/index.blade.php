@@ -74,7 +74,7 @@
                     @php($g = $m->profile->gender)
                     @php($level = auth()->user()->friendLevelWith($m))
                     <p class="member-where">@if ($g)<span class="gender-icon gender-{{ $g === '男' ? 'm' : 'f' }}" aria-hidden="true">{{ $g === '男' ? '♂' : '♀' }}</span>@endif
-                        {{ collect([$m->profile->genderLabel(), $m->profile->live_place, $m->profile->ageGroup()])->filter()->implode(' / ') }}
+                        {{ collect([$m->profile->genderLabel(), $m->profile->live_place, $m->profile->ageLabel()])->filter()->implode(' / ') }}
                         @if ($level > 0)<span class="member-level">{{ \App\Models\Friendship::LEVELS[$level] }}</span>@endif</p>
                     @php($line = ($m->profile->headline ?? '') !== '' ? $m->profile->headline : $m->profile->intro)
                     @if ($line)<p class="excerpt">{{ \Illuminate\Support\Str::limit($line, 40) }}</p>@endif
