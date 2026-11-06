@@ -43,10 +43,10 @@ class RegisterController extends Controller
             'agree' => ['accepted'],
         ], [
             'birth_year.between' => '愛諾園只開放 18 歲以上的會員。',
-            'agree.accepted' => '請先閱讀並同意會員規範。',
+            'agree.accepted' => '請先閱讀並同意網站服務條款和隱私權政策。', // 熊叔叔 11/6 照設計
         ], [
             'email' => '電子郵件', 'password' => '密碼', 'name' => '暱稱',
-            'gender' => '性別', 'birth_year' => '出生年', 'agree' => '會員規範',
+            'gender' => '性別', 'birth_year' => '出生年', 'agree' => '網站服務條款和隱私權政策',
         ]);
 
         $existing = User::where('email', $data['email'])->first();
