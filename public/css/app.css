@@ -1357,3 +1357,15 @@ ul.profile-mine a:hover { background: var(--button); color: #fff; }
 .letter-title .tag { font-weight: 400; }
 .gift-pane > h2 { margin: 0 0 12px; font-size: 1.1rem; }
 .gift-pane .gift-cards { gap: 24px; }
+
+/* 個人首頁跳出的送禮物／相約見面／傳情書對話框（設計稿 328:7030、342:51697、235:7660；熊叔叔 11/6 #7）：航空信封邊框的白紙 */
+.member-dialog { width: min(46rem, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 20px 28px 28px; background: #fff; color: var(--text); box-sizing: border-box;
+    border: 14px solid transparent; border-image: repeating-linear-gradient(-45deg, #e5c3ae 0 14px, #fff 14px 22px, #a8d8d6 22px 36px, #fff 36px 44px) 14; box-shadow: 0 10px 40px rgba(43, 33, 29, .3); }
+.member-dialog::backdrop { background: rgba(43, 33, 29, .55); }
+.member-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.member-dialog-head h2 { margin: 0; font-size: 1.2rem; font-weight: 500; color: var(--plum); overflow-wrap: anywhere; }
+.member-dialog-notes { margin: 0 0 12px; padding-left: 1.2em; }
+.member-dialog-notes li { color: #9a3d2b; font-size: .9rem; }
+.member-dialog-to { margin: 0 0 8px; color: var(--plum); }
+.member-dialog .form { max-width: none; }
+@media (max-width: 40rem) { .member-dialog { padding: 14px 14px 20px; border-width: 10px; } }

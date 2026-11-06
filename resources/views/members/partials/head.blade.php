@@ -56,10 +56,10 @@
             @if (\App\Http\Controllers\NoteController::canNote(auth()->user(), $member))
                 <p class="member-actions">
                     @if (\App\Http\Controllers\NoteController::canSendNote(auth()->user(), $member))
-                        <a class="pill-action pill-note" href="{{ route('notes.show', $member) }}">傳紙條<span class="visually-hidden">給 {{ $member->name }}</span></a>
+                        <a class="pill-action pill-note" href="{{ route('notes.show', $member) }}" data-dialog="note">傳紙條<span class="visually-hidden">給 {{ $member->name }}</span></a>
                     @endif
-                    <a class="pill-action pill-gift" href="{{ route('gifts.create', $member) }}"><img src="{{ asset('images/brand/gift.svg') }}" alt="" width="18" height="18"> 送禮物</a>
-                    <a class="pill-action pill-date" href="{{ route('meetups.create', $member) }}">約會<span class="visually-hidden">（邀請 {{ $member->name }}）</span></a>
+                    <a class="pill-action pill-gift" href="{{ route('gifts.create', $member) }}" data-dialog="gift"><img src="{{ asset('images/brand/gift.svg') }}" alt="" width="18" height="18"> 送禮物</a>
+                    <a class="pill-action pill-date" href="{{ route('meetups.create', $member) }}" data-dialog="date">約會<span class="visually-hidden">（邀請 {{ $member->name }}）</span></a>
                 </p>
             @endif
         </div>

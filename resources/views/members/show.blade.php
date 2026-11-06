@@ -5,6 +5,7 @@
 
 @section('content')
 @include('members.partials.head')
+@if (! empty($dialogs))@include('members.partials.dialogs')@endif
 @if ($isMe)
     {{-- 自己的頁面：常用入口做成小膠囊鈕（小鹿 11/6：原本一長串文字連結在手機換好幾行） --}}
     <ul class="profile-mine" aria-label="我的捷徑">
