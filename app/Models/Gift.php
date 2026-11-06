@@ -39,6 +39,7 @@ class Gift extends Model
             'opened_at' => 'datetime',
             'sender_deleted_at' => 'datetime',
             'recipient_deleted_at' => 'datetime',
+            'refunded_at' => 'datetime',
         ];
     }
 

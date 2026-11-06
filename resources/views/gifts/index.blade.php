@@ -11,7 +11,7 @@
 
 <div class="notes-layout @if($other) has-thread @endif">
     <section class="notes-threads" aria-labelledby="gift-list-title">
-        <form method="POST" action="{{ route('gifts.destroy') }}" id="letters-form" data-confirm="要刪除勾選的 {n} 份禮物嗎？只會從您這邊刪除，對方還看得到。">
+        <form method="POST" action="{{ route('gifts.destroy') }}" id="letters-form" data-confirm="要刪除勾選的 {n} 份禮物嗎？只會從您這邊刪除。還沒回禮的，會當作沒有收下，退 3 點給送禮的人。">
             @csrf
             <h2 id="gift-list-title" class="letters-head"><img src="{{ asset('images/brand/gift.svg') }}" alt="" width="24" height="24">
                 @if (count($newIds) > 0)<span>您有 <span class="threads-count">{{ count($newIds) }}</span> 個新禮物</span>@else<span>禮物清單</span>@endif
