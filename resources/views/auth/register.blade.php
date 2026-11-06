@@ -96,7 +96,7 @@
             <div class="auth-agree">
                 <input id="agree" name="agree" type="checkbox" value="1" @checked(old('agree'))
                        @error('agree') aria-invalid="true" aria-describedby="agree-error" @enderror>
-                <label for="agree">已閱讀並同意<a href="{{ route('rules') }}" target="_blank" rel="noopener">「會員規範」<span class="visually-hidden">（另開新分頁）</span></a></label>
+                <label for="agree">已閱讀並同意<a href="{{ route('terms') }}" target="_blank" rel="noopener">「網站服務條款」<span class="visually-hidden">（另開新分頁）</span></a><a href="{{ route('privacy') }}" target="_blank" rel="noopener">「隱私權政策」<span class="visually-hidden">（另開新分頁）</span></a></label>
             </div>
             @error('agree')<p id="agree-error" class="field-error">{{ $message }}</p>@enderror
 

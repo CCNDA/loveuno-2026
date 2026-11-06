@@ -88,8 +88,10 @@ class MeetupTest extends TestCase
         $this->actingAs($he)->post("/dates/{$m->id}/respond", ['decision' => 'accept', 'reply' => '好'])->assertForbidden(); // 只有被邀請的人
 
         $this->actingAs($she)->get("/dates/{$m->id}")->assertOk()->assertSee('弟兄 邀請您約會')->assertSee('台北靈糧堂');
-        $this->actingAs($she)->post("/dates/{$m->id}/respond", ['decision' => 'accept'])->assertSessionHasErrors('reply');
-        $this->actingAs($she)->post("/dates/{$m->id}/respond", ['decision' => 'accept', 'reply' => '好啊！'])->assertRedirect();
+        $this->actingAs($she)->post("/dates/{$m->id}/respond", ['decision' => 'maybe'])->assertSessionHasErrors('decision');
+        // 熊叔叔 11/6：清單上直接按「參加」，想說的話可以不寫
+        $this->actingAs($she)->post("/dates/{$m->id}/respond", ['decision' => 'accept'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(['accepted', ''], [$m->fresh()->status, (string) $m->fresh()->reply]);
         $this->assertSame('accepted', $m->fresh()->status);
         // 約會日還沒到：不能確認出席
         $this->actingAs($she)->post("/dates/{$m->id}/attend", ['attended' => 'yes', 'closing_note' => '很開心'])->assertSessionHas('status', fn ($s) => str_contains($s, '狀態已經變了'));
@@ -148,5 +150,22 @@ class MeetupTest extends TestCase
         \Illuminate\Support\Facades\DB::table('blocks')->insert(['blocker_id' => $she->id, 'blocked_id' => $he->id, 'created_at' => now(), 'updated_at' => now()]);
         $this->actingAs($he)->get("/dates/{$m->id}")->assertNotFound();
         $this->actingAs($she)->get('/dates')->assertOk()->assertDontSee(route('meetups.show', $m), false);
+    }
+
+    // 熊叔叔 11/6：約會邀請清單上，收到、還沒回覆的那封直接有「不參加」「參加」兩顆鈕
+    public function test_index_has_quick_attend_buttons_for_pending_received(): void
+    {
+        [$he, $she] = [$this->member('甲', '男'), $this->member('乙', '女')];
+        \App\Models\Friendship::raise($he, $she, 2);
+        $m = new \App\Models\Meetup;
+        $m->forceFill(['sender_id' => $he->id, 'recipient_id' => $she->id, 'meet_on' => now()->addDays(5)->toDateString(), 'meet_time' => '10:00',
+            'place' => '教會', 'activity' => 'sunday', 'company' => 'friends', 'message' => '一起去？', 'status' => 'pending'])->save();
+        $html = $this->actingAs($she)->get('/dates')->assertOk()->getContent();
+        $this->assertStringContainsString('action="' . route('meetups.respond', $m) . '"', $html);
+        $this->assertStringContainsString('value="decline"', $html);
+        $this->assertStringContainsString('value="accept"', $html);
+        $this->actingAs($he)->get('/dates')->assertOk()->assertDontSee('value="accept"', false); // 送出的人沒有這兩顆
+        $this->actingAs($she)->post(route('meetups.respond', $m), ['decision' => 'decline'])->assertRedirect();
+        $this->assertSame('declined', $m->fresh()->status);
     }
 }

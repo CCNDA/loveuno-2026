@@ -24,13 +24,13 @@
         @csrf
         @include('partials.errors', ['title' => '還沒有回覆'])
         <div class="field">
-            <label for="reply">想對 {{ $other?->name }} 說的話</label>
-            <textarea id="reply" name="reply" rows="4" maxlength="500" required @error('reply') aria-invalid="true" aria-describedby="reply-error" @enderror>{{ old('reply') }}</textarea>
+            <label for="reply">想對 {{ $other?->name }} 說的話<span class="hint">（可以不寫）</span></label>
+            <textarea id="reply" name="reply" rows="4" maxlength="500" @error('reply') aria-invalid="true" aria-describedby="reply-error" @enderror>{{ old('reply') }}</textarea>
             @error('reply')<p id="reply-error" class="field-error">{{ $message }}</p>@enderror
         </div>
         <div id="decision" tabindex="-1" class="review-actions">
-            <button type="submit" name="decision" value="accept" class="button">接受</button>
-            <button type="submit" name="decision" value="decline" class="button button-secondary">婉拒</button>
+            <button type="submit" name="decision" value="decline" class="button button-secondary">不參加</button>
+            <button type="submit" name="decision" value="accept" class="button">參加</button>
         </div>
     </form>
 @elseif ($state === 'accepted')
