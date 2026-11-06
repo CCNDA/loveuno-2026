@@ -7,6 +7,7 @@
         var grid = fs.querySelector('.check-grid');
         if (!boxes.length || !grid) { return; }
         var max = parseInt(fs.getAttribute('data-tags'), 10) || 3;
+        var min = parseInt(fs.getAttribute('data-tags-min'), 10) || 0; // 必填的至少留幾個（小鹿 11/6：拿掉最後一個會存不進去、畫面卻清空）
         var name = fs.querySelector('legend').textContent.replace(/（.*?）/g, '');
 
         var box = document.createElement('div');
@@ -40,6 +41,7 @@
         }
         function render(focusLast) {
             var chosen = boxes.filter(function (b) { return b.checked; });
+            var locked = chosen.length <= min;
             chips.textContent = '';
             list.textContent = '';
             chosen.forEach(function (b) {
@@ -47,7 +49,8 @@
                 btn.type = 'button';
                 btn.className = 'tag-chip';
                 btn.textContent = b.value;
-                btn.setAttribute('aria-label', '拿掉「' + b.value + '」');
+                btn.setAttribute('aria-label', locked ? '「' + b.value + '」（至少要留 ' + min + ' 個，要換的話先加別的再拿掉）' : '拿掉「' + b.value + '」');
+                if (locked) { btn.disabled = true; btn.title = '至少要留 ' + min + ' 個，先加別的再拿掉'; }
                 btn.addEventListener('click', function () { toggle(b, false); render(); input.focus(); });
                 li.appendChild(btn);
                 chips.appendChild(li);
