@@ -18,6 +18,9 @@
                 <li><a href="{{ route('members.index') }}" @if(request()->routeIs('members.index')) aria-current="page" @endif>認識朋友</a></li>
                 <li><a href="{{ route('notes.index') }}" @if(request()->routeIs('notes.*')) aria-current="page" @endif>傳紙條@if(($unreadNotes ?? 0) > 0) <span class="badge" aria-hidden="true">{{ $unreadNotes }}</span><span class="visually-hidden">，有 {{ $unreadNotes }} 則未讀</span>@endif</a></li>
                 <li><a href="{{ route('meetups.index') }}" @if(request()->routeIs('meetups.*')) aria-current="page" @endif>約會</a></li>
+                {{-- 11/11 熊叔叔：會員頁是給別人看的，自己的入口放左邊選單（原本只有會員頁上方小膠囊連得到「我的朋友」） --}}
+                <li><a href="{{ route('friends.index') }}" @if(request()->routeIs('friends.*')) aria-current="page" @endif>我的朋友</a></li>
+                <li><a href="{{ route('gifts.index') }}" @if(request()->routeIs('gifts.index')) aria-current="page" @endif>我的禮物</a></li>
                 <li><a href="{{ route('love-stories.index') }}" @if(request()->routeIs('love-stories.*')) aria-current="page" @endif>愛的見證</a></li>
                 <li><a href="{{ route('about') }}" @if(request()->routeIs('about')) aria-current="page" @endif>關於愛諾園</a></li>
                 <li><a href="{{ config('loveuno.links.devote') }}" rel="noopener">支持奉獻</a></li>

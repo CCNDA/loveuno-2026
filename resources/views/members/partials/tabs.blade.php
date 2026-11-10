@@ -33,16 +33,17 @@
     @php($vt = $p->verse_book !== '' ? ($p->verse_text !== '' ? $p->verse_text : (\App\Support\Bible::verse((string) $p->verse_book, (int) $p->verse_chapter, (int) $p->verse_verse) ?? '')) : '')
     @if ($p->intro || $p->hope || $p->verse_book !== '' || ! empty($p->hobbies) || ! empty($p->sports) || ! empty($p->languages))
         <dl class="profile-list">
+            {{-- is-long：標題超過四個字的，手機上改成標題在上、內容在下（小鹿 11/11） --}}
             @if ($p->intro)<div><dt>簡介</dt><dd class="prose">{!! nl2br(e($p->intro)) !!}</dd></div>@endif
             @foreach ([['languages', '慣用語言'], ['hobbies', '興趣嗜好'], ['sports', '喜愛的運動']] as [$key, $label])
-                @if (! empty($p->{$key}))<div><dt>{{ $label }}</dt><dd>{{ implode('｜', $p->{$key}) }}</dd></div>@endif
+                @if (! empty($p->{$key}))<div><dt @class(['is-long' => mb_strlen($label) > 4])>{{ $label }}</dt><dd @class(['is-long' => mb_strlen($label) > 4])>{{ implode('｜', $p->{$key}) }}</dd></div>@endif
             @endforeach
-            @if ($p->hope)<div><dt>期待認識的人</dt><dd class="prose">{!! nl2br(e($p->hope)) !!}</dd></div>@endif
+            @if ($p->hope)<div><dt class="is-long">期待認識的人</dt><dd class="prose is-long">{!! nl2br(e($p->hope)) !!}</dd></div>@endif
             @if ($p->verse_book !== '')
                 {{-- 舊站搬來的只有書卷章節、沒有經文：當下從經文庫查（熊叔叔 11/6「最愛經句沒有顯示經句內容」） --}}
                 {{-- 書卷章節先組成一個字串：Blade 的 @endif@if 黏在一起時第二個 @if 不會被編譯（11/11 整頁 500） --}}
                 @php($verseRef = trim($p->verse_book . ' ' . $p->verse_chapter . ($p->verse_verse ? ':' . $p->verse_verse : '')))
-                <div><dt>最愛的經句</dt><dd class="prose">@if ($vt !== ''){!! nl2br(e($vt)) !!}（{{ $verseRef }}）@else{{ $verseRef }}@endif</dd></div>
+                <div><dt class="is-long">最愛的經句</dt><dd class="prose is-long">@if ($vt !== ''){!! nl2br(e($vt)) !!}（{{ $verseRef }}）@else{{ $verseRef }}@endif</dd></div>
             @endif
         </dl>
     @endif
