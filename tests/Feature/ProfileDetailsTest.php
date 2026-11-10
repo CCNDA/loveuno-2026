@@ -64,7 +64,7 @@ class ProfileDetailsTest extends TestCase
 
         $other = $this->member('別人');
         $this->actingAs($other)->get("/members/{$u->id}?tab=intro")->assertOk()
-            ->assertSee('愛爬山的老師')->assertSee('耶利米書 29:11')->assertSeeInOrder(['興趣嗜好', '看書寫作', '各地旅遊', '喜愛的運動', '登山', '慣用語言', '中文/普通話']);
+            ->assertSee('愛爬山的老師')->assertSee('耶利米書 29:11')->assertSeeInOrder(['慣用語言', '中文/普通話', '興趣嗜好', '看書寫作｜各地旅遊', '喜愛的運動', '登山']); // 11/11 照設計稿 Profile 的順序、用「｜」分隔（熊叔叔「盡可能先按Figma設計」）
         $this->actingAs($u)->put('/me/intro', $this->introForm(['verse_book' => '耶利米書']))->assertSessionHasErrors('verse_chapter');
         // 經文自己帶出來（熊叔叔 11/5）：存的是和合本、不是使用者打的字；章節不存在就擋
         $this->assertSame('耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。', $u->profile->fresh()->verse_text);
