@@ -6,18 +6,7 @@
 @section('content')
 @include('members.partials.head')
 @if (! empty($dialogs))@include('members.partials.dialogs')@endif
-@if ($isMe)
-    {{-- 自己的頁面：常用入口做成小膠囊鈕（小鹿 11/6：原本一長串文字連結在手機換好幾行） --}}
-    <ul class="profile-mine" aria-label="我的捷徑">
-        <li><a href="{{ route('center.account') }}">會員中心</a></li>
-        <li><a href="{{ route('friends.index') }}">我的朋友</a></li>
-        <li><a href="{{ route('gifts.index') }}">我的禮物</a></li>
-        <li><a href="{{ route('meetups.index') }}">我的約會</a></li>
-        <li><a href="{{ route('profile.edit') }}">編輯個人檔案</a></li>
-        <li><a href="{{ route('profile.intro') }}#photo-title">換大頭照@if ($member->profile?->photo_status === 'pending')（審核中）@endif</a></li>
-        <li><a href="{{ route('album.edit') }}#cover-title">換封面</a></li>
-    </ul>
-@endif
+{{-- 11/11 熊叔叔選「拿掉，照 Figma」：自己頁面上方那排「會員中心、我的朋友…換封面」小膠囊拿掉；編輯走卡片右上角的鉛筆，其他入口在側邊選單和會員中心 --}}
 
 @if ($iBlocked ?? false)
     <p class="notice" role="status">您已封鎖這位會員，所以看不到對方的檔案和日記，對方也看不到您的。</p>
