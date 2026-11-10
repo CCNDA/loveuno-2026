@@ -21,7 +21,8 @@
     @else
         <dl class="profile">
             @foreach ($rows as $dt => $dd)
-                <div><dt>{{ $dt }}</dt><dd>{{ $dd }}</dd></div>
+                {{-- is-wide：內容超過六個字（例如長職業），手機上這組跨整列，不要折成四行（小鹿 11/11） --}}
+                <div @class(['is-wide' => mb_strlen((string) $dd) > 6])><dt>{{ $dt }}</dt><dd>{{ $dd }}</dd></div>
             @endforeach
         </dl>
     @endif

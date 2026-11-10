@@ -1263,6 +1263,7 @@ main.page-card.wrap-wide { max-width: 75rem; }
     .profile-section .profile { grid-template-columns: 1fr 1fr; gap: 0 12px; }
     .profile-section .profile div { grid-template-columns: 4.5em minmax(0, 1fr); gap: 6px; padding: 6px 0; }
     .profile-section .profile dt, .profile-section .profile dd { font-size: .95rem; }
+    .profile-section .profile > .is-wide { grid-column: 1 / -1; } /* 長職業這種跨整列（小鹿 11/11：375 寬折成四行） */
 }
 @media (max-width: 22rem) { .profile-section .profile { grid-template-columns: 1fr; } } /* 320 寬一組一列，長職業才放得下 */
 /* 電腦：個人資料一列三組（設計稿 142:22363） */
