@@ -62,7 +62,9 @@ class VerificationTest extends TestCase
         $this->assertSame(10, (int) \Illuminate\Support\Facades\DB::table('point_transactions')->where('user_id', $me->id)->where('type', 'job')->value('amount'));
         $other = $this->member('別人');
         $this->actingAs($other)->get("/members/{$me->id}")->assertSee('alt="已認證"', false)
-            ->assertSee('<dt>職業 Email 認證</dt><dd>已認證</dd>', false)->assertSee('<dt>身分文件認證</dt><dd>尚未認證</dd>', false)
+            // 11/11 照設計稿：認證只放頭像旁的盾牌徽章，個人資料表不再列四行（熊叔叔 11/10「排版不舒服」）
+            ->assertSee('alt="職業 Email 已認證"', false)->assertDontSee('alt="身分文件已認證"', false)
+            ->assertDontSee('<dt>職業 Email 認證</dt>', false)
             ->assertDontSee('某某科技'); // 公司不顯示於交友檔案
     }
 

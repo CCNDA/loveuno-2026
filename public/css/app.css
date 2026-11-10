@@ -689,6 +689,22 @@ html.fs-large { font-size: 118.75%; }
 .profile-section .profile { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 4px 24px; }
 .profile-section .profile div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 8px; background: none; border: 0; border-radius: 0; padding: 6px 0; }
 .profile-section .profile dd { font-weight: 400; }
+/* 2026-11-11 照設計稿 Profile：標題和內容同字級、同一條基線（原本標題淡灰小字、內容大字，對不齊——熊叔叔 11/10「排版不舒服」） */
+.profile-section .profile dt, .profile-section .profile dd { font-size: 1rem; line-height: 1.6; }
+.profile-section + .profile-section { margin-top: 24px; }
+/* 自我介紹、戀愛履歷：左欄標題｜右欄內容一條清單（設計稿 Profile 自我介紹卡） */
+.profile-list { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 14px 24px; margin: 0; }
+.profile-list > div { display: contents; }
+.profile-list dt { color: var(--muted); }
+.profile-list dd { margin: 0; max-width: 48em; line-height: 1.8; overflow-wrap: anywhere; }
+.profile-subtitle { margin: 28px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 1.05rem; color: var(--plum); }
+.profile-list-qa { grid-template-columns: 14rem minmax(0, 1fr); }
+@media (max-width: 640px) {
+    .profile-list { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 10px 12px; }
+    /* 戀愛履歷問題長：手機改成問題在上、答案在下 */
+    .profile-list-qa { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .profile-list-qa dd { margin-bottom: 12px; }
+}
 
 /* 手機：登入後頁首只留 ☰、Logo、鈴、頭像（简体移到側邊選單），不換行；大頭照小一點、少疊一點在輪播上 */
 .side-menu-script { display: none; margin: 8px 0 0; text-align: center; }
