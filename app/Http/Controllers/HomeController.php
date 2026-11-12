@@ -73,6 +73,7 @@ class HomeController extends Controller
             ->phoneVerified()
             ->active()
             ->whereHas('profile', $this->matchesPreferences($me))
+            ->whereHas('profile', fn ($p) => $p->unmarried()) // 已婚的不推薦（11/12 熊叔叔 TG 乙）
             ->with('profile')
             ->orderByDesc('email_verified_at')->orderByDesc('id')
             ->limit(5)
@@ -94,6 +95,7 @@ class HomeController extends Controller
             ->active()
             ->whereNotIn('id', $blocked)
             ->whereHas('profile', $this->matchesPreferences($me))
+            ->whereHas('profile', fn ($p) => $p->unmarried()) // 已婚的不推薦（11/12 熊叔叔 TG 乙）
             ->with('profile')
             ->inRandomOrder() // 會員多了以後要改（每次排序全部會員）；目前幾十位沒問題
             ->limit(6)

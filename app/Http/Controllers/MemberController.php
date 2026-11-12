@@ -7,7 +7,6 @@ use App\Models\Gift;
 use App\Models\Profile;
 use App\Models\User;
 use App\Support\Points;
-use App\Support\ProfileOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -47,7 +46,7 @@ class MemberController extends Controller
     {
         return User::query()
             // 已婚（管理員設的，例如見證通過的夫妻）不列：交友是給單身的（熊叔叔 11/2 TG 選「甲 不出現」）；檔案、日記照常看得到
-            ->whereHas('profile', fn ($p) => $p->whereNotIn('marital', ProfileOptions::MARITAL_ADMIN))
+            ->whereHas('profile', fn ($p) => $p->unmarried())
             ->whereNotNull('email_verified_at') // 還沒驗證 email、手機的新註冊會員不列出來（10/29「1A」）
             ->phoneVerified() // 手機認證過期的也不列（12 個月）
             ->active() // 帳號設定「啟用帳號」關掉的、註銷的不列

@@ -203,6 +203,13 @@ class Profile extends Model
         return false;
     }
 
+    // 沒結婚的：已婚（管理員設的，例如見證通過的夫妻）不出現在認識朋友、好友推薦、歡迎新朋友
+    // （熊叔叔 11/2「甲 不出現」；11/12「沒有討論區了社群會員意義不大」選「乙 已婚自動不出現在搜尋」）。檔案、日記照常看得到
+    public function scopeUnmarried(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        return $q->whereNotIn('marital', \App\Support\ProfileOptions::MARITAL_ADMIN);
+    }
+
     // 符合某人交友條件的個人檔案（$pref 是「看的人」的 profile）
     public function scopeMatchesPreferences(\Illuminate\Database\Eloquent\Builder $q, ?self $pref): \Illuminate\Database\Eloquent\Builder
     {
