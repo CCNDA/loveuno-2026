@@ -57,6 +57,42 @@ class PointsTest extends TestCase
         $this->assertSame(1 + 20 + 10 + 10 + 10, $this->balance($u)); // 含每日登入、手機認證（factory 預設手機已驗證）
     }
 
+    // 小布 11/13 檢測表 2-03：只設 11/5 補上的條件（婚姻狀態、信仰、身高、體重）也算完成希望對象建檔
+    public function test_preferences_task_counts_every_condition(): void
+    {
+        foreach ([
+            ['pref_marital' => '未婚'],
+            ['pref_faith' => '基督徒'],
+            ['pref_height_min' => 160],
+            ['pref_weight_max' => 70],
+        ] as $form) {
+            $u = $this->member();
+            $this->actingAs($u)->put('/center/preferences', $form)->assertRedirect();
+            $this->actingAs($u)->put('/center/preferences', $form)->assertRedirect();
+            $this->assertSame(
+                [10],
+                DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'preferences')->pluck('amount')->map(fn ($a) => (int) $a)->all(),
+                '只填 ' . array_key_first($form) . ' 要 +10、而且只給一次'
+            );
+        }
+    }
+
+    // 自動存檔（PATCH 單一欄位）走同一條路
+    public function test_preferences_autosave_single_field_awards(): void
+    {
+        $u = $this->member();
+        $this->actingAs($u)->patchJson('/center/preferences/fields', ['pref_marital' => '未婚'])->assertOk();
+        $this->assertSame(10, (int) DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'preferences')->value('amount'));
+    }
+
+    // 什麼都沒設（全部不限）不給
+    public function test_preferences_task_not_awarded_when_nothing_set(): void
+    {
+        $u = $this->member();
+        $this->actingAs($u)->put('/center/preferences', [])->assertRedirect();
+        $this->assertSame(0, DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'preferences')->count());
+    }
+
     public function test_photo_approval_awards_twenty(): void
     {
         $u = $this->member();

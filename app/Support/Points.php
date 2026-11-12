@@ -108,7 +108,8 @@ class Points
         $done = [
             'profile' => trim((string) $p->live_place) !== '' && trim((string) $p->job) !== ''
                 && collect(['faith', 'marital', 'children', 'education', 'blood_type', 'smoking', 'drinking'])->every(fn ($k) => (string) $p->{$k} !== ''),
-            'preferences' => $p->pref_gender !== '' || $p->pref_age_min !== null || $p->pref_age_max !== null || $p->pref_place !== '',
+            // 任何一項交友條件設了就算（11/5 補上婚姻狀態、信仰、身高、體重時這裡漏改；小布 11/13 檢測表 2-03）
+            'preferences' => $p->hasExplicitPreferences(),
             // 0.16～0.20 暫時用「寫了自我介紹」給 type=intro；0.21.0 起改成問卷、type=love，舊的 intro 紀錄不算完成
             'love' => LoveHistory::isComplete($p->love_history),
             'photo' => $p->photo_status === 'approved',
