@@ -83,6 +83,23 @@ class WallTest extends TestCase
         $this->assertStringNotContainsString('class="suggest-name">我<', $html);
     }
 
+    // 已婚（見證通過的夫妻）不出現在好友推薦、歡迎新朋友；認識朋友 11/2 就排除了（熊叔叔 11/12 TG 乙）
+    public function test_married_members_not_suggested_or_welcomed(): void
+    {
+        $me = $this->member('我', '男', 1990, '台北市');
+        $me->profile->forceFill(['preferences_saved_at' => now()])->save(); // 認識朋友要先存過交友條件才列人
+        $now = (int) now()->format('Y');
+        $this->member('單身姊妹', '女', $now - 30);
+        $this->member('已婚姊妹', '女', $now - 30)->profile->forceFill(['marital' => '已婚'])->save();
+        $this->member('離婚姊妹', '女', $now - 30)->profile->forceFill(['marital' => '離婚'])->save();
+
+        $html = $this->actingAs($me)->get('/')->assertOk()->assertSee('好友推薦')->assertSee('歡迎新朋友')->getContent();
+        $this->assertStringContainsString('單身姊妹', $html);
+        $this->assertStringContainsString('離婚姊妹', $html); // 只有「已婚」要藏，離婚、喪偶照常
+        $this->assertStringNotContainsString('已婚姊妹', $html);
+        $this->actingAs($me)->get('/members')->assertSee('單身姊妹')->assertDontSee('已婚姊妹');
+    }
+
     public function test_unverified_member_gets_intro_not_wall(): void
     {
         $pending = User::factory()->unverified()->create();
