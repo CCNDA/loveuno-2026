@@ -4,7 +4,6 @@
 
 @section('content')
 <h1>會員規範</h1>
-<p class="notice" role="note">這是草稿，正式開放前會請秘書長確認內容。</p>
 
 <ol class="prose">
     <li>愛諾園是給基督徒單身朋友的交友園地，請以真誠、尊重的態度和其他會員互動。</li>
