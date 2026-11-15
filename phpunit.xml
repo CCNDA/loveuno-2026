@@ -31,6 +31,12 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- 測試站 .env 為了同工實測會開註冊、設推播金鑰、寫 laravel.log；測試要固定成預設值，不跟著站台設定跑
+             （11/15 PHP 8.4 相容性測試時發現 3 個測試在測試站目錄會失敗；Asana 1220547578125246） -->
+        <env name="REGISTRATION_OPEN" value="false"/>
+        <env name="VAPID_PUBLIC_KEY" value=""/>
+        <env name="VAPID_PRIVATE_KEY" value=""/>
+        <env name="LOG_CHANNEL" value="null"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
     </php>
 </phpunit>
