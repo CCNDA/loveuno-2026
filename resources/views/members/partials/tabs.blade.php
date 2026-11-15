@@ -1,12 +1,15 @@
 {{-- 會員檔案的四個分頁（設計稿 PagePersonal PersonalTabNav：個人資料／自我介紹／心情日記／個人相簿）。$tab、$member、$p、$diaries
      2026-11-11 熊叔叔選「個人資料＋自我介紹合一頁，相簿日記仍分頁」：照設計稿 Profile 142:22363，「個人資料」頁上下兩張卡；
-     「自我介紹」分頁鈕跳到同一頁的自我介紹卡，舊網址 ?tab=intro 也顯示同一頁 --}}
+     「自我介紹」分頁鈕跳到同一頁的自我介紹卡，舊網址 ?tab=intro 也顯示同一頁
+     2026-11-16 小鹿驗收第 10 題：點「自我介紹」後作用中仍標「個人資料」。改連 ?tab=intro#member-intro：
+     內容照舊是合一頁、瀏覽器捲到自我介紹卡，作用中標示跟著點的那一顆（$current）——不用 JavaScript --}}
+@php($current = $tab)
 @php($tab = $tab === 'intro' ? 'info' : $tab)
 <nav class="center-subtabs member-tabs" aria-label="{{ $member->name }} 的檔案">
     <ul>
         @foreach (['info' => '個人資料', 'intro' => '自我介紹', 'album' => '個人相簿', 'diary' => '心情日記'] as $key => $label)
-            @php($href = match ($key) { 'info' => route('members.show', $member), 'intro' => route('members.show', $member) . '#member-intro', default => route('members.show', ['user' => $member, 'tab' => $key]) })
-            <li><a href="{{ $href }}" @if($tab === $key) aria-current="page" @endif>{{ $label }}</a></li>
+            @php($href = match ($key) { 'info' => route('members.show', $member), 'intro' => route('members.show', ['user' => $member, 'tab' => 'intro']) . '#member-intro', default => route('members.show', ['user' => $member, 'tab' => $key]) })
+            <li><a href="{{ $href }}" @if($current === $key) aria-current="page" @endif>{{ $label }}</a></li>
         @endforeach
     </ul>
 </nav>

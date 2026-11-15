@@ -63,6 +63,14 @@ class ProfileDetailsTest extends TestCase
         $this->assertSame(['看書寫作', '各地旅遊'], $u->profile->fresh()->hobbies); // 照選項順序存
 
         $other = $this->member('別人');
+        // 2026-11-16 小鹿驗收第 10 題：「自我介紹」鈕連 ?tab=intro#member-intro，作用中標示要跟著走；內容仍是合一頁
+        $intro = $this->actingAs($other)->get("/members/{$u->id}?tab=intro")->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#href="[^"]*\?tab=intro\#member-intro"\s*aria-current="page"\s*>自我介紹#u', $intro);
+        $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*>個人資料#u', $intro);
+        $this->assertStringContainsString('id="member-intro"', $intro);
+        $info = $this->actingAs($other)->get("/members/{$u->id}")->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#aria-current="page"\s*>個人資料#u', $info);
+        $this->assertDoesNotMatchRegularExpression('#aria-current="page"\s*>自我介紹#u', $info);
         $this->actingAs($other)->get("/members/{$u->id}?tab=intro")->assertOk()
             ->assertSee('愛爬山的老師')->assertSee('耶利米書 29:11')->assertSeeInOrder(['慣用語言', '中文/普通話', '興趣嗜好', '看書寫作｜各地旅遊', '喜愛的運動', '登山']); // 11/11 照設計稿 Profile 的順序、用「｜」分隔（熊叔叔「盡可能先按Figma設計」）
         $this->actingAs($u)->put('/me/intro', $this->introForm(['verse_book' => '耶利米書']))->assertSessionHasErrors('verse_chapter');
