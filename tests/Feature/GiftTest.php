@@ -174,6 +174,16 @@ class GiftTest extends TestCase
         $this->assertStringNotContainsString(route('gifts.create', $me), $html);
     }
 
+    // 2026-11-16 熊叔叔 TG 選甲：表單第一顆按鈕寫「下一步」（按了是到確認頁，不是送出）
+    public function test_gift_form_first_button_says_next_step(): void
+    {
+        $me = $this->member('我');
+        $you = $this->member('你');
+        $html = $this->actingAs($me)->get("/members/{$you->id}/gift")->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#<button type="submit" class="button">下一步</button>#u', $html);
+        $this->assertDoesNotMatchRegularExpression('#<button type="submit" class="button">送出</button>#u', $html);
+    }
+
     // 會員反映誤觸就送出（熊叔叔 11/2 選 gift_both）：先看確認頁，按「確定送出」才送、才扣點
     public function test_first_submit_shows_confirm_page_without_sending(): void
     {

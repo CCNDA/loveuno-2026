@@ -42,5 +42,6 @@
         @error('message')<p id="{{ $fp }}message-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
-    <button type="submit" class="button">送出</button>
+    {{-- 2026-11-16 熊叔叔 TG 選甲：這顆是到確認頁，不是真的送出，改「下一步」（小霏 11/7 F3 回報） --}}
+    <button type="submit" class="button">下一步</button>
 </form>
