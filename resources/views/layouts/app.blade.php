@@ -12,7 +12,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="愛諾園">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @if (auth()->user()?->font_family === 'huninn')<link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">@endif
+    @if (auth()->user()?->font_family === 'huninn')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&display=swap">
+    <link rel="stylesheet" href="{{ asset('css/huninn.css') }}?v={{ $appVersion }}">
+    @endif
     <script src="{{ asset('js/tz.js') }}?v={{ $appVersion }}" defer></script>
     <script src="{{ asset('js/error-focus.js') }}?v={{ $appVersion }}" defer></script>
     @auth<script src="{{ asset('js/side-menu.js') }}?v={{ $appVersion }}" defer></script>

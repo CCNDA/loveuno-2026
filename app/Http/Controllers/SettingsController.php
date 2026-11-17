@@ -24,7 +24,7 @@ class SettingsController extends Controller
 
     public const SCRIPTS = ['hant' => '繁體中文', 'hans' => '简体中文'];
 
-    public const FONT_FAMILIES = ['system' => '系統字體', 'huninn' => '粉圓（第一次載入約 5MB）'];
+    public const FONT_FAMILIES = ['system' => '系統字體', 'huninn' => '粉圓'];
 
     public function update(Request $request): RedirectResponse
     {
