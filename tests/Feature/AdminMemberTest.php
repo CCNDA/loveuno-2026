@@ -44,12 +44,21 @@ class AdminMemberTest extends TestCase
         $a = $this->member('甲小芯', ['email' => 'alpha@example.com', 'legacy_id' => 1012345, 'phone' => '0912345678']);
         $b = $this->member('乙會員', ['email' => 'beta@example.com']);
 
-        foreach ([(string) $a->id, '1012345', 'alpha@', '小芯', '0912345'] as $q) {
+        // 2026-11-17：後台顯示「#71」，照抄（含全形＃、中間空白）也要找得到
+        foreach ([(string) $a->id, '#' . $a->id, '＃' . $a->id, '# ' . $a->id, '1012345', 'alpha@', '小芯', '0912345'] as $q) {
             $this->actingAs($admin)->get('/admin/members?q=' . urlencode($q))->assertOk()
                 ->assertSee('甲小芯')->assertDontSee('乙會員');
         }
         // % 和 _ 是一般字元，不是萬用字元
         $this->actingAs($admin)->get('/admin/members?q=' . urlencode('%'))->assertOk()->assertSee('找不到符合的會員');
+    }
+
+    public function test_points_on_self_shows_chinese_422_page(): void
+    {
+        // 2026-11-17 Asana 1220377223503375：abort(422, 中文) 要顯示我們的中文頁，不是 Laravel 英文預設頁
+        $admin = $this->admin();
+        $this->actingAs($admin)->post('/admin/members/' . $admin->id . '/points', ['amount' => 1, 'reason' => '測試'])
+            ->assertStatus(422)->assertSee('這個動作不能做')->assertSee('不能幫自己加減點')->assertDontSee('Unprocessable');
     }
 
     public function test_suspend_hides_member_and_blocks_login(): void

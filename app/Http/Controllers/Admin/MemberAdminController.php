@@ -26,6 +26,10 @@ class MemberAdminController extends Controller
     public function index(Request $request): View
     {
         $q = trim((string) $request->query('q', ''));
+        // 2026-11-17 Asana 1220377223503375：後台畫面顯示會員編號是「#71」，照抄來搜要找得到
+        if (preg_match('/^[#＃]\s*(\d+)$/u', $q, $m)) {
+            $q = $m[1];
+        }
         $filter = (string) $request->query('filter', '');
         $users = User::query()->with('profile');
 
