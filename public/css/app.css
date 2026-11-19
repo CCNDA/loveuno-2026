@@ -443,9 +443,9 @@ html.fs-large { font-size: 118.75%; }
 .settings-actions { list-style: none; padding: 0; margin: 16px 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* 公開頁 */
-.footer-row { display: grid; gap: 24px; }
+.footer-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; } /* 欄寬不讓 logo 撐開：195px 寬不溢出（11/19 大沈） */
 .footer-row .footer-links ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; } /* 設計稿手機兩欄、電腦四欄 */
-.footer-brand img { display: block; height: auto; }
+.footer-brand img { display: block; max-width: 100%; height: auto; }
 .footer-social { display: flex; gap: 12px; list-style: none; margin: 16px 0 0; padding: 0; }
 .footer-social a { display: inline-flex; border-radius: 50%; }
 .footer-links a { color: #f3dccd; text-decoration: none; }
@@ -457,7 +457,7 @@ html.fs-large { font-size: 118.75%; }
     .footer-row .footer-links ul { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
 }
 .footer-links ul { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
-.footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
 .policy h2 { font-size: 1.15rem; margin-top: 24px; }
 .faq-group { margin-top: 24px; }
 .faq-item { border-top: 1px solid var(--line); padding: 4px 0; }
