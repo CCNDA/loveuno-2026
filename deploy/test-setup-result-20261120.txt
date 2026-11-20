@@ -63,6 +63,11 @@
 == S14 密碼不放在任何指令的參數（小布 🟠3：靜態檢查）
 ✅ S14 用到密碼變數的地方都是內建或 heredoc（1 處）
 ✅ S14 沒有固定檔名的 /tmp 暫存（小布 🟠4）
+== S15 硬連結：ubuntu 不能在 storage 裡硬連結到 root 的檔（靠 fs.protected_hardlinks）
+✅ S15 ubuntu 建不出指到 /etc/shadow 的硬連結（protected_hardlinks=1）
+✅ S15 跑完 /etc/shadow 群組沒變（shadow）
+== S16 主機沒開連結保護就停（用替身 sysctl 模擬）
+✅ S16 退出 1、沒建帳號（沒有做（1）：fs.protected_hardlinks 不是 1（主機沒開連結保護））
 
-共 51 項，失敗 0 項
+共 54 項，失敗 0 項
 全部通過

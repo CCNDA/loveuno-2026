@@ -60,6 +60,10 @@ if [ "$MODE" = "--undo" ]; then
 fi
 
 echo "== 0. 檢查"
+# root 自己動手的只剩 chgrp -h 與 chmod g+s：-h 不跟符號連結，但硬連結要靠核心保護擋（小布 16:43 建議）
+for k in fs.protected_hardlinks fs.protected_symlinks; do
+  [ "$(sysctl -n "$k" 2>/dev/null)" = 1 ] || { echo "沒有做（1）：$k 不是 1（主機沒開連結保護）"; exit 1; }
+done
 [ -d "$APP" ] && [ ! -L "$APP" ] && [ "$(stat -c %U "$APP")" = ubuntu ] && as_ubuntu test -f "$APP/artisan" || { echo "沒有做（1）：$APP 還沒部署（小芯先 git clone）"; exit 1; }
 # 事先擋連結（之後的寫入本來就是 ubuntu 身分、跟著連結也只有 ubuntu 的權限；這裡是讓它在動資料庫之前就停）
 for f in "$ENVF" "$MYCNF"; do as_ubuntu test -L "$f" && { echo "沒有做（1）：$f 是符號連結"; exit 1; }; done

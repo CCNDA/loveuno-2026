@@ -147,5 +147,16 @@ bad=$(grep -nE '\$P_(APP|BK|LG)' $S | grep -vE '^[0-9]+:(P_APP=|\[ \$\{#P_APP\}|
 [ -z "$(echo "$bad" | grep -vE 'printf|"\$P_BK" \| as_ubuntu')" ]; ok $? "S14 用到密碼變數的地方都是內建或 heredoc（$(echo "$bad" | wc -l) 處）"
 grep -n '/tmp/cora-' $S | grep -q .; [ $? != 0 ]; ok $? "S14 沒有固定檔名的 /tmp 暫存（小布 🟠4）"
 
+echo "== S15 硬連結：ubuntu 不能在 storage 裡硬連結到 root 的檔（靠 fs.protected_hardlinks）"
+fresh; runuser -u ubuntu -- ln /etc/shadow $APP/storage/logs/hard 2>/dev/null; [ ! -e $APP/storage/logs/hard ]; ok $? "S15 ubuntu 建不出指到 /etc/shadow 的硬連結（protected_hardlinks=$(sysctl -n fs.protected_hardlinks)）"
+before=$(stat -c '%G' /etc/shadow); out=$(bash $S 2>&1); [ "$(stat -c '%G' /etc/shadow)" = "$before" ]; ok $? "S15 跑完 /etc/shadow 群組沒變（$before）"
+
+echo "== S16 主機沒開連結保護就停（用替身 sysctl 模擬）"
+fresh; mv /usr/sbin/sysctl /usr/sbin/sysctl.real; printf '#!/bin/sh
+echo 0
+' > /usr/sbin/sysctl; chmod 755 /usr/sbin/sysctl
+out=$(bash $S 2>&1); rc=$?; mv -f /usr/sbin/sysctl.real /usr/sbin/sysctl
+[ $rc = 1 ] && [ -z "$(gr lu2026_app)" ] && echo "$out" | grep -q protected_hardlinks; ok $? "S16 退出 1、沒建帳號（$(echo "$out" | tail -1)）"
+
 echo; echo "共 $n 項，失敗 $fail 項"
 if [ $fail = 0 ]; then echo "全部通過"; exit 0; else echo "有失敗"; exit 1; fi
