@@ -48,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'notify_email' => 'boolean',
             'is_active' => 'boolean',
             'deleted_at' => 'datetime',
+            'beta_invited_at' => 'datetime', // 公測邀請名單（2026_11_20_000001）
             'suspended_at' => 'datetime', // 停權：舊站搬來的（2026_10_30_000029）或後台停權（2026_11_02_000001），哪個先跑就由哪個建欄位
             'suspend_prev_active' => 'boolean',
         ];

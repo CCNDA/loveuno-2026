@@ -19,6 +19,10 @@ return [
     // 開放註冊。11/8 會員大會是展示版，不開放；年底正式開放時才打開（熊叔叔 10/29：預計年底）
     'registration_open' => (bool) env('REGISTRATION_OPEN', false),
 
+    // 公測邀請制（熊叔叔 11/16 選乙；Asana 1220564012971609）：開著時只有名單上的人（users.beta_invited_at）和管理員能登入
+    // 名單用 php artisan beta:invite 管理。測試站、展示版不設＝關
+    'beta_invite_only' => (bool) env('BETA_INVITE_ONLY', false),
+
     // 簡訊（手機認證）：log＝只寫進 laravel.log（測試站）；twsms＝台灣簡訊（正式站，熊叔叔 10/29「沿用」舊站帳號）
     // 🔴 正式站一定要設 twsms：log 模式會把認證碼寫進記錄檔
     'sms' => [

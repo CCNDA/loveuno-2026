@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\LogoutNotInvited;
 use App\Http\Middleware\LogoutSuspended;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,12 @@ class LoginController extends Controller
         if ($request->user()->suspended_at !== null) {
             Auth::logout();
             throw ValidationException::withMessages(['email' => LogoutSuspended::MESSAGE]);
+        }
+
+        // 公測邀請制：名單外的帳號密碼對也不能登入（只在密碼對時才說，不會被拿來試帳號；訊息跟中途登出同一句）
+        if (LogoutNotInvited::blocks($request->user())) {
+            Auth::logout();
+            throw ValidationException::withMessages(['email' => LogoutNotInvited::MESSAGE]);
         }
 
         RateLimiter::clear($key);
