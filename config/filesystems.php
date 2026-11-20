@@ -44,6 +44,13 @@ return [
             // R2（s3）時 root 是 bucket 裡的前綴（例如 lu2026，跟舊站證件分開）；本機時是資料夾。公測：熊叔叔 11/20「可以直接用舊版的R2的 bucket」
             'root' => env('AVATAR_DISK_DRIVER', 'local') === 's3' ? env('AVATAR_S3_ROOT', 'lu2026') : storage_path('app/private/avatars'),
             'visibility' => 'private',
+            // 本機時：私有也要給群組讀寫。同步／匯入用 ubuntu 跑、網站用 www-data（php-fpm）跑，
+            // 預設 private 是 0600／0700，ubuntu 建的資料夾 www-data 會讀不到 → 破圖（11/20 vm10 實查）。
+            // 群組靠 storage 資料夾的 setgid 繼承 www-data；其他人仍然沒有權限
+            'permissions' => [
+                'file' => ['public' => 0644, 'private' => 0660],
+                'dir' => ['public' => 0755, 'private' => 0770],
+            ],
             'key' => env('AVATAR_S3_KEY'),
             'secret' => env('AVATAR_S3_SECRET'),
             'region' => env('AVATAR_S3_REGION', 'auto'),
