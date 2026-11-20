@@ -21,7 +21,8 @@ fresh() {   # 每個情境從乾淨的狀態開始
   bash $S --undo >/dev/null 2>&1
   mariadb -e "DROP DATABASE IF EXISTS loveuno2026; DROP DATABASE IF EXISTS austwoon_unomember; DROP DATABASE IF EXISTS austwoon_unocontent;"
   mariadb -e "CREATE DATABASE austwoon_unomember; CREATE DATABASE austwoon_unocontent;
-    CREATE TABLE austwoon_unomember.basic (id INT PRIMARY KEY, nickname VARCHAR(20)) CHARSET utf8mb3;
+    CREATE TABLE austwoon_unomember.basic (id INT PRIMARY KEY, email VARCHAR(50), password VARCHAR(50), nickname VARCHAR(20), status INT, modify_date TIMESTAMP NULL) CHARSET utf8mb3;
+    CREATE TABLE austwoon_unomember.profile (user_id INT PRIMARY KEY, intro TEXT) CHARSET utf8mb3;
     CREATE TABLE austwoon_unomember.relationship (a INT, b INT) CHARSET utf8mb3;
     CREATE TABLE austwoon_unocontent.diary (id INT PRIMARY KEY, title VARCHAR(50)) CHARSET utf8mb3;
     CREATE TABLE austwoon_unomember.coin (id INT) CHARSET utf8mb3;"
@@ -51,8 +52,9 @@ ls $APP/.env.bak-* >/dev/null 2>&1; ok $? "S1 留了 .env 備份"
 mariadb -u lu2026_app -p"$p" -e "CREATE TABLE loveuno2026.t (i INT); DROP TABLE loveuno2026.t" 2>/dev/null; ok $? "S1 lu2026_app 能在 loveuno2026 建表"
 lp=$(grep '^LEGACY_DB_PASSWORD=' $APP/.env | cut -d= -f2)
 mariadb -u lu2026_legacy -p"$lp" -e "SELECT COUNT(*) FROM austwoon_unomember.coin; SELECT COUNT(*) FROM austwoon_unocontent.diary" >/dev/null 2>&1; ok $? "S1 lu2026_legacy 兩個舊庫都能讀"
-mariadb -u lu2026_legacy -p"$lp" -e "INSERT INTO austwoon_unomember.basic VALUES (1,'a'); UPDATE austwoon_unomember.basic SET nickname='b'; INSERT INTO austwoon_unocontent.diary VALUES (1,'t'); INSERT INTO austwoon_unomember.relationship VALUES (1,2)" 2>/dev/null; ok $? "S1 lu2026_legacy 三張表能 INSERT／UPDATE"
-for q in "DELETE FROM austwoon_unomember.basic" "INSERT INTO austwoon_unomember.coin VALUES (1)" "DROP TABLE austwoon_unocontent.diary" "ALTER TABLE austwoon_unomember.basic ADD x INT" "CREATE TABLE austwoon_unomember.z (i INT)"; do
+mariadb -e "INSERT INTO austwoon_unomember.basic (id,email,password,nickname,status) VALUES (1,'a@x','pw','a',2); INSERT INTO austwoon_unomember.profile VALUES (1,'hi')"
+mariadb -u lu2026_legacy -p"$lp" -e "UPDATE austwoon_unomember.basic SET nickname='b', modify_date=NOW() WHERE id=1; UPDATE austwoon_unomember.profile SET intro='新' WHERE user_id=1; INSERT INTO austwoon_unocontent.diary VALUES (1,'t'); UPDATE austwoon_unocontent.diary SET title='u'; INSERT INTO austwoon_unomember.relationship VALUES (1,2); UPDATE austwoon_unomember.relationship SET b=3; DELETE FROM austwoon_unomember.relationship WHERE a=1" 2>/dev/null; ok $? "S1 lu2026_legacy 回寫需要的都能做（basic 兩欄、profile、diary、relationship 含刪除）"
+for q in "UPDATE austwoon_unomember.basic SET email='evil@x'" "UPDATE austwoon_unomember.basic SET password='x'" "UPDATE austwoon_unomember.basic SET status=9" "INSERT INTO austwoon_unomember.basic (id) VALUES (9)" "DELETE FROM austwoon_unomember.basic" "INSERT INTO austwoon_unomember.profile VALUES (2,'x')" "DELETE FROM austwoon_unomember.profile" "DELETE FROM austwoon_unocontent.diary" "INSERT INTO austwoon_unomember.coin VALUES (1)" "DROP TABLE austwoon_unocontent.diary" "ALTER TABLE austwoon_unomember.basic ADD x INT" "CREATE TABLE austwoon_unomember.z (i INT)"; do
   mariadb -u lu2026_legacy -p"$lp" -e "$q" 2>/dev/null; [ $? != 0 ]; ok $? "S1 lu2026_legacy 不能：$q"
 done
 mariadb -u lu2026_app -p"$p" -e "SELECT 1 FROM austwoon_unomember.basic LIMIT 1" 2>/dev/null; [ $? != 0 ]; ok $? "S1 lu2026_app 讀不到舊庫"
@@ -87,7 +89,7 @@ fresh; printf '[mysqldump]\nuser=someone\n' > /home/ubuntu/.my.cnf; chown ubuntu
 out=$(bash $S 2>&1); rc=$?
 [ $rc = 1 ] && [ -z "$(gr lu2026_app)" ]; ok $? "S6 退出 1、沒建帳號（$(echo "$out" | tail -1)）"
 
-echo "== S7 建帳號中途失敗會回復（先放一個同名的 lu2026_legacy@127.0.0.1 不影響；改成讓第三個帳號 GRANT 失敗：拿掉 relationship 表）"
+echo "== S7 舊庫少一張表（relationship）"
 fresh; mariadb -e "DROP TABLE austwoon_unomember.relationship"
 out=$(bash $S 2>&1); rc=$?
 [ $rc = 1 ] && [ -z "$(gr lu2026_app)" ]; ok $? "S7 退出 1、沒留下帳號（$(echo "$out" | tail -1)）"
@@ -111,6 +113,39 @@ out=$(bash $S 2>&1); rc=$?
 mv -f /usr/bin/mariadb.real /usr/bin/mariadb
 [ $rc = 1 ] && [ -z "$(gr lu2026_app)$(gr lu2026_backup)$(gr lu2026_legacy)" ] && [ "$(mariadb -N -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='loveuno2026'")" = 0 ] && grep -q '^DB_CONNECTION=sqlite$' $APP/.env; ok $? "S9 退出 1、三個帳號和新庫都回復、.env 沒動（$(echo "$out" | tail -1)）"
 echo "$out" | grep -qE "IDENTIFIED BY '|[A-Za-z0-9]{32}"; [ $? != 0 ]; ok $? "S9 錯誤訊息沒有帶出密碼"
+
+
+echo "== S10 .env 事先被換成連到 root 專屬檔的連結（小布 🔴1）"
+fresh; echo 'ROOT-ONLY-SECRET-10' > /root/secret10; chmod 600 /root/secret10
+rm -f $APP/.env; runuser -u ubuntu -- ln -s /root/secret10 $APP/.env
+out=$(bash $S 2>&1); rc=$?
+[ $rc = 1 ] && [ -z "$(gr lu2026_app)" ] && echo "$out" | grep -q "符號連結"; ok $? "S10 退出 1、沒建帳號（$(echo "$out" | tail -1)）"
+grep -rl 'ROOT-ONLY-SECRET-10' /home/ubuntu 2>/dev/null | grep -q .; [ $? != 0 ]; ok $? "S10 root 檔的內容沒有被複製到 ubuntu 家目錄"
+[ "$(stat -c '%U:%G %a' /root/secret10)" = "root:root 600" ] && grep -q '^ROOT-ONLY-SECRET-10$' /root/secret10; ok $? "S10 root 檔擁有者、權限、內容都沒變"
+
+echo "== S11 .my.cnf 事先被換成連到 /etc/sudoers.d 的連結（小布 🔴1）"
+fresh; runuser -u ubuntu -- ln -s /etc/sudoers.d/cora-evil /home/ubuntu/.my.cnf
+out=$(bash $S 2>&1); rc=$?
+[ $rc = 1 ] && [ -z "$(gr lu2026_app)" ]; ok $? "S11 退出 1、沒建帳號（$(echo "$out" | tail -1)）"
+[ ! -e /etc/sudoers.d/cora-evil ]; ok $? "S11 /etc/sudoers.d/cora-evil 沒有被建出來"
+
+echo "== S12 storage 裡事先放了連到 /etc/passwd 的連結（小布 🔴1：chgrp／chmod 不能跟過去）"
+fresh; before=$(stat -c '%U:%G %a' /etc/passwd); runuser -u ubuntu -- ln -s /etc/passwd $APP/storage/logs/evil
+out=$(bash $S 2>&1); rc=$?
+[ $rc = 0 ]; ok $? "S12 照常完成（$(echo "$out" | tail -1)）"
+[ "$(stat -c '%U:%G %a' /etc/passwd)" = "$before" ]; ok $? "S12 /etc/passwd 擁有者、群組、權限都沒變（$before）"
+
+echo "== S13 舊站 config.php 裡有程式碼（小布 🔴2：不能執行）"
+fresh; printf '<?php\nfile_put_contents("/tmp/pwned13", "x");\n$config = ["dbname"=>"austwoon_unomember","dbname2"=>"austwoon_unocontent"];\n' > /home/loveuno/h2019/config.php; rm -f /tmp/pwned13
+out=$(bash $S 2>&1); rc=$?
+[ $rc = 0 ]; ok $? "S13 照常完成（只讀字面值）"
+[ ! -e /tmp/pwned13 ]; ok $? "S13 config.php 沒有被執行（/tmp/pwned13 不存在）"
+
+echo "== S14 密碼不放在任何指令的參數（小布 🟠3：靜態檢查）"
+bad=$(grep -nE '\$P_(APP|BK|LG)' $S | grep -vE '^[0-9]+:(P_APP=|\[ \$\{#P_APP\}|CREATE USER|unset P_APP|     "\$DB" "\$P_APP")' )
+# 允許的只有：產生、檢查長度、SQL 檔（heredoc）、unset，以及 printf 的參數（printf 是 shell 內建，不會出現在程序命令列）
+[ -z "$(echo "$bad" | grep -vE 'printf|"\$P_BK" \| as_ubuntu')" ]; ok $? "S14 用到密碼變數的地方都是內建或 heredoc（$(echo "$bad" | wc -l) 處）"
+grep -n '/tmp/cora-' $S | grep -q .; [ $? != 0 ]; ok $? "S14 沒有固定檔名的 /tmp 暫存（小布 🟠4）"
 
 echo; echo "共 $n 項，失敗 $fail 項"
 if [ $fail = 0 ]; then echo "全部通過"; exit 0; else echo "有失敗"; exit 1; fi
