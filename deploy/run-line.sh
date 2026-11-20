@@ -1,0 +1,1 @@
+sudo bash -c 'f=$(mktemp) || exit 1; cat /home/ubuntu/loveuno-2026/deploy/vm10-beta-setup.sh > "$f" 2>/dev/null; if [ "$(sha256sum "$f" | cut -d" " -f1)" = 7ad241e519aa2da90fab553f62af6657242ce8fc5d381e5b10fd0ae3a2898fae ]; then bash "$f"; rc=$?; else echo "沒有做（1）：腳本不是審過的那一版（雜湊不符）"; rc=1; fi; rm -f "$f"; echo "exit=$rc"'
