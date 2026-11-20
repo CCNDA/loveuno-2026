@@ -41,7 +41,8 @@ return [
         // 大頭照：私有，不放 public/。測試站存本機；正式站可以用 AVATAR_DISK_DRIVER=s3 換成 R2 私有 bucket
         'avatars' => [
             'driver' => env('AVATAR_DISK_DRIVER', 'local'),
-            'root' => storage_path('app/private/avatars'),
+            // R2（s3）時 root 是 bucket 裡的前綴（例如 lu2026，跟舊站證件分開）；本機時是資料夾。公測：熊叔叔 11/20「可以直接用舊版的R2的 bucket」
+            'root' => env('AVATAR_DISK_DRIVER', 'local') === 's3' ? env('AVATAR_S3_ROOT', 'lu2026') : storage_path('app/private/avatars'),
             'visibility' => 'private',
             'key' => env('AVATAR_S3_KEY'),
             'secret' => env('AVATAR_S3_SECRET'),
