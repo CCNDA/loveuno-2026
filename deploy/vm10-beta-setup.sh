@@ -62,11 +62,13 @@ pick_db() {
   #   不顯示、不進命令列參數；只寫進 root 自己的 mktemp 設定檔（600），腳本結束就刪
   [ -t 0 ] || return 1
   local pw cf
-  read -rs -p "  請輸入 MariaDB root 密碼（不會顯示）：" pw; echo
+  IFS= read -rs -p "  請輸入 MariaDB root 密碼（不會顯示）：" pw; echo   # IFS=：開頭結尾的空白不會被吃掉（小布 21:4x）
   [ -n "$pw" ] || return 1
   cf=$(mktemp) || return 1
   DBPW_FILE=$cf
-  printf '[client]\nuser=root\npassword=%s\n' "$pw" > "$cf"; unset pw
+  # 設定檔的值加引號、先跳脫 \ 和 "：密碼有 #、空白、引號、反斜線時 MariaDB 才不會截斷或轉義（小布 21:4x）
+  pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}
+  printf '[client]\nuser=root\npassword="%s"\n' "$pw" > "$cf"; unset pw
   if mariadb --defaults-file="$cf" --sandbox -N -B -e "SELECT 1" >/dev/null 2>&1; then DBC=(--defaults-file="$cf"); echo "  MariaDB：用輸入的 root 密碼"; return 0; fi
   echo "  密碼不對或連不上"; return 1
 }

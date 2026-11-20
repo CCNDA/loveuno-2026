@@ -193,5 +193,14 @@ bash $S < /dev/null >/dev/null 2>&1
 out=$(bash $S --undo < /dev/null 2>&1); rc=$?
 [ $rc = 0 ] && [ -z "$(grm lu2026_app)$(grm lu2026_legacy)$(grm lu2026_backup)" ]; ok $? "S17e --undo 也走同一套連線（debian.cnf）收回帳號"
 
+echo "== S17f 密碼有前後空白、#、雙引號、反斜線（小布 21:4x）"
+reset17
+$M -e "ALTER USER root@localhost IDENTIFIED BY ' a#b\"c\\\\d '; FLUSH PRIVILEGES;" || die "改不了 root 密碼"
+M2() { mariadb -uroot -p' a#b"c\d ' "$@"; }
+M2 -e "SELECT 1" >/dev/null 2>&1 || die "測試密碼本身設錯"
+out=$( (sleep 3; printf '%s\n' ' a#b"c\d ') | script -qec "bash $S" /dev/null 2>&1); rc=$?
+echo "$out" | grep -q '用輸入的 root 密碼' && echo "$out" | grep -q '完成（0）' && [ -n "$(M2 -N -e "SHOW GRANTS FOR 'lu2026_app'@'localhost'" 2>/dev/null)" ]; ok $? "S17f 特殊字元的密碼照樣成功（$(echo "$out" | grep -E 'MariaDB：|密碼不對' | head -1 | tr -d '\r')）"
+M2 -e "DROP USER IF EXISTS 'lu2026_app'@'localhost'; DROP USER IF EXISTS 'lu2026_backup'@'localhost'; DROP USER IF EXISTS 'lu2026_legacy'@'localhost';" 2>/dev/null
+
 echo; echo "共 $n 項，失敗 $fail 項"
 if [ $fail = 0 ]; then echo "全部通過"; exit 0; else echo "有失敗"; exit 1; fi
