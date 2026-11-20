@@ -19,6 +19,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // 公測：每筆 Eloquent 寫入記 audit、要回寫舊站的排進 outbox（config loveuno.beta_audit；Asana 1220586286066431）
+        foreach (['created', 'updated', 'deleted'] as $ev) {
+            \Illuminate\Support\Facades\Event::listen("eloquent.{$ev}: *", function (string $name, array $data) use ($ev) {
+                if (($data[0] ?? null) instanceof \Illuminate\Database\Eloquent\Model) {
+                    \App\Support\BetaChangeRecorder::record($ev, $data[0]);
+                }
+            });
+        }
+
         // 退信的人重新驗證了原本的信箱 → 清掉退信標記（改信箱的在 EmailChangeController::confirm 清）
         \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Verified::class, function ($event) {
             if ($event->user instanceof \App\Models\User) {
