@@ -68,6 +68,17 @@
 ✅ S15 跑完 /etc/shadow 群組沒變（shadow）
 == S16 主機沒開連結保護就停（用替身 sysctl 模擬）
 ✅ S16 退出 1、沒建帳號（沒有做（1）：fs.protected_hardlinks 不是 1（主機沒開連結保護））
+== S17 MariaDB root 要密碼（vm10 實況，熊叔叔 11/20 20:4x）：socket → debian.cnf → 終端機輸入密碼
+✅ S17 前提：root 走 socket 已經連不上
+✅ S17 --sandbox 擋住 system 指令
+✅ S17a socket 不行、debian.cnf 可以 → 用它完成（  MariaDB：用 /etc/mysql/debian.cnf（帳號 root@localhost））
+✅ S17b debian.cnf 不是 root 600 → 不用它、不是終端機也不問密碼 → 退出 1、沒建帳號
+✅ S17c 終端機輸入正確密碼 → 完成
+✅ S17c 輸出裡沒有密碼（輸入時不顯示）
+✅ S17c /tmp 沒有留下含密碼的檔
+✅ S17d 密碼錯 → 退出 1、沒建帳號
+✅ S17d /tmp 沒有留下密碼檔
+✅ S17e --undo 也走同一套連線（debian.cnf）收回帳號
 
-共 54 項，失敗 0 項
+共 64 項，失敗 0 項
 全部通過

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 新版愛諾園公測 beta.loveuno.com：vm10 一次性設定（要 root；熊叔叔跑）——第二版（小布 11/20 15:43 審查 2 紅 2 橙 1 黃）
+# 新版愛諾園公測 beta.loveuno.com：vm10 一次性設定（要 root；熊叔叔跑）——第三版（第二版：小布 15:43 審查；第三版：熊叔叔 20:4x 實跑 root 連不上 MariaDB → 改用 debian.cnf 備援、加 --sandbox）
 # 熊叔叔 11/17：跑 vm10、網址 beta.loveuno.com、新建 loveuno2026 庫；11/18 選「乙 11/22 含回寫全部做完」；11/20 選「丙 照原訂 11/22 全部做完」
 # Asana 1220564106252789（同步）、1220586286066431（停寫／備份）、1220456570088705（決策地圖）
 #
@@ -45,11 +45,39 @@ USERS="lu2026_app lu2026_backup lu2026_legacy"
 [ "$(id -u)" -eq 0 ] || { echo "沒有做（1）：要用 sudo 執行"; exit 1; }
 MODE=${1:-}
 [ "$#" -le 1 ] && { [ -z "$MODE" ] || [ "$MODE" = "--undo" ]; } || { echo "沒有做（1）：不認得的參數"; exit 1; }
-sql() { mariadb -N -B -e "$1"; }
+# MariaDB 管理連線（熊叔叔 11/20 20:4x 實跑：vm10 的 root 不能 unix_socket 登入 → 第 0 步就停、什麼都沒動）
+# 依序試：root 走 socket → /etc/mysql/debian.cnf（root 擁有、600、一般檔才用）；都不行就停
+# --sandbox：關掉 mariadb 客戶端的 system／\! 等指令（小布 ccnda-db-run v1 審查同一類問題）
+DBC=()
+db() { mariadb "${DBC[@]}" --sandbox "$@"; }
+sql() { db -N -B -e "$1"; }
+pick_db() {
+  if mariadb --sandbox -N -B -e "SELECT 1" >/dev/null 2>&1; then DBC=(); echo "  MariaDB：root 走 socket"; return 0; fi
+  local f=/etc/mysql/debian.cnf
+  if [ -f "$f" ] && [ ! -L "$f" ] && [ "$(stat -c '%U %a' "$f")" = "root 600" ] \
+     && mariadb --defaults-file="$f" --sandbox -N -B -e "SELECT 1" >/dev/null 2>&1; then
+    DBC=(--defaults-file="$f"); echo "  MariaDB：用 $f（帳號 $(mariadb --defaults-file="$f" --sandbox -N -B -e 'SELECT CURRENT_USER()')）"; return 0
+  fi
+  # 第三條：請熊叔叔輸入一次 MariaDB root 密碼（熊叔叔 11/20 20:5x TG「sudo mariadb 要打密碼」）
+  #   不顯示、不進命令列參數；只寫進 root 自己的 mktemp 設定檔（600），腳本結束就刪
+  [ -t 0 ] || return 1
+  local pw cf
+  read -rs -p "  請輸入 MariaDB root 密碼（不會顯示）：" pw; echo
+  [ -n "$pw" ] || return 1
+  cf=$(mktemp) || return 1
+  DBPW_FILE=$cf
+  printf '[client]\nuser=root\npassword=%s\n' "$pw" > "$cf"; unset pw
+  if mariadb --defaults-file="$cf" --sandbox -N -B -e "SELECT 1" >/dev/null 2>&1; then DBC=(--defaults-file="$cf"); echo "  MariaDB：用輸入的 root 密碼"; return 0; fi
+  echo "  密碼不對或連不上"; return 1
+}
+DBPW_FILE=
+
 user_exists() { [ "$(sql "SELECT COUNT(*) FROM mysql.user WHERE User='$1' AND Host='localhost'")" = 1 ]; }
 as_ubuntu() { runuser -u ubuntu -- "$@"; }
 
 if [ "$MODE" = "--undo" ]; then
+  trap 'rm -f ${DBPW_FILE:+"$DBPW_FILE"}' EXIT
+  pick_db || { echo "🔴 連不上 MariaDB（root socket、/etc/mysql/debian.cnf、輸入密碼都不行），帳號沒刪"; exit 2; }
   rc=0
   rm -f "$LINK" "$SITE"
   if [ -e "$LINK" ] || [ -L "$LINK" ] || [ -e "$SITE" ]; then echo "🔴 nginx 站台檔刪不掉"; rc=2; fi
@@ -70,17 +98,18 @@ for f in "$ENVF" "$MYCNF"; do as_ubuntu test -L "$f" && { echo "沒有做（1）
 as_ubuntu test -f "$ENVF" || { echo "沒有做（1）：$ENVF 不存在（小芯先放好不含帳密的 .env）"; exit 1; }
 for d in storage bootstrap bootstrap/cache; do [ -d "$APP/$d" ] && [ ! -L "$APP/$d" ] || { echo "沒有做（1）：$APP/$d 不是一般資料夾"; exit 1; }; done
 { [ -e "$SITE" ] || [ -e "$LINK" ] || [ -L "$LINK" ]; } && { echo "沒有做（1）：beta 站台已經存在（已經跑過？）"; exit 1; }
+trap 'rm -f ${DBPW_FILE:+"$DBPW_FILE"}' EXIT   # 輸入的密碼檔：不管在哪一步退出都刪
+pick_db || { echo "沒有做（1）：root 連不上 MariaDB（socket、/etc/mysql/debian.cnf、輸入的密碼都不行），密碼也沒過"; exit 1; }
 for u in $USERS; do user_exists "$u" && { echo "沒有做（1）：帳號 $u 已經存在（已經跑過？）"; exit 1; }; done
 as_ubuntu grep -q '^\[mysqldump\]' "$MYCNF" 2>/dev/null && { echo "沒有做（1）：$MYCNF 已經有 [mysqldump] 段"; exit 1; }
 nginx -t >/dev/null 2>&1 || { echo "沒有做（1）：現在的 nginx 設定就有錯，先不要動"; exit 1; }
-sql "SELECT 1" >/dev/null || { echo "沒有做（1）：root 連不上 MariaDB"; exit 1; }
 DB_EXISTED=0; [ "$(sql "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$DB'")" = 1 ] && DB_EXISTED=1
 if [ $DB_EXISTED = 1 ] && [ "$(sql "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$DB'")" != 0 ]; then
   echo "沒有做（1）：$DB 已經存在而且有資料表"; exit 1
 fi
 
 NC=$(mktemp) && SQLF=$(mktemp) && ERRF=$(mktemp) || { echo "沒有做（1）：建不了暫存檔"; exit 1; }
-trap 'rm -f "$NC" "$SQLF" "$ERRF"' EXIT
+trap 'rm -f "$NC" "$SQLF" "$ERRF" ${DBPW_FILE:+"$DBPW_FILE"}' EXIT
 # nginx 設定：以 ubuntu 身分讀（root 不跟 ubuntu 的連結走），進 root 暫存後驗雜湊
 as_ubuntu cat "$CONF_SRC" > "$NC" 2>/dev/null && [ "$(sha256sum "$NC" | cut -d' ' -f1)" = "$NGINX_SHA" ] \
   || { echo "沒有做（1）：nginx 設定檔不是審過的那一版（雜湊不符）"; exit 1; }
@@ -126,7 +155,7 @@ undo_db() {
   if [ $DB_EXISTED = 0 ]; then sql "DROP DATABASE IF EXISTS \`$DB\`" || ok=1; fi
   return $ok
 }
-if ! mariadb < "$SQLF" 2>"$ERRF"; then
+if ! db < "$SQLF" 2>"$ERRF"; then
   echo "  建庫或帳號失敗：$(sed -E "s/IDENTIFIED BY .*//; s/[A-Za-z0-9]{32}/***/g" "$ERRF" | head -3)"
   undo_db && { echo "沒有做（1）：已回復（帳號刪除、新建的庫刪除）"; exit 1; }
   echo "🔴 回復失敗（2）：請看 mysql.user 裡 lu2026_*"; exit 2

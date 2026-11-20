@@ -105,7 +105,7 @@ mv /usr/bin/mariadb /usr/bin/mariadb.real
 cat > /usr/bin/mariadb <<'EOF2'
 #!/bin/bash
 # 包裝：從 stdin 讀 SQL 檔的那一次（建庫建帳號），在最後加一句一定失敗的 GRANT
-if [ "$#" = 0 ]; then { cat; echo "GRANT SELECT ON no_such_db_cora.no_such_table TO 'lu2026_app'@'localhost';"; } | /usr/bin/mariadb.real; exit $?; fi
+case " $* " in *" -e "*) ;; *) { cat; echo "GRANT SELECT ON no_such_db_cora.no_such_table TO 'lu2026_app'@'localhost';"; } | /usr/bin/mariadb.real "$@"; exit $?;; esac
 exec /usr/bin/mariadb.real "$@"
 EOF2
 chmod 755 /usr/bin/mariadb
@@ -157,6 +157,41 @@ echo 0
 ' > /usr/sbin/sysctl; chmod 755 /usr/sbin/sysctl
 out=$(bash $S 2>&1); rc=$?; mv -f /usr/sbin/sysctl.real /usr/sbin/sysctl
 [ $rc = 1 ] && [ -z "$(gr lu2026_app)" ] && echo "$out" | grep -q protected_hardlinks; ok $? "S16 退出 1、沒建帳號（$(echo "$out" | tail -1)）"
+
+echo "== S17 MariaDB root 要密碼（vm10 實況，熊叔叔 11/20 20:4x）：socket → debian.cnf → 終端機輸入密碼"
+command -v script >/dev/null || die "沒有 script（util-linux）"
+fresh
+mariadb -e "ALTER USER root@localhost IDENTIFIED VIA mysql_native_password USING PASSWORD('cora-test-pw-17'); FLUSH PRIVILEGES;" || die "改不了 root 驗證方式"
+M="mariadb -uroot -pcora-test-pw-17"
+grm() { $M -N -e "SHOW GRANTS FOR '$1'@'localhost'" 2>/dev/null | tr '\n' ' '; }
+undo17() { $M -e "DROP USER IF EXISTS 'lu2026_app'@'localhost'; DROP USER IF EXISTS 'lu2026_backup'@'localhost'; DROP USER IF EXISTS 'lu2026_legacy'@'localhost'; DROP DATABASE IF EXISTS loveuno2026;" 2>/dev/null; rm -f /etc/nginx/sites-enabled/beta.loveuno.com /etc/nginx/sites-available/beta.loveuno.com /home/ubuntu/.my.cnf; }
+reset17() { undo17; rm -f /etc/mysql/debian.cnf; rm -rf $APP; mkdir -p $APP/storage/logs $APP/bootstrap/cache $APP/public $APP/deploy/nginx; touch $APP/artisan; printf 'APP_NAME=Loveuno\nDB_CONNECTION=sqlite\n' > $APP/.env; install -m 644 /w/deploy/nginx/beta.loveuno.com.conf $APP/deploy/nginx/beta.loveuno.com.conf; chown -R ubuntu:ubuntu /home/ubuntu; }
+mariadb --sandbox -e "SELECT 1" >/dev/null 2>&1; [ $? != 0 ]; ok $? "S17 前提：root 走 socket 已經連不上"
+$M --sandbox -e 'system echo SANDBOX-LEAK' 2>&1 | grep -q SANDBOX-LEAK; [ $? != 0 ]; ok $? "S17 --sandbox 擋住 system 指令"
+
+reset17; printf '[client]\nuser=root\npassword=cora-test-pw-17\n' > /etc/mysql/debian.cnf; chmod 600 /etc/mysql/debian.cnf
+out=$(bash $S < /dev/null 2>&1); rc=$?
+[ $rc = 0 ] && echo "$out" | grep -q '用 /etc/mysql/debian.cnf' && [ -n "$(grm lu2026_app)" ]; ok $? "S17a socket 不行、debian.cnf 可以 → 用它完成（$(echo "$out" | grep MariaDB：)）"
+
+reset17; printf '[client]\nuser=root\npassword=cora-test-pw-17\n' > /etc/mysql/debian.cnf; chmod 644 /etc/mysql/debian.cnf
+out=$(bash $S < /dev/null 2>&1); rc=$?
+[ $rc = 1 ] && [ -z "$(grm lu2026_app)" ]; ok $? "S17b debian.cnf 不是 root 600 → 不用它、不是終端機也不問密碼 → 退出 1、沒建帳號"
+
+reset17; before=$(ls /tmp | sort)
+out=$( (sleep 3; printf 'cora-test-pw-17\n') | script -qec "bash $S" /dev/null 2>&1); rc=$?   # 等提示出現才打字（跟真人一樣）
+echo "$out" | grep -q '用輸入的 root 密碼' && echo "$out" | grep -q '完成（0）' && [ -n "$(grm lu2026_app)" ]; ok $? "S17c 終端機輸入正確密碼 → 完成"
+echo "$out" | grep -q 'cora-test-pw-17'; [ $? != 0 ]; ok $? "S17c 輸出裡沒有密碼（輸入時不顯示）"
+grep -rl 'cora-test-pw-17' /tmp 2>/dev/null | grep -q .; [ $? != 0 ]; ok $? "S17c /tmp 沒有留下含密碼的檔"
+
+reset17
+out=$( (sleep 3; printf 'wrong-pw\n') | script -qec "bash $S" /dev/null 2>&1); rc=$?   # 等提示出現才打字（跟真人一樣）
+echo "$out" | grep -q '密碼不對或連不上' && echo "$out" | grep -q '沒有做（1）' && [ -z "$(grm lu2026_app)" ]; ok $? "S17d 密碼錯 → 退出 1、沒建帳號"
+grep -rl 'wrong-pw' /tmp 2>/dev/null | grep -q .; [ $? != 0 ]; ok $? "S17d /tmp 沒有留下密碼檔"
+
+reset17; printf '[client]\nuser=root\npassword=cora-test-pw-17\n' > /etc/mysql/debian.cnf; chmod 600 /etc/mysql/debian.cnf
+bash $S < /dev/null >/dev/null 2>&1
+out=$(bash $S --undo < /dev/null 2>&1); rc=$?
+[ $rc = 0 ] && [ -z "$(grm lu2026_app)$(grm lu2026_legacy)$(grm lu2026_backup)" ]; ok $? "S17e --undo 也走同一套連線（debian.cnf）收回帳號"
 
 echo; echo "共 $n 項，失敗 $fail 項"
 if [ $fail = 0 ]; then echo "全部通過"; exit 0; else echo "有失敗"; exit 1; fi
