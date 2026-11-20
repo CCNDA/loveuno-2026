@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // 公測邀請制：名單外的帳號（管理員除外）已經登入的下一個請求就登出（config loveuno.beta_invite_only；熊叔叔 11/16 選乙）
         $middleware->web(append: [\App\Http\Middleware\LogoutNotInvited::class]);
 
+        // 公測停寫開關：BETA_READONLY=1 時所有寫入請求回「公測暫停中」（登入、登出除外；熊叔叔 11/17 選甲）
+        $middleware->web(append: [\App\Http\Middleware\BetaReadonly::class]);
+
         // 每日登入 +1 愛諾積點（記住我直接進來的也算）
         $middleware->web(append: [\App\Http\Middleware\AwardDailyLogin::class]);
 

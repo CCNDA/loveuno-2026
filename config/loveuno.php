@@ -23,6 +23,10 @@ return [
     // 名單用 php artisan beta:invite 管理。測試站、展示版不設＝關
     'beta_invite_only' => (bool) env('BETA_INVITE_ONLY', false),
 
+    // 公測停寫開關（熊叔叔 11/17 選甲；Asana 1220586286066431）：開著時只能看、不能寫（登入登出除外）
+    // 改 .env 後 php artisan config:clear（有 config:cache 就重跑 config:cache）
+    'beta_readonly' => (bool) env('BETA_READONLY', false),
+
     // 簡訊（手機認證）：log＝只寫進 laravel.log（測試站）；twsms＝台灣簡訊（正式站，熊叔叔 10/29「沿用」舊站帳號）
     // 🔴 正式站一定要設 twsms：log 模式會把認證碼寫進記錄檔
     'sms' => [
