@@ -49,3 +49,7 @@ php artisan view:clear && php artisan route:clear
 | `BETA_READONLY=true` | 停寫：會改資料的請求都擋（含驗證信連結、每日登入給點），只能瀏覽 |
 | `BETA_AUDIT=true` | 每筆寫入記進 `beta_audits`，要回寫舊站的排進 `legacy_outbox`（`php artisan legacy:push-outbox` 送出） |
 | `BETA_AUDIT_KEEP_DAYS=60` | `beta_audits` 存整筆欄位（含 email、手機），每天 03:40 `php artisan beta:prune-audits` 只留這麼多天；公測結束後整張清掉 |
+
+回寫的已知限制（小布 11/21 審查提醒）：
+- `legacy_outbox` 某一筆變成 `failed` 後，同一筆後面的會一直「等前一筆」；要人看過 `last_error`、處理完把它改成 `skipped` 才會放行。排程包裝會在 failed 筆數大於 0 時通知。
+- 日記新增重送時用「同作者＋標題＋日期＋內容」找舊站已有的那篇；同一位作者同一天寫兩篇一模一樣的，會共用同一個舊站編號。
