@@ -29,6 +29,8 @@ return [
 
     // 公測寫入紀錄＋回寫待送清單（熊叔叔 11/17 選甲、11/18 選乙）：公測站開，測試站、展示版不設＝關
     'beta_audit' => (bool) env('BETA_AUDIT', false),
+    // 寫入紀錄只留幾天（存整筆欄位，含 email、手機；小布 11/21 審查 🟡6）。每天 03:40 php artisan beta:prune-audits
+    'beta_audit_keep_days' => (int) env('BETA_AUDIT_KEEP_DAYS', 60),
 
     // 簡訊（手機認證）：log＝只寫進 laravel.log（測試站）；twsms＝台灣簡訊（正式站，熊叔叔 10/29「沿用」舊站帳號）
     // 🔴 正式站一定要設 twsms：log 模式會把認證碼寫進記錄檔

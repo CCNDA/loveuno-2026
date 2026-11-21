@@ -16,7 +16,8 @@ class AwardDailyLogin
     {
         $user = $request->user();
         $today = now()->toDateString();
-        if ($user && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $request->hasSession() && $request->session()->get('points_daily') !== $today) {
+        // 公測停寫（BETA_READONLY）時不給點：這是 GET 也會寫入的地方（小布 11/21 審查 🟠5）
+        if (! config('loveuno.beta_readonly') && $user && $user->hasVerifiedEmail() && $user->phone_verified_at !== null && $request->hasSession() && $request->session()->get('points_daily') !== $today) {
             try {
                 Points::daily($user, 'daily_login');
                 $request->session()->put('points_daily', $today);

@@ -169,4 +169,32 @@ class PushLegacyOutboxTest extends TestCase
         $this->assertSame('舊名', DB::connection('legacy')->table('basic')->where('id', 1000509)->value('nickname'));
         $this->assertSame('pending', DB::table('legacy_outbox')->value('status'));
     }
+
+    // 🟠3（小布 11/21）同一筆前面有沒送成功的 → 後面較新的先不送，免得下一輪重送舊的把新內容蓋回去
+    public function test_later_row_waits_for_earlier_failed_one(): void
+    {
+        $u = $this->legacyMember(1000511);
+        $u->forceFill(['name' => '第一次改'])->save();
+        $u->forceFill(['name' => '第二次改'])->save();
+        DB::table('legacy_outbox')->where('model', 'User')->orderBy('id')->limit(1)->update(['status' => 'failed', 'attempts' => 5]);
+        $this->push();
+        $this->assertSame('舊名', DB::connection('legacy')->table('basic')->where('id', 1000511)->value('nickname'));
+        $this->assertSame(['failed', 'pending'], DB::table('legacy_outbox')->where('model', 'User')->orderBy('id')->pluck('status')->all());
+        // 前一筆處理掉（人工標 skipped）之後就放行
+        DB::table('legacy_outbox')->where('status', 'failed')->update(['status' => 'skipped']);
+        $this->push();
+        $this->assertSame('第二次改', DB::connection('legacy')->table('basic')->where('id', 1000511)->value('nickname'));
+    }
+
+    // 🟠4（小布 11/21）日記新增重送：舊站已經有同一篇（上次插進去、存回編號前出錯）→ 沿用，不再插一篇
+    public function test_diary_insert_retry_reuses_existing_legacy_row(): void
+    {
+        $u = $this->legacyMember(1000512);
+        $d = Diary::forceCreate(['user_id' => $u->id, 'title' => '重送', 'body' => '內容', 'visibility' => 'public', 'published_on' => '2026-11-21']);
+        $existing = DB::connection('legacy')->table('diary')->insertGetId(['ownerid' => 1000512, 'subject' => '重送', 'content' => '內容', 'date' => '2026-11-21', 'status' => 0, 'pic' => '', 'is_r2' => 0]);
+        DB::table('legacy_outbox')->where('model', 'Diary')->update(['attempts' => 1]);   // 上一輪失敗過
+        $this->push();
+        $this->assertSame(1, DB::connection('legacy')->table('diary')->where('ownerid', 1000512)->count());
+        $this->assertSame($existing, (int) $d->fresh()->legacy_id);
+    }
 }

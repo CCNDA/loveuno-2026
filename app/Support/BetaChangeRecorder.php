@@ -60,6 +60,11 @@ class BetaChangeRecorder
         if (self::$importing || ! array_key_exists($m::class, self::OUTBOX)) {
             return;
         }
+        if ($m instanceof User && $action === 'updated' && $m->deleted_at !== null && array_key_exists('deleted_at', $m->getChanges())) {
+            // 註銷帳號：只記 audit、不排回寫。舊站帳號要停用還是不動，等熊叔叔決定（小布 11/21 審查 🔴2）；
+            // 不擋的話舊站暱稱會被改成「已註銷會員」、帳號卻照樣能登入舊站
+            return;
+        }
         $fields = self::OUTBOX[$m::class];
         if ($action === 'updated' && $fields !== null && ! array_intersect($fields, array_keys($m->getChanges()))) {
             return;

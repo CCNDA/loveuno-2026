@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BetaChangeRecorder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -57,7 +58,13 @@ class Friendship extends Model
             }
         }
         if ($f->level < $level) {
-            self::whereKey($f->id)->where('level', '<', $level)->update(['level' => $level, 'leveled_at' => now()]);
+            // 條件式 update：兩個請求同時升等也不會降級。query builder 不觸發 model 事件，
+            // 所以公測寫入紀錄／回寫舊站要自己記（小布 11/21 審查 🔴1）
+            $at = now();
+            if (self::whereKey($f->id)->where('level', '<', $level)->update(['level' => $level, 'leveled_at' => $at]) > 0) {
+                $f->forceFill(['level' => $level, 'leveled_at' => $at])->syncChanges();
+                BetaChangeRecorder::record('updated', $f);
+            }
             $f->refresh();
         }
         User::forgetFriendLevels($a, $b);
@@ -70,7 +77,8 @@ class Friendship extends Model
     public static function remove(User $a, User $b): void
     {
         [$low, $high] = self::pair($a, $b);
-        self::where('user_id', $low)->where('friend_id', $high)->delete();
+        // 逐筆用 model 刪：才會觸發事件、排進公測回寫（小布 11/21 審查 🔴1：原本批次刪，舊站好友永遠刪不掉）
+        self::where('user_id', $low)->where('friend_id', $high)->get()->each->delete();
         Gift::where(fn ($q) => $q->where('sender_id', $a->id)->where('recipient_id', $b->id))
             ->orWhere(fn ($q) => $q->where('sender_id', $b->id)->where('recipient_id', $a->id))
             ->delete();

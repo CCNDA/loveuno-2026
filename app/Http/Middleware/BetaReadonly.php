@@ -16,12 +16,19 @@ class BetaReadonly
 
     private const ALLOW = ['login.store', 'logout'];
 
+    // GET 但會寫入資料的（小布 11/21 審查 🟠5）；每日登入給點在 AwardDailyLogin 自己看開關
+    private const GET_WRITES = ['verification.verify'];
+
     public function handle(Request $request, Closure $next): Response
     {
-        if (! config('loveuno.beta_readonly') || $request->isMethodSafe()) {
+        if (! config('loveuno.beta_readonly')) {
             return $next($request);
         }
-        if (in_array($request->route()?->getName(), self::ALLOW, true)) {
+        $name = $request->route()?->getName();
+        if ($request->isMethodSafe() && ! in_array($name, self::GET_WRITES, true)) {
+            return $next($request);
+        }
+        if (in_array($name, self::ALLOW, true)) {
             return $next($request);
         }
         if ($request->expectsJson()) {

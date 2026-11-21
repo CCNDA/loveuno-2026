@@ -40,3 +40,12 @@ php artisan view:clear && php artisan route:clear
 所有機密（DB、Cloudflare R2、郵件等）一律放在 `.env`（已於 `.gitignore` 排除），不進版控；範本見 `.env.example`。
 
 版本號見 `VERSION`。
+
+## 公測站（beta.loveuno.com）專用設定
+
+| .env | 作用 |
+|---|---|
+| `BETA_INVITE_ONLY=true` | 只有名單上的人（`php artisan beta:invite`）和管理員能登入 |
+| `BETA_READONLY=true` | 停寫：會改資料的請求都擋（含驗證信連結、每日登入給點），只能瀏覽 |
+| `BETA_AUDIT=true` | 每筆寫入記進 `beta_audits`，要回寫舊站的排進 `legacy_outbox`（`php artisan legacy:push-outbox` 送出） |
+| `BETA_AUDIT_KEEP_DAYS=60` | `beta_audits` 存整筆欄位（含 email、手機），每天 03:40 `php artisan beta:prune-audits` 只留這麼多天；公測結束後整張清掉 |

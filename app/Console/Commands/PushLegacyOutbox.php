@@ -16,6 +16,9 @@ use Throwable;
 // - 新日記寫進舊站後，把舊站編號用 query builder 存回新版（不觸發 model 事件 → 不會再排一次，防迴圈）
 // - 每筆自己一個嘗試：失敗記 last_error、attempts+1，5 次以後標 failed 不再自動重試；成功標 sent
 // - 生日不回寫：新版只有出生年，寫回去會蓋掉舊站的月日
+// - 照順序：同一筆（model＋record_id）前面還有沒送成功的（pending／failed），後面的這一輪先不送，
+//   不然下一輪重送舊的那筆會把新內容蓋回去（小布 11/21 審查 🟠3）；failed 的要人處理後才會放行
+// - 日記新增重送時先找舊站有沒有一模一樣的一篇（上次 insert 成功、存回編號之前出錯），有就沿用（🟠4）
 class PushLegacyOutbox extends Command
 {
     protected $signature = 'legacy:push-outbox {--limit=200 : 這次最多處理幾筆} {--dry-run : 只列出要做什麼，不寫舊站、不改狀態}';
@@ -36,8 +39,14 @@ class PushLegacyOutbox extends Command
             $legacy->statement("SET time_zone = '+00:00'");
         }
         $rows = DB::table('legacy_outbox')->where('status', 'pending')->orderBy('id')->limit((int) $this->option('limit'))->get();
-        $n = ['sent' => 0, 'skipped' => 0, 'error' => 0];
+        $n = ['sent' => 0, 'skipped' => 0, 'error' => 0, 'held' => 0];
         foreach ($rows as $r) {
+            $earlier = DB::table('legacy_outbox')->where('model', $r->model)->where('record_id', $r->record_id)
+                ->where('id', '<', $r->id)->whereIn('status', ['pending', 'failed'])->exists();
+            if ($earlier && ! $this->option('dry-run')) {
+                $n['held']++;
+                continue;
+            }
             try {
                 $what = $this->apply($r, $legacy, (bool) $this->option('dry-run'));
                 if ($this->option('dry-run')) {
@@ -58,7 +67,7 @@ class PushLegacyOutbox extends Command
                 $n['error']++;
             }
         }
-        $this->info(sprintf('回寫：送出 %d、略過 %d、出錯 %d（共 %d 筆待送）', $n['sent'], $n['skipped'], $n['error'], $rows->count()));
+        $this->info(sprintf('回寫：送出 %d、略過 %d、出錯 %d、等前一筆 %d（共 %d 筆待送）', $n['sent'], $n['skipped'], $n['error'], $n['held'], $rows->count()));
 
         return $n['error'] > 0 ? self::FAILURE : self::SUCCESS;
     }
@@ -141,7 +150,10 @@ class PushLegacyOutbox extends Command
                 if ($dry) {
                     return 'diary 新增';
                 }
-                $newId = (int) $legacy->table('diary')->insertGetId($row + ['pic' => '', 'is_r2' => 0]);
+                $dup = $r->attempts > 0
+                    ? $legacy->table('diary')->where('ownerid', $owner)->where('subject', $row['subject'])->where('date', $row['date'])->where('content', $row['content'])->orderByDesc('id')->value('id')
+                    : null;
+                $newId = $dup !== null ? (int) $dup : (int) $legacy->table('diary')->insertGetId($row + ['pic' => '', 'is_r2' => 0]);
                 DB::table('diaries')->where('id', $r->record_id)->update(['legacy_source' => 'diary', 'legacy_id' => $newId]); // query builder：不觸發事件
                 // 同一篇後面排著的「更新」要用這個編號
                 return "diary#{$newId} 新增";
