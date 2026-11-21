@@ -12,15 +12,27 @@
 // - --images：日記照片從本機 diary_pic/ 或 R2 讀出來放進 images/，匯入端重新轉檔
 // - --images-after=album:31000,diary:50000,testi:15：只抓編號比這個大的照片檔（資料列照樣全部匯出）。
 //   照片「切換前先搬」：前幾天先整批匯出轉檔，切換當天只補之後新增的（匯入端已經有的會跳過）
+// - --since='YYYY-MM-DD HH:MM:SS'：公測增量（Asana 1220564106252789）。日記挑「作者 basic.modify_date 在這之後」的
+//   （舊站寫／改／刪日記都會更新作者的 modify_date，日記本身只有日期）；回覆、代禱、留言板、約會、見證用各自的時間欄。
+//   好友、相簿沒有時間欄，不能用 --since（每天全量對帳）
 // - 只用唯讀帳號；輸出目錄 700、檔案 600，用完請刪掉
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'web::', 'r2::', 'db::']);
+$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'web::', 'r2::', 'db::', 'since::']);
 $kinds = array_filter(explode(',', (string) ($opts['kind'] ?? '')));
 $known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi'];
 if (empty($opts['cnf']) || empty($opts['out']) || ! $kinds || array_diff($kinds, $known)) {
     fwrite(STDERR, "用法：php legacy_export_content.php --cnf=<唯讀設定檔> --out=<輸出目錄> --kind=" . implode(',', $known) . " [--images]\n");
+    exit(2);
+}
+$since = isset($opts['since']) && $opts['since'] !== false ? (string) $opts['since'] : null;
+if ($since !== null && ! preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $since)) {
+    fwrite(STDERR, "--since 要是 YYYY-MM-DD HH:MM:SS（舊站時間）\n");
+    exit(2);
+}
+if ($since !== null && array_intersect($kinds, ['friend', 'album'])) {
+    fwrite(STDERR, "好友、相簿沒有時間欄，不能用 --since（用全量對帳）\n");
     exit(2);
 }
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
@@ -115,6 +127,17 @@ function legacy_time(?string $t): ?string
 }
 
 $counts = [];
+// 有 --since 時加上「這種資料自己的變動條件」（每個 ? 都代入 since）；沒有就整批
+$q = function (string $select, ?string $changed, string $order) use ($pdo, $since) {
+    if ($since === null || $changed === null) {
+        return $pdo->query($select . $order);
+    }
+    $st = $pdo->prepare($select . (str_contains($select, ' WHERE ') ? ' AND ' : ' WHERE ') . "({$changed})" . $order);
+    $st->execute(array_fill(0, substr_count($changed, '?'), $since));
+
+    return $st;
+};
+
 $write = function (string $name, iterable $rows, callable $map) use ($out, &$counts): void {
     $f = fopen("{$out}/{$name}.jsonl", 'w');
     chmod("{$out}/{$name}.jsonl", 0600);
@@ -132,7 +155,7 @@ $write = function (string $name, iterable $rows, callable $map) use ($out, &$cou
 
 if (in_array('diary', $kinds, true)) {
     $imgCount = 0;
-    $write('diary', $pdo->query('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary ORDER BY id'),
+    $write('diary', $q('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary', 'ownerid IN (SELECT id FROM basic WHERE modify_date >= ?)', ' ORDER BY id'),
         function (array $r) use (&$imgCount): array {
             $pic = ltrim((string) $r['pic'], '/');
             $image = legacy_image('diary_pic', $pic, (int) $r['is_r2'] === 1, "diary_{$r['id']}");
@@ -146,16 +169,16 @@ if (in_array('diary', $kinds, true)) {
             ];
         });
     $counts['diary_images'] = $imgCount;
-    $write('diary_reply', $pdo->query('SELECT id, diaryid, ownerid, status, msg, timestamp FROM diary_reply ORDER BY id'),
+    $write('diary_reply', $q('SELECT id, diaryid, ownerid, status, msg, timestamp FROM diary_reply', 'timestamp >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'parent' => (int) $r['diaryid'], 'owner' => (int) $r['ownerid'],
             'status' => (int) $r['status'], 'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp'])]);
 }
 
 if (in_array('pray', $kinds, true)) {
-    $write('pray', $pdo->query('SELECT id, ownerid, status, subject, msg, timestamp FROM pray ORDER BY id'),
+    $write('pray', $q('SELECT id, ownerid, status, subject, msg, timestamp FROM pray', 'timestamp >= ? OR last_reply_time >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'], 'status' => (int) $r['status'],
             'title' => legacy_text($r['subject']), 'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp'])]);
-    $write('pray_reply', $pdo->query('SELECT id, ownerid, prayid, status, msg, timestamp FROM pray_reply ORDER BY id'),
+    $write('pray_reply', $q('SELECT id, ownerid, prayid, status, msg, timestamp FROM pray_reply', 'timestamp >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'parent' => (int) $r['prayid'], 'owner' => (int) $r['ownerid'],
             'status' => (int) $r['status'], 'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp'])]);
 }
@@ -168,7 +191,7 @@ if (in_array('friend', $kinds, true)) {
 
 if (in_array('guestbook', $kinds, true)) {
     // 個人頁留言板：sender 留言給 sendee（頁主），reply_msg 是頁主的回覆（10/29「留言板＝傳紙條」）
-    $write('guestbook', $pdo->query('SELECT id, sender, sendee, msg, timestamp, privatemsg, reply_msg, reply_timestamp FROM guestbook ORDER BY id'),
+    $write('guestbook', $q('SELECT id, sender, sendee, msg, timestamp, privatemsg, reply_msg, reply_timestamp FROM guestbook', 'timestamp >= ? OR reply_timestamp >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'from' => (int) $r['sender'], 'to' => (int) $r['sendee'],
             'body' => legacy_text($r['msg']), 'at' => legacy_time($r['timestamp']), 'private' => (int) $r['privatemsg'] === 1,
             'reply' => legacy_text($r['reply_msg']), 'reply_at' => legacy_time($r['reply_timestamp'])]);
@@ -183,7 +206,7 @@ if (in_array('album', $kinds, true)) {
 
 if (in_array('date', $kinds, true)) {
     // 舊站 private_date.result：0 等回覆、1 準備參加、-1 婉拒、-2 取消／沒參加、2 過期、3 已參加
-    $write('date', $pdo->query('SELECT id, sender, sendee, date, time, place, church_address, activity, single, msg, timestamp, result, result_timestamp, result_msg FROM private_date ORDER BY id'),
+    $write('date', $q('SELECT id, sender, sendee, date, time, place, church_address, activity, single, msg, timestamp, result, result_timestamp, result_msg FROM private_date', 'timestamp >= ? OR result_timestamp >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'from' => (int) $r['sender'], 'to' => (int) $r['sendee'],
             'date' => legacy_time($r['date']), 'time' => (string) $r['time'],
             'place' => trim(legacy_text($r['place']) . ' ' . legacy_text($r['church_address'])),
@@ -194,13 +217,13 @@ if (in_array('date', $kinds, true)) {
 
 if (in_array('testi', $kinds, true)) {
     // 愛的見證：status 0 待審核、1 顯示、-1 隱藏；pic 在 member_photo/testi_pic/
-    $write('testi', $pdo->query('SELECT id, ownerid, boyid, girlid, status, subject, content, pic, timestamp, is_r2 FROM testi ORDER BY id'),
+    $write('testi', $q('SELECT id, ownerid, boyid, girlid, status, subject, content, pic, timestamp, is_r2 FROM testi', 'timestamp >= ?', ' ORDER BY id'),
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'], 'male' => (int) $r['boyid'], 'female' => (int) $r['girlid'],
             'status' => (int) $r['status'], 'title' => legacy_text($r['subject']), 'body' => legacy_text($r['content']), 'at' => legacy_time($r['timestamp']),
             'image' => legacy_image('member_photo/testi_pic', (string) $r['pic'], (int) $r['is_r2'] === 1, "testi_{$r['id']}")]);
 }
 
-file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'since' => $since, 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 chmod("{$out}/content_manifest.json", 0600);
 foreach ($counts as $k => $n) {
     printf("%s：%d\n", $k, $n);
