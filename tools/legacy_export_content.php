@@ -153,9 +153,25 @@ $write = function (string $name, iterable $rows, callable $map) use ($out, &$cou
     $counts[$name] = $n;
 };
 
+$diaryOwners = null; // --since 時：這次涵蓋的作者（他們在舊站的日記這次是「全部」，匯入端用來找舊站刪掉的）
 if (in_array('diary', $kinds, true)) {
     $imgCount = 0;
-    $write('diary', $q('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary', 'ownerid IN (SELECT id FROM basic WHERE modify_date >= ?)', ' ORDER BY id'),
+    if ($since !== null) {
+        // 先固定名單、再用同一份名單挑日記：中間有人剛改，不會變成「在名單上但日記沒匯到」
+        $st = $pdo->prepare('SELECT id FROM basic WHERE modify_date >= ? ORDER BY id');
+        $st->execute([$since]);
+        $diaryOwners = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+        $st->closeCursor();
+    }
+    $diaryRows = $diaryOwners === null
+        ? $pdo->query('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary ORDER BY id')
+        : ($diaryOwners === [] ? [] : (function () use ($pdo, $diaryOwners) {
+            $st = $pdo->prepare('SELECT id, ownerid, subject, content, date, status, pic, is_r2 FROM diary WHERE ownerid IN (' . implode(',', array_fill(0, count($diaryOwners), '?')) . ') ORDER BY id');
+            $st->execute($diaryOwners);
+
+            return $st;
+        })());
+    $write('diary', $diaryRows,
         function (array $r) use (&$imgCount): array {
             $pic = ltrim((string) $r['pic'], '/');
             $image = legacy_image('diary_pic', $pic, (int) $r['is_r2'] === 1, "diary_{$r['id']}");
@@ -223,7 +239,7 @@ if (in_array('testi', $kinds, true)) {
             'image' => legacy_image('member_photo/testi_pic', (string) $r['pic'], (int) $r['is_r2'] === 1, "testi_{$r['id']}")]);
 }
 
-file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'since' => $since, 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'since' => $since, 'diary_owners' => $diaryOwners, 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 chmod("{$out}/content_manifest.json", 0600);
 foreach ($counts as $k => $n) {
     printf("%s：%d\n", $k, $n);

@@ -26,13 +26,18 @@ use Throwable;
 // - 愛的見證：1 公開、0 待審核、-1 不公開
 class ImportLegacyContent extends Command
 {
-    protected $signature = 'legacy:import-content {dir : legacy_export_content.php 的輸出目錄} {--dry-run : 只算筆數}';
+    protected $signature = 'legacy:import-content {dir : legacy_export_content.php 的輸出目錄} {--dry-run : 只算筆數} {--update-from-legacy : 公測增量：已經搬過的日記／代禱用舊站新值更新、舊站刪掉的也刪（新版改過的不動）}';
 
     protected $description = '匯入舊站的日記、回覆、代禱、好友、留言板（變紙條）、相簿、約會、愛的見證';
 
     private array $users = [];
 
     private array $stats = [];
+
+    private array $manifest = [];
+
+    // 一次最多刪幾篇：超過就不刪、只警告（匯出不完整時不要把新版的日記大量刪掉）
+    private const MAX_DELETE = 50;
 
     public function handle(): int
     {
@@ -54,6 +59,7 @@ class ImportLegacyContent extends Command
             return self::FAILURE;
         }
         $this->users = DB::table('users')->whereNotNull('legacy_id')->pluck('id', 'legacy_id')->all();
+        $this->manifest = json_decode((string) file_get_contents("{$dir}/content_manifest.json"), true) ?: [];
 
         // 先日記、代禱，再回覆（回覆要對到上面那一層）
         // 每一種包一個交易：一筆一筆 insert 快很多；中途失敗那一種整個退回，重跑會補（已經有的會跳過）
@@ -69,7 +75,7 @@ class ImportLegacyContent extends Command
         foreach ($this->stats as $kind => $s) {
             $this->info(sprintf('%s：%s %d、已經有 %d、略過 %d（%s）%s', $kind, $this->option('dry-run') ? '可以匯入' : '匯入',
                 $s['new'], $s['exists'], array_sum($s['skip']), $this->skipText($s['skip']),
-                ''));
+                (isset($s['updated']) ? "、用舊站更新 {$s['updated']}" : '') . (isset($s['deleted']) ? "、舊站已刪跟著刪 {$s['deleted']}" : '')));
         }
 
         return self::SUCCESS;
@@ -79,10 +85,15 @@ class ImportLegacyContent extends Command
     {
         $this->start($kind);
         $have = $this->have('diaries', $kind);
+        $seen = [];
         foreach ($this->rows("{$dir}/{$kind}.jsonl") as $r) {
             $id = (int) $r['legacy_id'];
             if (isset($have[$id])) {
                 $this->stats[$kind]['exists']++;
+                $seen[$id] = true;
+                if ($this->option('update-from-legacy') && ! $this->option('dry-run')) {
+                    $this->refreshPost($kind, $id, $r);
+                }
 
                 continue;
             }
@@ -117,6 +128,63 @@ class ImportLegacyContent extends Command
             ], $image);
             $this->stats[$kind]['new']++;
         }
+        if ($kind === 'diary' && $this->option('update-from-legacy') && ! $this->option('dry-run')) {
+            $this->deleteGoneDiaries($seen);
+        }
+    }
+
+    // 已經搬過的日記／代禱：舊站改了 → 跟著改。會員在新版改過（beta_audits 有 user: 紀錄）就以新版為準
+    private function refreshPost(string $kind, int $legacyId, array $r): void
+    {
+        $row = DB::table('diaries')->where('legacy_source', $kind)->where('legacy_id', $legacyId)->first(['id', 'title', 'body', 'visibility']);
+        if (! $row || $this->changedInNewSite((int) $row->id)) {
+            return;
+        }
+        $title = trim((string) ($r['title'] ?? ''));
+        $body = trim((string) ($r['body'] ?? ''));
+        if ($title === '' && $body === '') {
+            return;
+        }
+        $want = [
+            'title' => mb_substr($title !== '' ? $title : mb_substr($body, 0, 30), 0, 150),
+            'body' => $body !== '' ? $body : $title,
+            'visibility' => (int) ($r['status'] ?? 0) < 0 ? 'private' : 'public',
+        ];
+        if ($want !== ['title' => $row->title, 'body' => $row->body, 'visibility' => $row->visibility]) {
+            DB::table('diaries')->where('id', $row->id)->update($want + ['updated_at' => now()]);
+            $this->stats[$kind]['updated'] = ($this->stats[$kind]['updated'] ?? 0) + 1;
+        }
+    }
+
+    private function changedInNewSite(int $diaryId): bool
+    {
+        return DB::table('beta_audits')->where('table_name', 'diaries')->where('record_id', (string) $diaryId)->where('actor', 'like', 'user:%')->exists();
+    }
+
+    // 舊站刪日記是整筆刪掉（member/delete_diary.php），增量看不到。匯出時記下「這次涵蓋的作者」（他們的日記這次是全部）：
+    // 新版裡這些作者、從舊站搬來、這次沒出現的 → 舊站已經刪了，新版也刪。新版改過的不刪；一次超過 MAX_DELETE 篇就不刪、只警告
+    private function deleteGoneDiaries(array $seen): void
+    {
+        $owners = $this->manifest['diary_owners'] ?? null;
+        if (! is_array($owners)) {
+            return; // 全量匯出沒有名單：不在這裡刪（全量對帳另外做）
+        }
+        $userIds = array_values(array_filter(array_map(fn ($o) => $this->users[(int) $o] ?? null, $owners)));
+        if ($userIds === []) {
+            return;
+        }
+        $gone = DB::table('diaries')->where('legacy_source', 'diary')->whereIn('user_id', $userIds)
+            ->whereNotIn('legacy_id', array_keys($seen) ?: [0])->pluck('id')
+            ->reject(fn ($id) => $this->changedInNewSite((int) $id))->values();
+        if ($gone->count() > self::MAX_DELETE) {
+            $this->warn(sprintf('舊站好像刪了 %d 篇日記，超過 %d 篇，這次不刪（請人看過）', $gone->count(), self::MAX_DELETE));
+
+            return;
+        }
+        foreach ($gone as $id) {
+            \App\Models\Diary::whereKey($id)->first()?->delete(); // 用 model 刪：留言、禱告、照片跟新版自己刪的一樣處理
+        }
+        $this->stats['diary']['deleted'] = $gone->count();
     }
 
     private function replies(string $dir, string $kind, string $parentKind): void
