@@ -58,6 +58,12 @@ class ImportLegacyContent extends Command
 
             return self::FAILURE;
         }
+        if ($this->option('update-from-legacy') && ! config('loveuno.beta_audit')) {
+            // 分辨「會員在新版改過」靠 beta_audits；沒開就會把新版的修改蓋掉
+            $this->error('--update-from-legacy 要在 BETA_AUDIT=true 的站才能用（靠寫入紀錄分辨新版改過的）。');
+
+            return self::FAILURE;
+        }
         $this->users = DB::table('users')->whereNotNull('legacy_id')->pluck('id', 'legacy_id')->all();
         $this->manifest = json_decode((string) file_get_contents("{$dir}/content_manifest.json"), true) ?: [];
 
@@ -239,6 +245,7 @@ class ImportLegacyContent extends Command
     private function friends(string $dir): void
     {
         $this->start('friend');
+        $legacy = []; // "低-高" => 舊站等級（全量時用來對帳）
         foreach ($this->rows("{$dir}/friend.jsonl") as $r) {
             $a = $this->users[(int) $r['a']] ?? null;
             $b = $this->users[(int) $r['b']] ?? null;
@@ -249,6 +256,7 @@ class ImportLegacyContent extends Command
                 continue;
             }
             [$low, $high] = [min($a, $b), max($a, $b)];
+            $legacy["{$low}-{$high}"] = max($legacy["{$low}-{$high}"] ?? 0, $level);
             if (DB::table('friendships')->where('user_id', $low)->where('friend_id', $high)->exists()) {
                 $this->stats['friend']['exists']++;
 
@@ -260,6 +268,41 @@ class ImportLegacyContent extends Command
             }
             $this->stats['friend']['new']++;
         }
+        if ($this->option('update-from-legacy') && ! $this->option('dry-run') && ($this->manifest['since'] ?? null) === null && is_file("{$dir}/friend.jsonl")) {
+            $this->reconcileFriends($legacy);
+        }
+    }
+
+    // 好友每天全量對帳（舊站 relationship 沒有時間欄，增量看不到；Asana 1220564106252789）：
+    // 兩邊都是舊站會員的好友，舊站等級變了 → 跟著改；舊站已經不是好友 → 新版也解除。
+    // 會員在新版升級、解除、新加過的（beta_audits 有 user: 紀錄）以新版為準；一次解除超過 MAX_DELETE 對就不做、只警告
+    private function reconcileFriends(array $legacy): void
+    {
+        $legacyUsers = array_flip(array_values($this->users));
+        $touched = DB::table('beta_audits')->where('table_name', 'friendships')->where('actor', 'like', 'user:%')->pluck('record_id')->flip()->all();
+        $gone = [];
+        $changed = 0;
+        foreach (\App\Models\Friendship::query()->cursor() as $f) {
+            if (! isset($legacyUsers[$f->user_id], $legacyUsers[$f->friend_id]) || isset($touched[(string) $f->id])) {
+                continue;
+            }
+            $want = $legacy["{$f->user_id}-{$f->friend_id}"] ?? null;
+            if ($want === null) {
+                $gone[] = $f;
+            } elseif ($want !== (int) $f->level) {
+                $f->forceFill(['level' => $want, 'leveled_at' => now()])->save();
+                $changed++;
+            }
+        }
+        if (count($gone) > self::MAX_DELETE) {
+            $this->warn(sprintf('舊站好像解除了 %d 對好友，超過 %d 對，這次不解除（請人看過）', count($gone), self::MAX_DELETE));
+            $gone = [];
+        }
+        foreach ($gone as $f) {
+            $f->delete();
+        }
+        $this->stats['friend']['updated'] = $changed;
+        $this->stats['friend']['deleted'] = count($gone);
     }
 
     private function guestbook(string $dir): void

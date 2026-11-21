@@ -45,6 +45,12 @@ class ImportLegacyExport extends Command
 
     private function runImport(): int
     {
+        if ($this->option('update-from-legacy') && ! config('loveuno.beta_audit')) {
+            // 分辨「會員在新版改過」靠 beta_audits；沒開就會把新版的修改蓋掉
+            $this->error('--update-from-legacy 要在 BETA_AUDIT=true 的站才能用（靠寫入紀錄分辨新版改過的）。');
+
+            return self::FAILURE;
+        }
         $dir = rtrim($this->argument('dir'), '/');
         $json = @file_get_contents("{$dir}/export.json");
         $data = $json ? json_decode($json, true) : null;
