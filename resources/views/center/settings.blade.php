@@ -164,7 +164,9 @@
 <ul class="settings-actions">
     <li><a class="button button-light btn-icon" href="{{ route('settings.network') }}"><span class="ui-icon icon-wifi" aria-hidden="true"></span>網路檢測</a></li>
     <li><a class="button button-light btn-icon" href="{{ route('contact', ['subject' => 'bug']) }}"><span class="ui-icon icon-cs" aria-hidden="true"></span>Bug 回報</a></li>
+    @if (config('loveuno.account_delete_enabled'))
     <li><a class="button button-light btn-icon" href="{{ route('settings.delete') }}"><span class="ui-icon icon-clear" aria-hidden="true"></span>註銷帳號</a></li>
+    @endif
 </ul>
 <script src="{{ asset('js/push.js') }}?v={{ $appVersion }}" defer></script>
 <script src="{{ asset('js/account-panels.js') }}?v={{ $appVersion }}" defer></script>

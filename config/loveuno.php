@@ -32,6 +32,10 @@ return [
     // 寫入紀錄只留幾天（存整筆欄位，含 email、手機；小布 11/21 審查 🟡6）。每天 03:40 php artisan beta:prune-audits
     'beta_audit_keep_days' => (int) env('BETA_AUDIT_KEEP_DAYS', 60),
 
+    // 會員自己註銷帳號（熊叔叔 11/22 TG 選丙：公測期間先關掉，正式上線前再決定舊站帳號怎麼處理）
+    // 公測站 .env 設 ACCOUNT_DELETE_ENABLED=false；其他站不設＝開
+    'account_delete_enabled' => (bool) env('ACCOUNT_DELETE_ENABLED', true),
+
     // 簡訊（手機認證）：log＝只寫進 laravel.log（測試站）；twsms＝台灣簡訊（正式站，熊叔叔 10/29「沿用」舊站帳號）
     // 🔴 正式站一定要設 twsms：log 模式會把認證碼寫進記錄檔
     'sms' => [

@@ -93,8 +93,15 @@ class SettingsController extends Controller
         return view('center.network', ['ms' => (int) round((microtime(true) - $start) * 1000), 'now' => now()]);
     }
 
-    public function confirmDestroy(): View
+    // 公測期間關掉註銷（config loveuno.account_delete_enabled；熊叔叔 11/22 選丙）
+    public const DELETE_DISABLED = '公測期間暫停自行註銷帳號。需要停用帳號，請用「聯絡我們」告訴我們，我們會協助處理。';
+
+    public function confirmDestroy(): View|RedirectResponse
     {
+        if (! config('loveuno.account_delete_enabled')) {
+            return redirect()->route('center.account')->with('status', self::DELETE_DISABLED);
+        }
+
         return view('center.delete-account');
     }
 
@@ -103,6 +110,9 @@ class SettingsController extends Controller
     // 所以是「清掉個資」：暱稱、Email、密碼、手機、個人檔案、照片、日記、相簿、認證、好友、積點都刪，帳號列標成已註銷。
     public function destroy(Request $request): RedirectResponse
     {
+        if (! config('loveuno.account_delete_enabled')) {
+            return redirect()->route('center.account')->with('status', self::DELETE_DISABLED);
+        }
         $data = $request->validateWithBag('delete', [
             'current_password' => ['required', 'current_password'],
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
