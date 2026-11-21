@@ -50,4 +50,10 @@ return [
     ],
 
     'contact_email' => env('LOVEUNO_CONTACT_EMAIL', 'support@loveuno.com'),
+
+    // 測試站限時一次性登入連結（同工驗收用：有的同工的規則不允許自己輸入密碼；大蘇 11/21）
+    // 只在 TEST_LOGIN_LINKS=true 而且不是 production 時才有這個入口；只限 TEST_LOGIN_LINK_USERS 列的會員編號（逗號分隔）
+    // 用法：php artisan test:login-link <會員編號> → 連結寄到那位會員的信箱（不印在畫面上），15 分鐘內有效、只能用一次
+    'test_login_links' => (bool) env('TEST_LOGIN_LINKS', false),
+    'test_login_link_users' => array_values(array_filter(array_map('intval', explode(',', (string) env('TEST_LOGIN_LINK_USERS', ''))))),
 ];

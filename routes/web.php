@@ -252,3 +252,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::get('/reports/{report}/screenshot', [ReportReviewController::class, 'screenshot'])->whereNumber('report')->name('admin.reports.screenshot');
     });
 });
+
+// 測試站限時一次性登入連結：正式站（production）或沒開 TEST_LOGIN_LINKS 時，這條路徑根本不存在
+if (config('loveuno.test_login_links') && ! app()->isProduction()) {
+    Route::get('/test-login/{user}/{nonce}', \App\Http\Controllers\TestLoginLinkController::class)
+        ->whereNumber('user')->where('nonce', '[A-Za-z0-9]{40}')->middleware(['signed', 'throttle:10,1'])->name('test.login');
+}
