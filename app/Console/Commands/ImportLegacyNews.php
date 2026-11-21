@@ -20,6 +20,17 @@ class ImportLegacyNews extends Command
 
     public function handle(): int
     {
+        // 從舊站匯入：標成 sync → 照樣記 audit、不排回寫（防兩邊來回打轉；11/21 發現原本沒標。Asana 1220564106252789）
+        \App\Support\BetaChangeRecorder::$importing = true;
+        try {
+            return $this->runImport();
+        } finally {
+            \App\Support\BetaChangeRecorder::$importing = false;
+        }
+    }
+
+    private function runImport(): int
+    {
         $path = $this->argument('csv') ?? database_path('data/legacy_news.csv');
         $fh = @fopen($path, 'r');
         if (! $fh) {

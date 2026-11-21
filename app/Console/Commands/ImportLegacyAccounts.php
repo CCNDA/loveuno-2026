@@ -19,6 +19,17 @@ class ImportLegacyAccounts extends Command
 
     public function handle(): int
     {
+        // 從舊站匯入：標成 sync → 照樣記 audit、不排回寫（防兩邊來回打轉；11/21 發現原本沒標。Asana 1220564106252789）
+        \App\Support\BetaChangeRecorder::$importing = true;
+        try {
+            return $this->runImport();
+        } finally {
+            \App\Support\BetaChangeRecorder::$importing = false;
+        }
+    }
+
+    private function runImport(): int
+    {
         $db = (string) config('database.connections.legacy.database');
         if (! preg_match('/(^|_)(dev|test)(_|$)/', $db)) {
             $this->error('舊站資料庫名稱裡沒有獨立的 dev 或 test 一段（例如 loveuno_dev_member），不像測試庫，停止。展示版不可以讀正式會員資料。');

@@ -36,6 +36,17 @@ class ImportLegacyContent extends Command
 
     public function handle(): int
     {
+        // 從舊站匯入：標成 sync → 照樣記 audit、不排回寫（防兩邊來回打轉；11/21 發現原本沒標。Asana 1220564106252789）
+        \App\Support\BetaChangeRecorder::$importing = true;
+        try {
+            return $this->runImport();
+        } finally {
+            \App\Support\BetaChangeRecorder::$importing = false;
+        }
+    }
+
+    private function runImport(): int
+    {
         $dir = rtrim($this->argument('dir'), '/');
         if (! is_file("{$dir}/content_manifest.json")) {
             $this->error('讀不到 content_manifest.json，不像 legacy_export_content.php 的輸出目錄。');

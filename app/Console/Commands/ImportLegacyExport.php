@@ -28,11 +28,22 @@ use Throwable;
 // 不印 email、密碼，只印編號與筆數。
 class ImportLegacyExport extends Command
 {
-    protected $signature = 'legacy:import-export {dir : legacy_export.php 的輸出目錄} {--dry-run : 只檢查，不寫入} {--refresh : 已經搬過的也照匯出檔重寫（只在正式切換前演練用）}';
+    protected $signature = 'legacy:import-export {dir : legacy_export.php 的輸出目錄} {--dry-run : 只檢查，不寫入} {--refresh : 已經搬過的也照匯出檔重寫（只在正式切換前演練用）} {--update-from-legacy : 公測增量：已經搬過的，用舊站的值更新新版沒改過的欄位}';
 
     protected $description = '匯入在舊站匯出的指定會員（帳號、個人檔案、主照）';
 
     public function handle(): int
+    {
+        // 從舊站匯入：標成 sync → 照樣記 audit、不排回寫（防兩邊來回打轉；11/21 發現原本沒標。Asana 1220564106252789）
+        \App\Support\BetaChangeRecorder::$importing = true;
+        try {
+            return $this->runImport();
+        } finally {
+            \App\Support\BetaChangeRecorder::$importing = false;
+        }
+    }
+
+    private function runImport(): int
     {
         $dir = rtrim($this->argument('dir'), '/');
         $json = @file_get_contents("{$dir}/export.json");
@@ -47,6 +58,7 @@ class ImportLegacyExport extends Command
         $skipped = [];
         $phoneSkipped = [];
         $existing = 0;
+        $updated = 0;
         $placeholder = \Illuminate\Support\Facades\Hash::make(Str::random(40));
         foreach ($data['members'] as $m) {
             $id = (int) ($m['legacy_id'] ?? 0);
@@ -63,8 +75,11 @@ class ImportLegacyExport extends Command
                 continue;
             }
             // 已經搬過的：會員可能在新版改過名字、email、密碼，不要蓋回舊站的（審查 10/30）
-            if (! $this->option('refresh') && User::withoutGlobalScopes()->where('legacy_id', $id)->exists()) {
+            if (! $this->option('refresh') && ($had = User::withoutGlobalScopes()->where('legacy_id', $id)->first())) {
                 $existing++;
+                if ($this->option('update-from-legacy') && ! $this->option('dry-run') && DB::transaction(fn () => $this->updateFromLegacy($had, $m))) {
+                    $updated++;
+                }
 
                 continue;
             }
@@ -141,8 +156,9 @@ class ImportLegacyExport extends Command
             $done[] = $id;
         }
 
-        $this->info(sprintf('%s %d 位%s；已經搬過、沒動 %d 位', $this->option('dry-run') ? '可以匯入' : '已匯入', count($done),
-            count($done) <= 50 ? '：' . implode(', ', $done) : '', $existing));
+        $this->info(sprintf('%s %d 位%s；%s', $this->option('dry-run') ? '可以匯入' : '已匯入', count($done),
+            count($done) <= 50 ? '：' . implode(', ', $done) : '',
+            $this->option('update-from-legacy') ? "已經搬過 {$existing} 位（其中 {$updated} 位用舊站的新資料更新）" : "已經搬過、沒動 {$existing} 位"));
         if ($skipped) {
             $this->warn(sprintf('略過 %d 位：%s', count($skipped), implode('；', $skipped)));
         }
@@ -151,6 +167,58 @@ class ImportLegacyExport extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    // 公測增量同步（Asana 1220564106252789）：已經搬過的會員，用舊站的新值更新新版。
+    // - 會員在新版自己改過的欄位（beta_audits 有 actor=user:… 的紀錄）以新版為準，不蓋
+    // - 不動 email、密碼、手機（安全相關；新版改密碼不會留內容紀錄，分不出誰新）、照片（要重新審核，另外處理）
+    // - 舊站停權（status 負數）→ 新版也停權；新版註銷的不動
+    // 回傳有沒有改到東西
+    private function updateFromLegacy(User $user, array $m): bool
+    {
+        if ($user->deleted_at !== null) {
+            return false;
+        }
+        $owned = fn (string $table, $recordId) => DB::table('beta_audits')->where('table_name', $table)->where('record_id', (string) $recordId)
+            ->where('actor', 'like', 'user:%')->pluck('after')
+            ->flatMap(fn ($a) => array_keys(json_decode((string) $a, true) ?: []))->unique()->all();
+        $changed = false;
+
+        $nick = trim((string) ($m['nickname'] ?? ''));
+        if ($nick !== '' && ! in_array('name', $owned($user->getTable(), $user->getKey()), true) && $user->name !== mb_substr($nick, 0, 50)) {
+            $user->name = mb_substr($nick, 0, 50);
+            $user->save();
+            $changed = true;
+        }
+        $status = (int) ($m['status'] ?? 2);
+        if (self::statusKind($status) === 'suspended' && $user->suspended_at === null) {
+            DB::table('users')->where('id', $user->id)->update(['suspended_at' => now(), 'is_active' => false, 'legacy_status' => $status]);
+            $changed = true;
+        }
+
+        $profile = $user->profile;
+        if ($profile !== null) {
+            $mine = $owned($profile->getTable(), $profile->getKey());
+            $want = [
+                'gender' => in_array($m['gender'] ?? '', ['男', '女'], true) ? $m['gender'] : $profile->gender,
+                'live_place' => mb_substr((string) ($m['live_place'] ?? ''), 0, 20),
+                'church' => mb_substr((string) ($m['church'] ?? ''), 0, 100),
+                'church_visible' => (bool) ($m['church_visible'] ?? false),
+                'job' => mb_substr((string) ($m['job'] ?? ''), 0, 20),
+                'intro' => \App\Support\LegacyText::plain($m['intro'] ?? null),
+            ];
+            foreach ($want as $k => $v) {
+                if (! in_array($k, $mine, true)) {
+                    $profile->{$k} = $v;
+                }
+            }
+            if ($profile->isDirty()) {
+                $profile->save();
+                $changed = true;
+            }
+        }
+
+        return $changed;
     }
 
     // 舊站的號碼 → [新版的寫法, 認證時間]；格式不對、沒有認證時間就 [null, null]（要在新版認證）
