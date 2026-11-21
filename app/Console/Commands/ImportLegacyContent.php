@@ -92,6 +92,7 @@ class ImportLegacyContent extends Command
         $this->start($kind);
         $have = $this->have('diaries', $kind);
         $seen = [];
+        $deletedHere = $this->deletedInNewSite('diaries', fn (array $b) => ($b['legacy_source'] ?? null) === $kind && isset($b['legacy_id']) ? (string) $b['legacy_id'] : null);
         foreach ($this->rows("{$dir}/{$kind}.jsonl") as $r) {
             $id = (int) $r['legacy_id'];
             if (isset($have[$id])) {
@@ -100,6 +101,11 @@ class ImportLegacyContent extends Command
                 if ($this->option('update-from-legacy') && ! $this->option('dry-run')) {
                     $this->refreshPost($kind, $id, $r);
                 }
+
+                continue;
+            }
+            if (isset($deletedHere[(string) $id])) {
+                $this->skip($kind, '會員在新版刪掉了');
 
                 continue;
             }
@@ -132,6 +138,7 @@ class ImportLegacyContent extends Command
                 'image_path' => $image, 'image_status' => $image ? 'approved' : '', 'image_updated_at' => $image ? now() : null,
                 'published_on' => $at->toDateString(), 'created_at' => $at, 'updated_at' => $at,
             ], $image);
+            $seen[$id] = true; // 這次新增的也算「舊站還有」，不然下面會當成舊站已刪、當場刪掉（小布 11/21 審查 🔴1）
             $this->stats[$kind]['new']++;
         }
         if ($kind === 'diary' && $this->option('update-from-legacy') && ! $this->option('dry-run')) {
@@ -160,6 +167,21 @@ class ImportLegacyContent extends Command
             DB::table('diaries')->where('id', $row->id)->update($want + ['updated_at' => now()]);
             $this->stats[$kind]['updated'] = ($this->stats[$kind]['updated'] ?? 0) + 1;
         }
+    }
+
+    // 會員在新版刪掉的（beta_audits 有 user: 的 deleted 紀錄）：用 $key 從刪除前的內容算出比對用的鍵
+    // 回寫只會把舊站日記設成隱藏、好友回寫可能還沒送到；不擋的話下一輪匯入會把它們「救回來」（小布 11/21 審查 🟠2）
+    private function deletedInNewSite(string $table, callable $key): array
+    {
+        $out = [];
+        foreach (DB::table('beta_audits')->where('table_name', $table)->where('action', 'deleted')->where('actor', 'like', 'user:%')->pluck('before') as $b) {
+            $k = $key(json_decode((string) $b, true) ?: []);
+            if ($k !== null) {
+                $out[$k] = true;
+            }
+        }
+
+        return $out;
     }
 
     private function changedInNewSite(int $diaryId): bool
@@ -246,6 +268,7 @@ class ImportLegacyContent extends Command
     {
         $this->start('friend');
         $legacy = []; // "低-高" => 舊站等級（全量時用來對帳）
+        $removedHere = $this->deletedInNewSite('friendships', fn (array $b) => isset($b['user_id'], $b['friend_id']) ? "{$b['user_id']}-{$b['friend_id']}" : null);
         foreach ($this->rows("{$dir}/friend.jsonl") as $r) {
             $a = $this->users[(int) $r['a']] ?? null;
             $b = $this->users[(int) $r['b']] ?? null;
@@ -259,6 +282,11 @@ class ImportLegacyContent extends Command
             $legacy["{$low}-{$high}"] = max($legacy["{$low}-{$high}"] ?? 0, $level);
             if (DB::table('friendships')->where('user_id', $low)->where('friend_id', $high)->exists()) {
                 $this->stats['friend']['exists']++;
+
+                continue;
+            }
+            if (isset($removedHere["{$low}-{$high}"])) {
+                $this->skip('friend', '會員在新版解除或封鎖了');
 
                 continue;
             }

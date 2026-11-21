@@ -65,6 +65,8 @@ class PushLegacyOutboxTest extends TestCase
         $this->assertSame('新暱稱', $b->nickname);
         $this->assertSame('plain', $b->password, '密碼不動');
         $this->assertNotNull($b->modify_date);
+        // 舊站 PHP 用台北時間寫 modify_date 字串：回寫也一樣（小布 11/21 審查 🟠3；原本寫 UTC、早 8 小時）
+        $this->assertLessThan(180, abs(\Illuminate\Support\Carbon::parse($b->modify_date, 'Asia/Taipei')->diffInSeconds(now('Asia/Taipei'))));
         $p = DB::connection('legacy')->table('profile')->where('id', 1000501)->first();
         $this->assertSame('老師', $p->job);
         $this->assertSame('第一行<br>' . "\n" . '第二行', $p->intro);

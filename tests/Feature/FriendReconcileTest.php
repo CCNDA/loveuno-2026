@@ -73,6 +73,19 @@ class FriendReconcileTest extends TestCase
         $this->assertSame(0, DB::table('legacy_outbox')->count(), '從舊站來的不排回寫');
     }
 
+    // 小布 🟠2：會員在新版解除（或封鎖）了，回寫還沒送到舊站 → 全量對帳不能把好友加回來
+    public function test_removed_in_new_site_not_added_back(): void
+    {
+        [$a, $b] = [$this->member(1000921), $this->member(1000922)];
+        Friendship::raise($a, $b, 1);
+        $this->actingAs($a);
+        Friendship::remove($a, $b);
+        auth()->logout();
+        $this->export([[1, 1000921, 1000922, 1]]);
+        $this->run_();
+        $this->assertNull(Friendship::between($a, $b));
+    }
+
     public function test_incremental_export_does_not_reconcile(): void
     {
         [$a, $c] = [$this->member(1000911), $this->member(1000913)];

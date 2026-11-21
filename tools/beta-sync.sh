@@ -6,7 +6,8 @@
 # inc ：舊站 basic.modify_date ≥（上次開始時間－5 分鐘）的會員：帳號暱稱、個人資料、日記（含舊站刪掉的）；
 #       回覆、代禱、留言板、約會、見證用各自的時間欄。第一次全量匯入之後，要把「全量開始的台北時間」寫進 $STATE/last_inc 才會開始跑
 # full：好友全量對帳（舊站 relationship 沒有時間欄，增量看不到）
-# 每一輪最後都跑回寫（legacy:push-outbox）；回寫有 failed（要人看）→ 印 🔴、exit 3
+# 每一輪先跑一次回寫（先把新版的改動送出去，再匯入；小布 11/21 審查 🟠2），最後再跑一次；回寫有 failed（要人看）→ 印 🔴、exit 3
+# 舊站帳密含 " 會直接拒絕；含 \ 的會被 MySQL 設定檔當跳脫字元 → 連線失敗（不會靜靜做錯；小布 🟡5）
 # 時間：舊站 PHP 用 Asia/Taipei 寫 modify_date 字串 → since 也用台北時間
 # 帳密不放這裡：從新版 .env 的 LEGACY_DB_*（lu2026_legacy，舊站只能讀＋回寫那幾欄）臨時產生 600 的設定檔，跑完刪掉
 # 退出碼：0 成功；1 失敗；2 用法；3 回寫有 failed
@@ -44,6 +45,9 @@ run() { # run <說明> <指令...>：失敗印最後幾行、exit 1
   fi
   log "   $what：$(grep -vE '^\s*$' "$out/run.log" | tail -1)"
 }
+
+(cd "$APP" && php artisan legacy:push-outbox) > "$out/push0.log" 2>&1
+log "   先回寫：$(grep -vE '^\s*$' "$out/push0.log" | tail -1)"
 
 if [ "$MODE" = inc ]; then
   now=$(TZ=Asia/Taipei date '+%F %T')

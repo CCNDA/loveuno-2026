@@ -96,12 +96,29 @@ class ContentIncrementalImportTest extends TestCase
         $gone = $this->migrated($covered, 32);
         $newSiteOwn = Diary::forceCreate(['user_id' => $covered->id, 'title' => '新版自己寫的', 'body' => 'x', 'visibility' => 'public', 'published_on' => '2026-11-21']);
         $otherDiary = $this->migrated($other, 41);
-        $this->export([['legacy_id' => 31, 'owner' => 1000803, 'title' => '原標題', 'body' => '原內容']], [1000803]);
+        $this->export([
+            ['legacy_id' => 31, 'owner' => 1000803, 'title' => '原標題', 'body' => '原內容'],
+            ['legacy_id' => 33, 'owner' => 1000803, 'title' => '舊站剛寫的', 'body' => '新的一篇'],
+        ], [1000803]);
         $this->run_();
         $this->assertNotNull($keep->fresh());
+        $this->assertSame(1, Diary::where('legacy_source', 'diary')->where('legacy_id', 33)->count(), '這一輪新匯進來的不能當場刪掉（小布 🔴1）');
         $this->assertNull($gone->fresh(), '涵蓋的作者、舊站已刪 → 新版也刪');
         $this->assertNotNull($newSiteOwn->fresh(), '新版自己寫的不刪');
         $this->assertNotNull($otherDiary->fresh(), '這次沒涵蓋的作者不動');
+    }
+
+    // 小布 🟠2：會員在新版刪掉的搬來日記，舊站還在（回寫只設隱藏）→ 下一輪不能再匯回來
+    public function test_diary_deleted_in_new_site_not_reimported(): void
+    {
+        $u = $this->member(1000807);
+        $d = $this->migrated($u, 71);
+        $this->actingAs($u);
+        $d->delete();
+        auth()->logout();
+        $this->export([['legacy_id' => 71, 'owner' => 1000807, 'title' => '原標題', 'body' => '原內容', 'status' => -1]], [1000807]);
+        $this->run_();
+        $this->assertSame(0, Diary::where('legacy_source', 'diary')->where('legacy_id', 71)->count());
     }
 
     public function test_mass_delete_guard(): void

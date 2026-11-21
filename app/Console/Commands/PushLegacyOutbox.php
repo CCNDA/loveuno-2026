@@ -11,7 +11,8 @@ use Throwable;
 // 讀 legacy_outbox（BetaChangeRecorder 排的），照下面的對照寫進舊站 basic／profile／diary／relationship。
 // - 舊站連線帳號 lu2026_legacy 只有：basic 的 nickname、modify_date 兩欄 UPDATE；profile UPDATE；diary INSERT／UPDATE；relationship INSERT／UPDATE／DELETE
 // - 舊表是 utf8mb3：emoji 這類 4 位元組字元先換成「□」（11/18 欄位對照查到的坑）
-// - 時間一律 UTC（basic 的 TIMESTAMP 依連線時區換算；11/18 查到的坑）
+// - 時間：舊站 PHP 用 Asia/Taipei 寫 basic.modify_date 字串、連線用伺服器預設時區 → 回寫也寫台北時間字串、不改連線時區
+//   （原本連線設 UTC、寫 UTC，回寫的那幾筆比實際早 8 小時，舊站排序／顯示會錯；小布 11/21 審查 🟠3）
 // - 編號：新版存的 users.legacy_id、diaries.legacy_id；新版自己開的帳號（沒有 legacy_id）不回寫，標 skipped
 // - 新日記寫進舊站後，把舊站編號用 query builder 存回新版（不觸發 model 事件 → 不會再排一次，防迴圈）
 // - 每筆自己一個嘗試：失敗記 last_error、attempts+1，5 次以後標 failed 不再自動重試；成功標 sent
@@ -35,9 +36,6 @@ class PushLegacyOutbox extends Command
     public function handle(): int
     {
         $legacy = DB::connection('legacy');
-        if (! $this->option('dry-run')) {
-            $legacy->statement("SET time_zone = '+00:00'");
-        }
         $rows = DB::table('legacy_outbox')->where('status', 'pending')->orderBy('id')->limit((int) $this->option('limit'))->get();
         $n = ['sent' => 0, 'skipped' => 0, 'error' => 0, 'held' => 0];
         foreach ($rows as $r) {
@@ -91,7 +89,7 @@ class PushLegacyOutbox extends Command
                 if ($r->action !== 'updated' || ! array_key_exists('name', $p)) {
                     return 'skip：只回寫改暱稱';
                 }
-                $dry || $legacy->table('basic')->where('id', $lid)->update(['nickname' => self::fit($p['name']), 'modify_date' => now('UTC')->format('Y-m-d H:i:s')]);
+                $dry || $legacy->table('basic')->where('id', $lid)->update(['nickname' => self::fit($p['name']), 'modify_date' => now('Asia/Taipei')->format('Y-m-d H:i:s')]);
 
                 return "basic#{$lid} nickname";
 
@@ -141,7 +139,7 @@ class PushLegacyOutbox extends Command
                     return "diary#{$lid} 隱藏";
                 }
                 $row = ['ownerid' => $owner, 'subject' => self::fit($p['title'] ?? ''), 'content' => nl2br(e(self::fit($p['body'] ?? '')), false),
-                    'date' => substr((string) ($p['published_on'] ?? now('UTC')->toDateString()), 0, 10), 'status' => $status];
+                    'date' => substr((string) ($p['published_on'] ?? now('Asia/Taipei')->toDateString()), 0, 10), 'status' => $status];
                 if ($lid !== null) {
                     $dry || $legacy->table('diary')->where('id', $lid)->update($row);
 
