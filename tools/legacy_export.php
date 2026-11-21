@@ -5,6 +5,8 @@
 // 用法（ubuntu 身分）：
 //   php legacy_export.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_export 1000014 1018068
 //   php legacy_export.php --cnf=... --out=... --all [--status=2,4,6]   ← 整批（預設所有狀態，500 位一批）
+//   php legacy_export.php --cnf=... --out=... --since='2026-11-21 08:00:00'   ← 公測增量：basic.modify_date 在這之後的會員
+//     （舊站個人資料 profile1～4、寫／改／刪日記、手機認證都會更新 modify_date；好友、教會欄不會 → 另外每天全量對帳。Asana 1220564106252789）
 //   每位都帶舊站 basic.status（2 交友會員、4 社群會員、6 特約作者、1／3 未啟用、負數停權），新版匯入時照狀態處理
 //
 // 安全：
@@ -17,12 +19,17 @@
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::'], $rest);
+$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::', 'since::'], $rest);
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
 $ids = array_slice($argv, $rest);
 $all = isset($opts['all']);
-if (empty($opts['cnf']) || empty($opts['out']) || ($all === (bool) $ids)) {
-    fwrite(STDERR, "用法：php legacy_export.php --cnf=<唯讀設定檔> --out=<輸出目錄> <會員編號>...｜--all [--status=2,4,6]\n");
+$since = isset($opts['since']) && $opts['since'] !== false ? (string) $opts['since'] : null;
+if ($since !== null && ! preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $since)) {
+    fwrite(STDERR, "--since 要是 YYYY-MM-DD HH:MM:SS（舊站時間）\n");
+    exit(2);
+}
+if (empty($opts['cnf']) || empty($opts['out']) || ((int) $all + (int) (bool) $ids + (int) ($since !== null)) !== 1) {
+    fwrite(STDERR, "用法：php legacy_export.php --cnf=<唯讀設定檔> --out=<輸出目錄> <會員編號>...｜--all [--status=2,4,6]｜--since='YYYY-MM-DD HH:MM:SS'\n");
     exit(2);
 }
 $statuses = null;
@@ -60,6 +67,11 @@ if ($all) {
     $st->execute($statuses ?? []);
     $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
     fprintf(STDERR, "整批：%d 位\n", count($ids));
+} elseif ($since !== null) {
+    $st = $pdo->prepare('SELECT id FROM basic WHERE modify_date >= ? ORDER BY id');
+    $st->execute([$since]);
+    $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+    fprintf(STDERR, "增量（modify_date ≥ %s）：%d 位\n", $since, count($ids));
 }
 
 $out = rtrim($opts['out'], '/');
@@ -138,11 +150,11 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
         fprintf(STDERR, "  第 %d 批完成（累計 %d 位）\n", $n + 1, count($members));
     }
 }
-file_put_contents("{$out}/export.json", json_encode(['exported_at' => date('c'), 'members' => $members], JSON_UNESCAPED_UNICODE | ($all ? 0 : JSON_PRETTY_PRINT)));
+file_put_contents("{$out}/export.json", json_encode(['exported_at' => date('c'), 'since' => $since, 'members' => $members], JSON_UNESCAPED_UNICODE | ($all || $since !== null ? 0 : JSON_PRETTY_PRINT)));
 chmod("{$out}/export.json", 0600);
 
 $found = array_column($members, 'legacy_id');
-printf("匯出 %d 位%s；有主照 %d 位\n", count($found), $all ? '' : '：' . implode(', ', $found), count(array_filter(array_column($members, 'photo'))));
+printf("匯出 %d 位%s；有主照 %d 位\n", count($found), $all || $since !== null ? '' : '：' . implode(', ', $found), count(array_filter(array_column($members, 'photo'))));
 if ($missing = array_diff($ids, $found)) {
     printf("找不到：%s\n", implode(', ', $missing));
 }
