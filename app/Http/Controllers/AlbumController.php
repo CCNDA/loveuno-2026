@@ -88,9 +88,7 @@ class AlbumController extends Controller
         abort_unless($photo->user_id === (int) $request->user()->id, 404);
         $path = $photo->path;
         $photo->delete(); // 先刪紀錄，再刪檔案：刪紀錄失敗就不會留下指到空檔案的紀錄
-        if ($path !== '') {
-            Storage::disk('avatars')->delete($path);
-        }
+        \App\Support\PhotoStore::delete($path); // 舊站搬來的（legacy:）只刪紀錄
 
         return redirect()->route('album.edit')->with('status', '照片刪掉了。');
     }
@@ -98,10 +96,11 @@ class AlbumController extends Controller
     public function show(Request $request, AlbumPhoto $photo): Response
     {
         abort_unless($photo->path !== '' && $photo->visibleTo($request->user()), 404);
-        abort_unless(Storage::disk('avatars')->exists($photo->path), 404);
+        $img = \App\Support\PhotoStore::read($photo->path);
+        abort_unless($img !== null, 404);
 
-        return response(Storage::disk('avatars')->get($photo->path), 200, [
-            'Content-Type' => 'image/jpeg',
+        return response($img['bytes'], 200, [
+            'Content-Type' => $img['type'],
             'Cache-Control' => 'private, max-age=3600',
             'X-Content-Type-Options' => 'nosniff',
         ]);

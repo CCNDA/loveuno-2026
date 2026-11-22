@@ -110,14 +110,14 @@ class DiaryWriteController extends Controller
         Storage::disk('avatars')->put($path, $jpeg);
         $diary->forceFill(['image_path' => $path, 'image_status' => 'approved', 'image_updated_at' => now()])->save();
         if ($old && $old !== $path) {
-            Storage::disk('avatars')->delete($old);
+            \App\Support\PhotoStore::delete($old);
         }
     }
 
     private function deleteImage(Diary $diary): void
     {
         if ($diary->image_path) {
-            Storage::disk('avatars')->delete($diary->image_path);
+            \App\Support\PhotoStore::delete($diary->image_path);
             $diary->forceFill(['image_path' => null, 'image_status' => '', 'image_updated_at' => now()])->save();
         }
     }

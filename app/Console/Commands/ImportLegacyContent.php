@@ -396,7 +396,7 @@ class ImportLegacyContent extends Command
                 continue;
             }
             $rel = (string) ($r['image'] ?? '');
-            if (! preg_match('#^images/album_\d+\.img$#', $rel) || ! is_file("{$dir}/{$rel}")) {
+            if (! \App\Support\PhotoStore::isLegacy($rel) && (! preg_match('#^images/album_\d+\.img$#', $rel) || ! is_file("{$dir}/{$rel}"))) {
                 $this->skip('album', '沒有照片檔');
 
                 continue;
@@ -553,8 +553,20 @@ class ImportLegacyContent extends Command
     }
 
     // 匯出檔裡的照片 → 重新轉成 JPEG（最長邊 1200、拿掉 EXIF）放進 avatars 磁碟；不是 images/xxx_數字.img 或讀不出來就 null
+    // legacy:<目錄>/<檔名>（匯出時加 --photo-ref）：舊站 R2 原檔直接用、不轉檔不另存（熊叔叔 11/22 選甲）
     private function image(string $dir, string $rel, string $prefix = ''): ?string
     {
+        if (\App\Support\PhotoStore::isLegacy($rel)) {
+            foreach (['member_photo/image', 'diary_pic', 'member_photo/testi_pic'] as $d) {
+                if (str_starts_with($rel, "legacy:{$d}/")) {
+                    $ref = \App\Support\PhotoStore::legacyRef($d, substr($rel, strlen("legacy:{$d}/")));
+
+                    return $ref === $rel ? $ref : null;
+                }
+            }
+
+            return null;
+        }
         if (! preg_match('#^images/[a-z]+_\d+\.img$#', $rel) || ! is_file("{$dir}/{$rel}")) {
             return null;
         }
@@ -576,7 +588,7 @@ class ImportLegacyContent extends Command
             DB::table($table)->insert($row);
         } catch (Throwable $e) {
             if ($path) {
-                Storage::disk('avatars')->delete($path);
+                \App\Support\PhotoStore::delete($path);
             }
             throw $e;
         }

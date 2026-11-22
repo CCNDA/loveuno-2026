@@ -53,9 +53,7 @@ class PhotoReviewController extends Controller
             $msg = sprintf('%s 的%s通過了。', $profile->user->name, $label);
         } else {
             // 不通過就把檔案刪掉，不留在主機上
-            if ($profile->{$kind . '_path'}) {
-                Storage::disk('avatars')->delete($profile->{$kind . '_path'});
-            }
+            \App\Support\PhotoStore::delete($profile->{$kind . '_path'}); // 舊站搬來的只清掉新版的指向，原檔舊站還在用
             $profile->forceFill([$kind . '_status' => 'rejected', $kind . '_path' => null])->save();
             $msg = sprintf('%s 的%s不通過，檔案已刪除。', $profile->user->name, $label);
         }

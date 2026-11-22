@@ -21,6 +21,9 @@ class FindStoryFaces extends Command
             $q->whereNull('photo_focus_x');
         }
         foreach ($q->orderBy('id')->get() as $s) {
+            if (\App\Support\PhotoStore::isLegacy($s->photo_path)) {
+                continue; // 舊站 R2 原檔（熊叔叔 11/22 選甲）不在本機，找臉要另外做
+            }
             $f = FaceFocus::find(Storage::disk('avatars')->path($s->photo_path));
             $this->line(sprintf('#%d %s → %s', $s->id, $s->title, $f ? "{$f[0]}%, {$f[1]}%" : '找不到臉（用預設）'));
             if ($f && ! $this->option('dry-run')) {

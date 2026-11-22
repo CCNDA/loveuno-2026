@@ -14,6 +14,7 @@
 //   照片「切換前先搬」：前幾天先整批匯出轉檔，切換當天只補之後新增的（匯入端已經有的會跳過）
 // - --images-upto=album:5000：只抓編號 ≤ 這個的照片，跟 --images-after 配成區間分批跑（11/22：相簿約 2 萬張×1 MB，一次會塞爆硬碟）
 //   ⚠️ 只有相簿適合分批：相簿沒有照片的那筆匯入端會跳過、下一批還能補；日記沒有照片也會先建起來，之後不會補照片 → 日記照片一次匯
+// - --photo-ref：照片不下載，只寫舊站 R2 路徑（legacy:<目錄>/<檔名>），新版直接讀 R2 原檔（熊叔叔 11/22 選甲）；不在 R2 的不收
 // - --min-free-gb=3：寫照片前剩餘空間低於這個就停（exit 3）
 // - --since='YYYY-MM-DD HH:MM:SS'：公測增量（Asana 1220564106252789）。日記挑「作者 basic.modify_date 在這之後」的
 //   （舊站寫／改／刪日記都會更新作者的 modify_date，日記本身只有日期）；回覆、代禱、留言板、約會、見證用各自的時間欄。
@@ -22,7 +23,7 @@
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'images-upto::', 'web::', 'r2::', 'db::', 'since::', 'min-free-gb::']);
+$opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'images-upto::', 'web::', 'r2::', 'db::', 'since::', 'min-free-gb::', 'photo-ref']);
 $kinds = array_filter(explode(',', (string) ($opts['kind'] ?? '')));
 $known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi'];
 if (empty($opts['cnf']) || empty($opts['out']) || ! $kinds || array_diff($kinds, $known)) {
@@ -42,6 +43,7 @@ $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'
 $web = rtrim($opts['web'] ?? '/home/loveuno', '/');
 $r2 = rtrim($opts['r2'] ?? '', '/');
 $withImages = isset($opts['images']);
+$photoRef = isset($opts['photo-ref']);
 $imagesAfter = $imagesUpto = [];
 foreach (['images-after' => 'imagesAfter', 'images-upto' => 'imagesUpto'] as $o => $var) {
     if (isset($opts[$o]) && $opts[$o] !== false && $opts[$o] !== '') {
@@ -105,8 +107,11 @@ function legacy_text(?string $s): string
 // 從本機或 R2 讀一個舊站檔案，是圖片才存進 images/<name>.img；回傳相對路徑或 null
 function legacy_image(string $sub, string $file, bool $isR2, string $name): ?string
 {
-    global $withImages, $imagesAfter, $imagesUpto, $web, $r2, $out, $minFreeGb;
+    global $withImages, $imagesAfter, $imagesUpto, $web, $r2, $out, $minFreeGb, $photoRef;
     $file = ltrim($file, '/');
+    if ($photoRef) {
+        return ($isR2 && $file !== '' && ! str_contains($file, '..') && ! preg_match('/[\x00-\x1f?#\\\\]/', $file)) ? "legacy:{$sub}/{$file}" : null;
+    }
     if (! $withImages || $file === '' || str_contains($file, '..')) {
         return null;
     }

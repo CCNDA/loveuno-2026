@@ -16,6 +16,9 @@ return [
         'messenger' => 'https://m.me/100064814103255',
     ],
 
+    // 舊站照片的公開網址（舊站 R2_PUBLIC_URL；熊叔叔 11/22 選甲：新版直接用 R2 原檔、不搬）。只讀，見 App\Support\PhotoStore
+    'legacy_photo_url' => env('LEGACY_PHOTO_URL', ''),
+
     // 開放註冊。11/8 會員大會是展示版，不開放；年底正式開放時才打開（熊叔叔 10/29：預計年底）
     'registration_open' => (bool) env('REGISTRATION_OPEN', false),
 

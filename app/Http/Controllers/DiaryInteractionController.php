@@ -76,10 +76,11 @@ class DiaryInteractionController extends Controller
     public function image(Request $request, Diary $diary): Response
     {
         abort_unless($diary->imageVisibleTo($request->user()), 404);
-        abort_unless(Storage::disk('avatars')->exists($diary->image_path), 404);
+        $img = \App\Support\PhotoStore::read($diary->image_path);
+        abort_unless($img !== null, 404);
 
-        return response(Storage::disk('avatars')->get($diary->image_path), 200, [
-            'Content-Type' => 'image/jpeg',
+        return response($img['bytes'], 200, [
+            'Content-Type' => $img['type'],
             'Cache-Control' => 'private, max-age=3600',
             'X-Content-Type-Options' => 'nosniff',
         ]);

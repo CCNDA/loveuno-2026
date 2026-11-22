@@ -55,9 +55,7 @@ class LoveStoryReviewController extends Controller
         // 不通過或撤下：照片刪掉，文字留給投稿的人看結果
         $path = $story->photo_path;
         $story->forceFill(['status' => 'rejected', 'photo_path' => null, 'approved_at' => null])->save();
-        if ($path) {
-            Storage::disk('avatars')->delete($path);
-        }
+        \App\Support\PhotoStore::delete($path);
 
         return redirect()->route('admin.love-stories')->with('status', sprintf('「%s」不公開，照片已刪除。', $story->title));
     }

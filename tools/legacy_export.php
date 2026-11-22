@@ -6,6 +6,7 @@
 //   php legacy_export.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_export 1000014 1018068
 //   php legacy_export.php --cnf=... --out=... --all [--status=2,4,6]   ← 整批（預設所有狀態，500 位一批）
 //   php legacy_export.php --cnf=... --out=... --all --id-min=1000000 --id-max=1002999   ← 整批再切編號區間（大頭照一張約 1 MB，分批跑免得塞爆硬碟）
+//   --photo-ref：大頭照不下載，只寫舊站 R2 路徑（legacy:member_photo/image/<檔名>），新版直接讀 R2 原檔（熊叔叔 11/22 選甲）
 //   --min-free-gb=3：寫照片前剩餘空間低於這個就停（exit 3）
 //   php legacy_export.php --cnf=... --out=... --since='2026-11-21 08:00:00'   ← 公測增量：basic.modify_date 在這之後的會員
 //     （舊站個人資料 profile1～4、寫／改／刪日記、手機認證都會更新 modify_date；好友、教會欄不會 → 另外每天全量對帳。Asana 1220564106252789）
@@ -21,7 +22,7 @@
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::', 'since::', 'id-min::', 'id-max::', 'min-free-gb::'], $rest);
+$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::', 'since::', 'id-min::', 'id-max::', 'min-free-gb::', 'photo-ref'], $rest);
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
 $ids = array_slice($argv, $rest);
 $all = isset($opts['all']);
@@ -147,7 +148,12 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
         if (isset($main[$id])) {
             $f = ltrim((string) $main[$id]['filename'], '/');
             $bytes = false;
-            if ((int) $main[$id]['is_r2'] === 1 && $r2 !== '') {
+            if (isset($opts['photo-ref'])) {
+                // 只有確定在 R2 上的才寫路徑；檔名有 .. 或控制字元就不收（匯入端還會再驗一次）
+                if ((int) $main[$id]['is_r2'] === 1 && $f !== '' && ! str_contains($f, '..') && ! preg_match('/[\x00-\x1f?#\\\\]/', $f)) {
+                    $photo = "legacy:member_photo/image/{$f}";
+                }
+            } elseif ((int) $main[$id]['is_r2'] === 1 && $r2 !== '') {
                 $bytes = @file_get_contents($r2 . '/member_photo/image/' . str_replace('%2F', '/', rawurlencode($f)));
             } elseif (! str_contains($f, '..')) {
                 $bytes = @file_get_contents("{$web}/member_photo/image/{$f}");

@@ -144,7 +144,15 @@ class ImportLegacyExport extends Command
                 ] + self::legacyProfileFields($m['legacy_profile'] ?? []));
 
                 $photo = (string) ($m['photo'] ?? '');
-                if ($photo !== '' && preg_match('#^photos/\d{7}\.img$#', $photo) && is_file("{$dir}/{$photo}")) {
+                if (\App\Support\PhotoStore::isLegacy($photo)) {
+                    // 舊站 R2 原檔直接用（熊叔叔 11/22 選甲）：路徑要合規才收
+                    $ref = \App\Support\PhotoStore::legacyRef('member_photo/image', substr($photo, strlen('legacy:member_photo/image/')));
+                    if ($ref !== null && $ref === $photo && $profile->photo_path !== $ref) {
+                        $old = $profile->photo_path;
+                        $profile->forceFill(['photo_path' => $ref, 'photo_status' => 'pending', 'photo_updated_at' => now()])->save();
+                        \App\Support\PhotoStore::delete($old);
+                    }
+                } elseif ($photo !== '' && preg_match('#^photos/\d{7}\.img$#', $photo) && is_file("{$dir}/{$photo}")) {
                     try {
                         $jpeg = AvatarImage::fromUpload("{$dir}/{$photo}");
                         $old = $profile->photo_path;
@@ -152,7 +160,7 @@ class ImportLegacyExport extends Command
                         Storage::disk('avatars')->put($path, $jpeg);
                         $profile->forceFill(['photo_path' => $path, 'photo_status' => 'pending', 'photo_updated_at' => now()])->save();
                         if ($old && $old !== $path) {
-                            Storage::disk('avatars')->delete($old);
+                            \App\Support\PhotoStore::delete($old);
                         }
                     } catch (RuntimeException) {
                         $this->warn("{$id} 的照片讀不出來，略過照片");

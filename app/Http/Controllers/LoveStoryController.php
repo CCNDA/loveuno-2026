@@ -110,10 +110,11 @@ class LoveStoryController extends Controller
     public function photo(Request $request, LoveStory $story): Response
     {
         abort_unless($story->photo_path && $story->visibleTo($request->user()), 404);
-        abort_unless(Storage::disk('avatars')->exists($story->photo_path), 404);
+        $img = \App\Support\PhotoStore::read($story->photo_path);
+        abort_unless($img !== null, 404);
 
-        return response(Storage::disk('avatars')->get($story->photo_path), 200, [
-            'Content-Type' => 'image/jpeg',
+        return response($img['bytes'], 200, [
+            'Content-Type' => $img['type'],
             'Cache-Control' => $story->status === 'approved' ? 'public, max-age=86400' : 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);

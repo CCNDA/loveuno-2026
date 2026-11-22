@@ -61,7 +61,7 @@ class PhotoController extends Controller
             $kind . '_updated_at' => now(),
         ])->save();
         if ($old && $old !== $path) {
-            Storage::disk('avatars')->delete($old);
+            \App\Support\PhotoStore::delete($old); // 舊站搬來的（legacy:）不刪原檔
         }
 
         return redirect()->to(route($cfg['edit']) . '#photo-title')->with('status', $cfg['label'] . '上傳好了，管理員審核通過後其他會員就看得到。');
@@ -71,9 +71,7 @@ class PhotoController extends Controller
     {
         $kind = $this->kind($request);
         $profile = $this->profileOf($request->user());
-        if ($profile->{$kind . '_path'}) {
-            Storage::disk('avatars')->delete($profile->{$kind . '_path'});
-        }
+        \App\Support\PhotoStore::delete($profile->{$kind . '_path'});
         $profile->forceFill([$kind . '_path' => null, $kind . '_status' => '', $kind . '_updated_at' => now()])->save();
 
         return redirect()->to(route(self::KINDS[$kind]['edit']) . '#photo-title')->with('status', self::KINDS[$kind]['label'] . '刪掉了。');
@@ -84,10 +82,11 @@ class PhotoController extends Controller
         $kind = $this->kind($request);
         $profile = $user->profile;
         abort_unless($profile && $profile->imageVisibleTo($kind, $request->user()), 404);
-        abort_unless(Storage::disk('avatars')->exists($profile->{$kind . '_path'}), 404);
+        $img = \App\Support\PhotoStore::read($profile->{$kind . '_path'});
+        abort_unless($img !== null, 404);
 
-        return response(Storage::disk('avatars')->get($profile->{$kind . '_path'}), 200, [
-            'Content-Type' => 'image/jpeg',
+        return response($img['bytes'], 200, [
+            'Content-Type' => $img['type'],
             'Cache-Control' => 'private, max-age=3600',
             'X-Content-Type-Options' => 'nosniff',
         ]);
