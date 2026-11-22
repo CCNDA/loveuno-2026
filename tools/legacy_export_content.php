@@ -264,7 +264,12 @@ foreach ($counts as $k => $n) {
 function ensure_free_space(string $dir, float $minGb): void
 {
     $free = @disk_free_space($dir);
-    if ($free !== false && $free < $minGb * 1e9) {
+    if ($free === false) { // 讀不到剩餘空間就當成不安全（小布 11/22 複審第 4 項）
+        fprintf(STDERR, "🛑 讀不到 %s 的剩餘空間，停止匯出
+", $dir);
+        exit(3);
+    }
+    if ($free < $minGb * 1e9) {
         fprintf(STDERR, "🛑 %s 剩 %.1f GB，低於 %.1f GB，停止匯出（已寫的檔案留著，請先匯入、刪掉再分批跑）\n", $dir, $free / 1e9, $minGb);
         exit(3);
     }
