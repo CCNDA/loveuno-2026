@@ -5,6 +5,8 @@
 // 用法（ubuntu 身分）：
 //   php legacy_export.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_export 1000014 1018068
 //   php legacy_export.php --cnf=... --out=... --all [--status=2,4,6]   ← 整批（預設所有狀態，500 位一批）
+//   php legacy_export.php --cnf=... --out=... --all --id-min=1000000 --id-max=1002999   ← 整批再切編號區間（大頭照一張約 1 MB，分批跑免得塞爆硬碟）
+//   --min-free-gb=3：寫照片前剩餘空間低於這個就停（exit 3）
 //   php legacy_export.php --cnf=... --out=... --since='2026-11-21 08:00:00'   ← 公測增量：basic.modify_date 在這之後的會員
 //     （舊站個人資料 profile1～4、寫／改／刪日記、手機認證都會更新 modify_date；好友、教會欄不會 → 另外每天全量對帳。Asana 1220564106252789）
 //   每位都帶舊站 basic.status（2 交友會員、4 社群會員、6 特約作者、1／3 未啟用、負數停權），新版匯入時照狀態處理
@@ -19,7 +21,7 @@
 
 declare(strict_types=1);
 
-$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::', 'since::'], $rest);
+$opts = getopt('', ['cnf:', 'out:', 'web::', 'r2::', 'all', 'status::', 'db::', 'since::', 'id-min::', 'id-max::', 'min-free-gb::'], $rest);
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
 $ids = array_slice($argv, $rest);
 $all = isset($opts['all']);
@@ -47,6 +49,17 @@ foreach ($ids as $id) {
     }
 }
 $ids = array_values(array_unique(array_map('intval', $ids)));
+$idMin = $idMax = null;
+foreach (['id-min' => 'idMin', 'id-max' => 'idMax'] as $o => $var) {
+    if (isset($opts[$o]) && $opts[$o] !== false && $opts[$o] !== '') {
+        if (! $all || ! preg_match('/^\d{7}$/', (string) $opts[$o])) {
+            fwrite(STDERR, "--{$o} 只能跟 --all 一起用，而且要是 7 位數字\n");
+            exit(2);
+        }
+        $$var = (int) $opts[$o];
+    }
+}
+$minFreeGb = isset($opts['min-free-gb']) && is_numeric($opts['min-free-gb']) ? (float) $opts['min-free-gb'] : 3.0;
 $web = rtrim($opts['web'] ?? '/home/loveuno', '/');
 $r2 = rtrim($opts['r2'] ?? '', '/'); // 舊站 R2_PUBLIC_URL；照片 is_r2=1 時用
 
@@ -62,11 +75,24 @@ $pdo = new PDO("mysql:host={$host};dbname={$db};charset=utf8mb4", $c['user'], $c
 unset($c, $cnf);
 
 if ($all) {
-    $sql = 'SELECT id FROM basic' . ($statuses ? ' WHERE status IN (' . implode(',', array_fill(0, count($statuses), '?')) . ')' : '') . ' ORDER BY id';
-    $st = $pdo->prepare($sql);
-    $st->execute($statuses ?? []);
+    $where = [];
+    $bind = [];
+    if ($statuses) {
+        $where[] = 'status IN (' . implode(',', array_fill(0, count($statuses), '?')) . ')';
+        $bind = $statuses;
+    }
+    if ($idMin !== null) {
+        $where[] = 'id >= ?';
+        $bind[] = $idMin;
+    }
+    if ($idMax !== null) {
+        $where[] = 'id <= ?';
+        $bind[] = $idMax;
+    }
+    $st = $pdo->prepare('SELECT id FROM basic' . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY id');
+    $st->execute($bind);
     $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
-    fprintf(STDERR, "整批：%d 位\n", count($ids));
+    fprintf(STDERR, "整批：%d 位%s\n", count($ids), ($idMin ?? $idMax) !== null ? "（編號 " . ($idMin ?? '…') . '～' . ($idMax ?? '…') . '）' : '');
 } elseif ($since !== null) {
     $st = $pdo->prepare('SELECT id FROM basic WHERE modify_date >= ? ORDER BY id');
     $st->execute([$since]);
@@ -128,6 +154,7 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
             }
             if ($bytes !== false && @getimagesizefromstring($bytes)) {
                 $photo = "photos/{$id}.img";
+                ensure_free_space($out, $minFreeGb);
                 file_put_contents("{$out}/{$photo}", $bytes);
                 chmod("{$out}/{$photo}", 0600);
             }
@@ -170,4 +197,14 @@ $found = array_column($members, 'legacy_id');
 printf("匯出 %d 位%s；有主照 %d 位\n", count($found), $all || $since !== null ? '' : '：' . implode(', ', $found), count(array_filter(array_column($members, 'photo'))));
 if ($missing = array_diff($ids, $found)) {
     printf("找不到：%s\n", implode(', ', $missing));
+}
+
+// 硬碟守門（11/22：全站照片約 30 GB、vm10 只剩 6 GB）：寫照片前剩餘空間低於 --min-free-gb（預設 3）就停，不把正式機寫滿
+function ensure_free_space(string $dir, float $minGb): void
+{
+    $free = @disk_free_space($dir);
+    if ($free !== false && $free < $minGb * 1e9) {
+        fprintf(STDERR, "🛑 %s 剩 %.1f GB，低於 %.1f GB，停止匯出（已寫的檔案留著，請先匯入、刪掉再分批跑）\n", $dir, $free / 1e9, $minGb);
+        exit(3);
+    }
 }
