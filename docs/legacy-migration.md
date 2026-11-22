@@ -10,7 +10,7 @@ Asana 1215470856990770。舊站欄位的意思是讀舊站程式推出來的（�
 | 舊站 | 新版 | 怎麼搬 |
 |---|---|---|
 | basic（id、email、password、nickname、status） | users（legacy_id、email、password、name、legacy_status） | 密碼明文在 vm10 上就 bcrypt；status：1／3／5 未啟用（要重新驗證 email）、負數停權（suspended_at，不能登入）、其他（2、4、6、0、9）一般會員——照舊站 member/login.php：只擋 1／3／5 和負數；已經搬過的不再改（--refresh 才重寫） |
-| profile | profiles | 性別、出生年、居住地、教會、職業、自我介紹 |
+| profile | profiles | 性別、出生年、居住地、教會、職業、自我介紹；11/22 起另帶婚姻、子女、信仰、學歷、血型、菸酒、身高體重、語言／興趣／運動、金句、交友條件、戀愛觀問卷、真實姓名、市話、生日月日（只收新版選項裡的值）。舊站有、新版沒有的：個性小問答 q1～q10、交友目的、出生地、星座、LINE → 不搬（熊叔叔 11/22 TG 選甲） |
 | photo（mainshow 2 通過、1 審核中） | profiles.photo_path（大頭照） | 重新轉成 600×600 JPEG、拿掉 EXIF；狀態 pending（要管理員審核） |
 | certification（手機） | users.phone、phone_verified_at | 3 已認證、4 已過期照認證日搬；12 個月到期照新版規則；同一支手機已經在別的帳號就不搬 |
 
