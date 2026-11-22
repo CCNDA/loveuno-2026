@@ -122,7 +122,7 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
     $st->execute($batch);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
-    $ph = $pdo->prepare("SELECT ownerid, filename, is_r2 FROM photo WHERE ownerid IN ({$in}) AND mainshow IN (1, 2) ORDER BY ownerid, mainshow DESC, id");
+    $ph = $pdo->prepare("SELECT ownerid, filename, is_r2, mainshow FROM photo WHERE ownerid IN ({$in}) AND mainshow IN (1, 2) ORDER BY ownerid, mainshow DESC, id");
     $ph->execute($batch);
     $main = [];
     foreach ($ph->fetchAll(PDO::FETCH_ASSOC) as $p) {
@@ -179,6 +179,8 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
             'job' => (string) $r['job'],
             'intro' => $r['intro'],
             'photo' => $photo,
+            // 舊站審核過（mainshow 2）的大頭照，新版直接算通過（熊叔叔 11/22 TG 選甲）；1 是審核中
+            'photo_approved' => $photo !== null && (int) ($main[$id]['mainshow'] ?? 0) === 2,
             // 11/22 起：profile 其他欄位照原值帶出，對照到新版選項在匯入端做（熊叔叔：舊資料都要在、只是改名稱）
             'legacy_profile' => array_intersect_key($r, array_flip(['realname', 'homephone', 'birthday', 'marriage', 'kids', 'religion', 'education',
                 'blood', 'smoke', 'drink', 'height', 'weight', 'language1', 'language2', 'language3', 'hobby1', 'hobby2', 'hobby3',

@@ -121,4 +121,23 @@ class LegacyR2PhotoTest extends TestCase
         $this->assertSame(['legacy:member_photo/image/x/1.jpg'], AlbumPhoto::where('user_id', $u->id)->pluck('path')->all());
         $this->assertSame([], Storage::disk('avatars')->allFiles());
     }
+
+    // 熊叔叔 11/22 TG 選甲「舊站通過的直接通過」
+    public function test_avatar_approved_in_legacy_stays_approved(): void
+    {
+        $row = fn (int $lid, ?bool $approved) => ['legacy_id' => $lid, 'status' => 2, 'email' => "m{$lid}@example.com", 'password_hash' => password_hash('x', PASSWORD_BCRYPT),
+            'nickname' => '舊站會員', 'gender' => '女', 'birth_year' => 1990, 'live_place' => '台北市', 'church' => '', 'church_visible' => false,
+            'job' => '', 'intro' => '', 'photo' => "legacy:member_photo/image/{$lid}.jpg"] + ($approved === null ? [] : ['photo_approved' => $approved]);
+        file_put_contents("{$this->dir}/export.json", json_encode(['members' => [$row(1000911, true), $row(1000912, false), $row(1000913, null)]], JSON_UNESCAPED_UNICODE));
+        $this->artisan('legacy:import-export', ['dir' => $this->dir])->assertSuccessful();
+
+        $st = fn (int $lid) => User::where('legacy_id', $lid)->first()->profile->photo_status;
+        $this->assertSame('approved', $st(1000911), '舊站通過 → 直接通過');
+        $this->assertSame('pending', $st(1000912), '舊站審核中 → 待審');
+        $this->assertSame('pending', $st(1000913), '舊匯出檔沒有這欄 → 待審');
+
+        $viewer = $this->member(1000914);
+        Http::fake(['*' => Http::response($this->png(), 200)]);
+        $this->actingAs($viewer)->get(route('members.show', User::where('legacy_id', 1000911)->first()))->assertOk();
+    }
 }

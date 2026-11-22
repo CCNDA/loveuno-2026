@@ -144,12 +144,14 @@ class ImportLegacyExport extends Command
                 ] + self::legacyProfileFields($m['legacy_profile'] ?? []));
 
                 $photo = (string) ($m['photo'] ?? '');
+                // 舊站審核過的直接通過（熊叔叔 11/22 TG 選甲「舊站通過的直接通過」）；舊匯出檔沒有這欄 → 照舊待審
+                $photoStatus = ($m['photo_approved'] ?? false) === true ? 'approved' : 'pending';
                 if (\App\Support\PhotoStore::isLegacy($photo)) {
                     // 舊站 R2 原檔直接用（熊叔叔 11/22 選甲）：路徑要合規才收
                     $ref = \App\Support\PhotoStore::legacyRef('member_photo/image', substr($photo, strlen('legacy:member_photo/image/')));
                     if ($ref !== null && $ref === $photo && $profile->photo_path !== $ref) {
                         $old = $profile->photo_path;
-                        $profile->forceFill(['photo_path' => $ref, 'photo_status' => 'pending', 'photo_updated_at' => now()])->save();
+                        $profile->forceFill(['photo_path' => $ref, 'photo_status' => $photoStatus, 'photo_updated_at' => now()])->save();
                         \App\Support\PhotoStore::delete($old);
                     }
                 } elseif ($photo !== '' && preg_match('#^photos/\d{7}\.img$#', $photo) && is_file("{$dir}/{$photo}")) {
@@ -158,7 +160,7 @@ class ImportLegacyExport extends Command
                         $old = $profile->photo_path;
                         $path = Str::random(40) . '.jpg';
                         Storage::disk('avatars')->put($path, $jpeg);
-                        $profile->forceFill(['photo_path' => $path, 'photo_status' => 'pending', 'photo_updated_at' => now()])->save();
+                        $profile->forceFill(['photo_path' => $path, 'photo_status' => $photoStatus, 'photo_updated_at' => now()])->save();
                         if ($old && $old !== $path) {
                             \App\Support\PhotoStore::delete($old);
                         }
