@@ -281,10 +281,13 @@ class ImportLegacyExport extends Command
     {
         DB::transaction(function () use ($userId, $coin) {
             DB::table('users')->where('id', $userId)->lockForUpdate()->value('id');
-            DB::table('point_transactions')->updateOrInsert(
-                ['user_id' => $userId, 'type' => 'legacy_carry', 'ref' => 'legacy-coin'],
-                ['amount' => $coin, 'label' => '舊站積點結轉', 'updated_at' => now(), 'created_at' => now()]
-            );
+            $key = ['user_id' => $userId, 'type' => 'legacy_carry', 'ref' => 'legacy-coin'];
+            // 建立時間只在第一次給（小布 11/22 21:43 第 3 項）；之後只改點數
+            if (DB::table('point_transactions')->where($key)->exists()) {
+                DB::table('point_transactions')->where($key)->where('amount', '<>', $coin)->update(['amount' => $coin, 'updated_at' => now()]);
+            } else {
+                DB::table('point_transactions')->insert($key + ['amount' => $coin, 'label' => '舊站積點結轉', 'created_at' => now(), 'updated_at' => now()]);
+            }
             DB::table('users')->where('id', $userId)->update([
                 'points' => (int) DB::table('point_transactions')->where('user_id', $userId)->sum('amount'),
             ]);

@@ -47,7 +47,7 @@ class KeepLegacyIdTest extends TestCase
 
         // 之後新版自己建的帳號接在最大編號後面，不會撞到
         $new = User::factory()->create();
-        $this->assertGreaterThan(1018068, $new->id);
+        $this->assertGreaterThanOrEqual(5000000, $new->id, '新版自己的帳號從 500 萬開始，跟舊站編號拉開（小布 11/22 第 1 項）');
 
         // 再匯一次（用舊站更新）不會改編號
         config(['loveuno.beta_audit' => true]); // --update-from-legacy 要開稽核才能跑（28559e0 的守門）
@@ -81,6 +81,9 @@ class KeepLegacyIdTest extends TestCase
         $this->assertSame(120, (int) $u->points);
         $this->assertSame('舊站積點結轉', \Illuminate\Support\Facades\DB::table('point_transactions')->where('user_id', $u->id)->value('label'));
 
+        $firstCreated = (string) \Illuminate\Support\Facades\DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'legacy_carry')->value('created_at');
+        $this->travel(2)->minutes();
+
         // 新版自己賺的點留著
         \App\Support\Points::award($u, 'daily_login', '2026-11-22', 1, '每日登入');
 
@@ -90,6 +93,9 @@ class KeepLegacyIdTest extends TestCase
         $this->artisan('legacy:import-export', ['dir' => $this->dir, '--update-from-legacy' => true])->assertSuccessful();
         $this->artisan('legacy:import-export', ['dir' => $this->dir, '--update-from-legacy' => true])->assertSuccessful();
         $this->assertSame(91, (int) $u->fresh()->points);
+        $carry = \Illuminate\Support\Facades\DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'legacy_carry')->first();
+        $this->assertSame(90, (int) $carry->amount);
+        $this->assertSame($firstCreated, (string) $carry->created_at, '建立時間不跟著同步改（小布第 3 項）');
         $this->assertSame(1, \Illuminate\Support\Facades\DB::table('point_transactions')->where('user_id', $u->id)->where('type', 'legacy_carry')->count());
     }
 }
