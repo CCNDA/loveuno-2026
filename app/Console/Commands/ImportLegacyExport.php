@@ -32,6 +32,9 @@ class ImportLegacyExport extends Command
 
     protected $description = '匯入在舊站匯出的指定會員（帳號、個人檔案、主照）';
 
+    /** @var int[] 新版編號已被占用、只好用自動編號的舊站會員 */
+    private array $idTaken = [];
+
     public function handle(): int
     {
         // 從舊站匯入：標成 sync → 照樣記 audit、不排回寫（防兩邊來回打轉；11/21 發現原本沒標。Asana 1220564106252789）
@@ -86,6 +89,10 @@ class ImportLegacyExport extends Command
                 if ($this->option('update-from-legacy') && ! $this->option('dry-run') && DB::transaction(fn () => $this->updateFromLegacy($had, $m))) {
                     $updated++;
                 }
+                // 積點每次都照舊站餘額更新結轉那一筆（熊叔叔 11/22「點數也一樣」）
+                if ($this->option('update-from-legacy') && ! $this->option('dry-run') && $had->deleted_at === null && array_key_exists('coin', $m)) {
+                    self::syncLegacyPoints($had->id, (int) $m['coin']);
+                }
 
                 continue;
             }
@@ -105,6 +112,12 @@ class ImportLegacyExport extends Command
                 $user->email = $email;
                 $user->is_demo = false;
                 if (! $user->exists) {
+                    // 會員編號沿用舊站（熊叔叔 11/22 TG「會員編號應該要沿用吧」）：新版的編號已經被別人用掉才退回自動編號，並記下來
+                    if (! User::whereKey($id)->exists()) {
+                        $user->id = $id;
+                    } else {
+                        $this->idTaken[] = $id;
+                    }
                     // 欄位不能空，先放一個佔位的雜湊，下一行換成匯出的雜湊。佔位雜湊整批只算一次：
                     // 原本每位都 Hash::make(亂數)，bcrypt 一位 0.2 秒，演練 1,203 位要 242 秒、2 萬位要一個多小時（10/31 演練發現）
                     $user->password = $placeholder;
@@ -168,6 +181,9 @@ class ImportLegacyExport extends Command
                         $this->warn("{$id} 的照片讀不出來，略過照片");
                     }
                 }
+                if (array_key_exists('coin', $m)) {
+                    self::syncLegacyPoints($user->id, (int) $m['coin']);
+                }
             });
             $done[] = $id;
         }
@@ -177,6 +193,9 @@ class ImportLegacyExport extends Command
             $this->option('update-from-legacy') ? "已經搬過 {$existing} 位（其中 {$updated} 位用舊站的新資料更新）" : "已經搬過、沒動 {$existing} 位"));
         if ($skipped) {
             $this->warn(sprintf('略過 %d 位：%s', count($skipped), implode('；', $skipped)));
+        }
+        if ($this->idTaken) {
+            $this->warn(sprintf('新版編號已經被占用、沒辦法沿用舊站編號的 %d 位：%s', count($this->idTaken), implode(', ', $this->idTaken)));
         }
         if ($phoneSkipped) {
             $this->warn(sprintf('手機已經在別的帳號、沒有搬的 %d 位（要在新版重新認證）：%s', count($phoneSkipped), implode(', ', $phoneSkipped)));
@@ -253,6 +272,23 @@ class ImportLegacyExport extends Command
         } catch (Throwable) {
             return [null, null];
         }
+    }
+
+    // 舊站積點（熊叔叔 11/22 TG「點數也一樣，測試站需要跟舊站資料同步」）：
+    // 舊站的餘額結轉成一筆「舊站積點結轉」（type legacy_carry、ref legacy-coin），每次同步把這一筆改成舊站最新的餘額，
+    // 新版自己的加點／花點照留著；users.points ＝ 全部加總。紀錄 153 萬筆不搬（docs/legacy-migration.md 第一節）
+    public static function syncLegacyPoints(int $userId, int $coin): void
+    {
+        DB::transaction(function () use ($userId, $coin) {
+            DB::table('users')->where('id', $userId)->lockForUpdate()->value('id');
+            DB::table('point_transactions')->updateOrInsert(
+                ['user_id' => $userId, 'type' => 'legacy_carry', 'ref' => 'legacy-coin'],
+                ['amount' => $coin, 'label' => '舊站積點結轉', 'updated_at' => now(), 'created_at' => now()]
+            );
+            DB::table('users')->where('id', $userId)->update([
+                'points' => (int) DB::table('point_transactions')->where('user_id', $userId)->sum('amount'),
+            ]);
+        });
     }
 
     // 舊站 profile 其他欄位 → 新版（熊叔叔 11/22：「直接切換，舊資料都要在」「規則改變很小，只是改變名稱」）

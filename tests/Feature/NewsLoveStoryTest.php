@@ -112,6 +112,19 @@ class NewsLoveStoryTest extends TestCase
         $this->assertSame($he->id, LoveStory::sole()->male_id);
     }
 
+    // 11/22 起新版編號沿用舊站、之後新註冊的也是 7 位數：7 位數的新版編號要找得到本人
+    public function test_seven_digit_new_site_number_works(): void
+    {
+        $he = $this->member('弟兄', '男');
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $he->id)->update(['id' => 1020001]);
+        \Illuminate\Support\Facades\DB::table('profiles')->where('user_id', $he->id)->update(['user_id' => 1020001]);
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        $she = $this->member('姊妹', '女');
+        $this->actingAs($she)->post('/love-stories', ['title' => '新版認識的', 'male_id' => 1020001, 'female_id' => $she->id, 'body' => '感謝主'])->assertRedirect();
+        $this->assertSame(1020001, (int) LoveStory::sole()->male_id);
+    }
+
     // 照片焦點（熊叔叔 2026-11-05「愛的見證照片是否可以判斷臉，而不是被切掉」）
     public function test_admin_sets_photo_focus_and_pages_use_it(): void
     {

@@ -111,7 +111,7 @@ chmod($out, 0700);
 $members = [];
 foreach (array_chunk($ids, 500) as $n => $batch) {
     $in = implode(',', array_fill(0, count($batch), '?'));
-    $st = $pdo->prepare("SELECT b.id, b.status, b.email, b.password, b.nickname, p.sex, p.birthday, p.live_place, p.church, p.church_show, p.job, p.intro,
+    $st = $pdo->prepare("SELECT b.id, b.status, b.email, b.password, b.nickname, b.coin, p.sex, p.birthday, p.live_place, p.church, p.church_show, p.job, p.intro,
                                   p.realname, p.homephone, p.marriage, p.kids, p.religion, p.education, p.blood, p.smoke, p.drink, p.height, p.weight,
                                   p.language1, p.language2, p.language3, p.hobby1, p.hobby2, p.hobby3, p.sports1, p.sports2, p.sports3, p.bible,
                                   p.hope_sex, p.hope_age1, p.hope_age2, p.hope_marriage, p.hope_live_place, p.hope_height1, p.hope_height2,
@@ -179,6 +179,7 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
             'job' => (string) $r['job'],
             'intro' => $r['intro'],
             'photo' => $photo,
+            'coin' => (int) $r['coin'], // 舊站目前積點（熊叔叔 11/22「點數也一樣」）；紀錄不搬，只結轉餘額
             // 舊站審核過（mainshow 2）的大頭照，新版直接算通過（熊叔叔 11/22 TG 選甲）；1 是審核中
             'photo_approved' => $photo !== null && (int) ($main[$id]['mainshow'] ?? 0) === 2,
             // 11/22 起：profile 其他欄位照原值帶出，對照到新版選項在匯入端做（熊叔叔：舊資料都要在、只是改名稱）

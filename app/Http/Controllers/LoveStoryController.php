@@ -100,7 +100,9 @@ class LoveStoryController extends Controller
     // 新版的會員編號，或舊站的會員編號（7 位數，舊站搬來的會員記得的是這個）
     private function memberId(int $n): int
     {
-        if ($n >= 1000000) {
+        // 11/22 起匯入的會員編號＝舊站編號（熊叔叔「會員編號應該要沿用吧」），之後新版自己的編號也會是 7 位數：
+        // 先找新版編號，找不到才當舊站編號（之前匯入、編號沒沿用的會員）
+        if ($n >= 1000000 && ! User::whereKey($n)->exists()) {
             return (int) (User::where('legacy_id', $n)->value('id') ?? 0);
         }
 
