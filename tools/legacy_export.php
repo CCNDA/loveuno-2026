@@ -84,7 +84,13 @@ chmod($out, 0700);
 $members = [];
 foreach (array_chunk($ids, 500) as $n => $batch) {
     $in = implode(',', array_fill(0, count($batch), '?'));
-    $st = $pdo->prepare("SELECT b.id, b.status, b.email, b.password, b.nickname, p.sex, p.birthday, p.live_place, p.church, p.church_show, p.job, p.intro
+    $st = $pdo->prepare("SELECT b.id, b.status, b.email, b.password, b.nickname, p.sex, p.birthday, p.live_place, p.church, p.church_show, p.job, p.intro,
+                                  p.realname, p.homephone, p.marriage, p.kids, p.religion, p.education, p.blood, p.smoke, p.drink, p.height, p.weight,
+                                  p.language1, p.language2, p.language3, p.hobby1, p.hobby2, p.hobby3, p.sports1, p.sports2, p.sports3, p.bible,
+                                  p.hope_sex, p.hope_age1, p.hope_age2, p.hope_marriage, p.hope_live_place, p.hope_height1, p.hope_height2,
+                                  p.hope_weight1, p.hope_weight2, p.hope_religion,
+                                  p.cvcurrent, p.cvpast, p.cvmempartner, p.cvmemtime, p.cvmembreak, p.cvmemreason, p.cvfeelld, p.cvfeelweb,
+                                  p.cvfeelsister, p.cvfeelhomo, p.cvfeelbreak, p.cvhopeway, p.cvnote
                            FROM basic b LEFT JOIN profile p ON p.id = b.id WHERE b.id IN ({$in})");
     $st->execute($batch);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
@@ -140,6 +146,13 @@ foreach (array_chunk($ids, 500) as $n => $batch) {
             'job' => (string) $r['job'],
             'intro' => $r['intro'],
             'photo' => $photo,
+            // 11/22 起：profile 其他欄位照原值帶出，對照到新版選項在匯入端做（熊叔叔：舊資料都要在、只是改名稱）
+            'legacy_profile' => array_intersect_key($r, array_flip(['realname', 'homephone', 'birthday', 'marriage', 'kids', 'religion', 'education',
+                'blood', 'smoke', 'drink', 'height', 'weight', 'language1', 'language2', 'language3', 'hobby1', 'hobby2', 'hobby3',
+                'sports1', 'sports2', 'sports3', 'bible', 'hope_sex', 'hope_age1', 'hope_age2', 'hope_marriage', 'hope_live_place',
+                'hope_height1', 'hope_height2', 'hope_weight1', 'hope_weight2', 'hope_religion',
+                'cvcurrent', 'cvpast', 'cvmempartner', 'cvmemtime', 'cvmembreak', 'cvmemreason', 'cvfeelld', 'cvfeelweb',
+                'cvfeelsister', 'cvfeelhomo', 'cvfeelbreak', 'cvhopeway', 'cvnote'])),
         ] + ($cert === null ? [] : ['phone' => isset($cert[$id]) && in_array((int) $cert[$id]['phone_certification'], [3, 4], true) ? [
             'country_code' => (string) $cert[$id]['phone_country_code'],
             'mobile' => (string) $cert[$id]['phone_mobile'],

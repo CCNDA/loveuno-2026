@@ -141,7 +141,7 @@ class ImportLegacyExport extends Command
                     'church_visible' => (bool) ($m['church_visible'] ?? false),
                     'job' => mb_substr((string) ($m['job'] ?? ''), 0, 20),
                     'intro' => \App\Support\LegacyText::plain($m['intro'] ?? null), // 舊站存 <br>（熊叔叔 11/6）
-                ]);
+                ] + self::legacyProfileFields($m['legacy_profile'] ?? []));
 
                 $photo = (string) ($m['photo'] ?? '');
                 if ($photo !== '' && preg_match('#^photos/\d{7}\.img$#', $photo) && is_file("{$dir}/{$photo}")) {
@@ -212,7 +212,7 @@ class ImportLegacyExport extends Command
                 'church_visible' => (bool) ($m['church_visible'] ?? false),
                 'job' => mb_substr((string) ($m['job'] ?? ''), 0, 20),
                 'intro' => \App\Support\LegacyText::plain($m['intro'] ?? null),
-            ];
+            ] + self::legacyProfileFields($m['legacy_profile'] ?? []);
             foreach ($want as $k => $v) {
                 if (! in_array($k, $mine, true)) {
                     $profile->{$k} = $v;
@@ -243,6 +243,80 @@ class ImportLegacyExport extends Command
         } catch (Throwable) {
             return [null, null];
         }
+    }
+
+    // 舊站 profile 其他欄位 → 新版（熊叔叔 11/22：「直接切換，舊資料都要在」「規則改變很小，只是改變名稱」）
+    // 新版的選項就是照舊站做的（ProfileOptions、LoveHistory 的 key 沿用舊站欄位名），所以多半一對一；
+    // 不在新版選項裡的值不收（留空，會員自己再選）；交友條件的「不拘」／空白＝沒設定；數字超出新版允許範圍的不收。
+    // 沒帶 legacy_profile（11/22 以前的匯出檔）就回空陣列，什麼都不動。
+    public static function legacyProfileFields(array $p): array
+    {
+        if ($p === []) {
+            return [];
+        }
+        $O = \App\Support\ProfileOptions::class;
+        $pick = fn ($v, array $allowed) => in_array(trim((string) $v), $allowed, true) ? trim((string) $v) : null;
+        $num = fn ($v, int $lo, int $hi) => (is_numeric($v) && (int) $v >= $lo && (int) $v <= $hi) ? (int) $v : null;
+        $many = function (array $vals, array $allowed) {
+            $vals = array_map(fn ($v) => str_replace('中文/普通话', '中文/普通話', trim((string) $v)), $vals);
+            return array_values(array_unique(array_filter($vals, fn ($v) => in_array($v, $allowed, true))));
+        };
+        $any = fn ($v) => in_array(trim((string) $v), ['', '不拘'], true) ? null : trim((string) $v);
+        $out = [
+            'real_name' => mb_substr(trim((string) ($p['realname'] ?? '')), 0, 30),
+            'home_phone' => mb_substr(trim((string) ($p['homephone'] ?? '')), 0, 20),
+            'marital' => $pick($p['marriage'] ?? '', array_merge($O::MARITAL, $O::MARITAL_ADMIN)),
+            'children' => $pick($p['kids'] ?? '', $O::CHILDREN),
+            'faith' => $pick($p['religion'] ?? '', $O::FAITH),
+            'education' => $pick($p['education'] ?? '', $O::EDUCATION),
+            'blood_type' => $pick($p['blood'] ?? '', $O::BLOOD),
+            'smoking' => $pick($p['smoke'] ?? '', $O::SMOKING),
+            'drinking' => $pick($p['drink'] ?? '', $O::DRINKING),
+            'height' => $num($p['height'] ?? null, 90, 230),
+            'weight' => $num($p['weight'] ?? null, 30, 200),
+            'languages' => $many([$p['language1'] ?? '', $p['language2'] ?? '', $p['language3'] ?? ''], $O::LANGUAGES),
+            'hobbies' => $many([$p['hobby1'] ?? '', $p['hobby2'] ?? '', $p['hobby3'] ?? ''], $O::HOBBIES),
+            'sports' => $many([$p['sports1'] ?? '', $p['sports2'] ?? '', $p['sports3'] ?? ''], $O::SPORTS),
+            'pref_gender' => $pick($p['hope_sex'] ?? '', ['男', '女']),
+            'pref_place' => ($v = $any($p['hope_live_place'] ?? '')) === null ? null : mb_substr($v, 0, 20),
+            'pref_marital' => $pick($any($p['hope_marriage'] ?? '') ?? '', $O::MARITAL),
+            'pref_faith' => $pick($any($p['hope_religion'] ?? '') ?? '', $O::FAITH),
+        ];
+        // 年齡／身高／體重區間：兩端都在新版範圍內、而且小的在前才收（舊站有 10 歲這種值）
+        foreach ([['age', 18, 99], ['height', 120, 230], ['weight', 30, 200]] as [$k, $lo, $hi]) {
+            $a = $num($p["hope_{$k}1"] ?? null, $lo, $hi);
+            $b = $num($p["hope_{$k}2"] ?? null, $lo, $hi);
+            [$out["pref_{$k}_min"], $out["pref_{$k}_max"]] = ($a !== null && $b !== null && $a > $b) ? [null, null] : [$a, $b];
+        }
+        if (preg_match('/^\d{4}-(\d{2})-(\d{2})/', (string) ($p['birthday'] ?? ''), $d) && (int) $d[1] >= 1 && (int) $d[1] <= 12 && (int) $d[2] >= 1 && (int) $d[2] <= 31) {
+            $out['birth_month'] = (int) $d[1];
+            $out['birth_day'] = (int) $d[2];
+        }
+        $verse = trim(\App\Support\LegacyText::plain($p['bible'] ?? null));
+        if ($verse !== '' && $verse !== '沒有選擇最愛經句') {
+            $out['verse_text'] = mb_substr($verse, 0, 300);
+        }
+        $love = [];
+        foreach (\App\Support\LoveHistory::QUESTIONS as $k => [, $opts]) {
+            if (($v = $pick($p[$k] ?? '', $opts)) !== null) {
+                $love[$k] = $v;
+            }
+        }
+        foreach (\App\Support\LoveHistory::TEXTS as $k => [, $max]) {
+            $v = trim(\App\Support\LegacyText::plain($p[$k] ?? null));
+            if ($v !== '') {
+                $love[$k] = mb_substr($v, 0, $max);
+            }
+        }
+        if ($love !== []) {
+            $out['love_history'] = $love;
+        }
+        // 這些文字欄位資料表是 NOT NULL、預設空字串：沒對到就存空字串
+        foreach (['marital', 'children', 'faith', 'education', 'blood_type', 'smoking', 'drinking', 'pref_gender', 'pref_place', 'pref_marital', 'pref_faith'] as $k) {
+            $out[$k] = $out[$k] ?? '';
+        }
+
+        return $out;
     }
 
     // 舊站 basic.status → active（一般會員）／unverified（還沒啟用）／suspended（停權，或不明的值）
