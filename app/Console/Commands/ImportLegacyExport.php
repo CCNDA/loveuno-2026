@@ -264,7 +264,10 @@ class ImportLegacyExport extends Command
         $any = fn ($v) => in_array(trim((string) $v), ['', '不拘'], true) ? null : trim((string) $v);
         $out = [
             'real_name' => mb_substr(trim((string) ($p['realname'] ?? '')), 0, 30),
-            'home_phone' => mb_substr(trim((string) ($p['homephone'] ?? '')), 0, 20),
+            'home_phone' => (function ($v) {   // 跟 ProfileController 同一個 regex；「分機」、中文字這類不符就留空（小布 11/22）
+                $v = trim(strtr((string) $v, ['（' => '(', '）' => ')', '－' => '-', '＃' => '#', '＋' => '+']));
+                return (mb_strlen($v) <= 20 && preg_match('/^[0-9+\-() #]*$/', $v)) ? $v : '';
+            })($p['homephone'] ?? ''),
             'marital' => $pick($p['marriage'] ?? '', array_merge($O::MARITAL, $O::MARITAL_ADMIN)),
             'children' => $pick($p['kids'] ?? '', $O::CHILDREN),
             'faith' => $pick($p['religion'] ?? '', $O::FAITH),
@@ -272,7 +275,7 @@ class ImportLegacyExport extends Command
             'blood_type' => $pick($p['blood'] ?? '', $O::BLOOD),
             'smoking' => $pick($p['smoke'] ?? '', $O::SMOKING),
             'drinking' => $pick($p['drink'] ?? '', $O::DRINKING),
-            'height' => $num($p['height'] ?? null, 90, 230),
+            'height' => $num($p['height'] ?? null, 120, 230),   // 跟 ProfileController 驗證一致（小布 11/22：90～119 匯進來之後改資料會被擋）
             'weight' => $num($p['weight'] ?? null, 30, 200),
             'languages' => $many([$p['language1'] ?? '', $p['language2'] ?? '', $p['language3'] ?? ''], $O::LANGUAGES),
             'hobbies' => $many([$p['hobby1'] ?? '', $p['hobby2'] ?? '', $p['hobby3'] ?? ''], $O::HOBBIES),
@@ -288,7 +291,7 @@ class ImportLegacyExport extends Command
             $b = $num($p["hope_{$k}2"] ?? null, $lo, $hi);
             [$out["pref_{$k}_min"], $out["pref_{$k}_max"]] = ($a !== null && $b !== null && $a > $b) ? [null, null] : [$a, $b];
         }
-        if (preg_match('/^\d{4}-(\d{2})-(\d{2})/', (string) ($p['birthday'] ?? ''), $d) && (int) $d[1] >= 1 && (int) $d[1] <= 12 && (int) $d[2] >= 1 && (int) $d[2] <= 31) {
+        if (preg_match('/^\d{4}-(\d{2})-(\d{2})/', (string) ($p['birthday'] ?? ''), $d) && checkdate((int) $d[1], (int) $d[2], 2000)) {   // 跟表單一樣（小布 11/22）
             $out['birth_month'] = (int) $d[1];
             $out['birth_day'] = (int) $d[2];
         }

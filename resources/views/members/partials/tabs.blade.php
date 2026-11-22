@@ -34,8 +34,9 @@
 <div class="card profile-section" id="member-intro">
     <div class="profile-section-head"><h2 class="profile-section-title">自我介紹</h2>@if ($isMe ?? false)<a class="section-edit" href="{{ route('profile.intro') }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.3 2.3a1.4 1.4 0 0 1 2 2L5.5 12.1 2.5 13l.9-3 7.9-7.7z" fill="currentColor"/></svg><span class="visually-hidden">編輯自我介紹</span></a>@endif</div>
     {{-- 設計稿 Profile 自我介紹卡：左欄標題、右欄內容一條清單；興趣等用「｜」分隔的文字（不再是膠囊＋小標題，熊叔叔 11/10「排版不舒服」） --}}
-    @php($vt = $p->verse_book !== '' ? ($p->verse_text !== '' ? $p->verse_text : (\App\Support\Bible::verse((string) $p->verse_book, (int) $p->verse_chapter, (int) $p->verse_verse) ?? '')) : '')
-    @if ($p->intro || $p->hope || $p->verse_book !== '' || ! empty($p->hobbies) || ! empty($p->sports) || ! empty($p->languages))
+    {{-- 舊站搬來的金句只有經文文字、沒有書卷（小布 11/22）：沒有書卷時直接用 verse_text --}}
+    @php($vt = $p->verse_book !== '' ? ($p->verse_text !== '' ? $p->verse_text : (\App\Support\Bible::verse((string) $p->verse_book, (int) $p->verse_chapter, (int) $p->verse_verse) ?? '')) : (string) $p->verse_text)
+    @if ($p->intro || $p->hope || $p->verse_book !== '' || $vt !== '' || ! empty($p->hobbies) || ! empty($p->sports) || ! empty($p->languages))
         <dl class="profile-list">
             {{-- is-long：標題超過四個字的，手機上改成標題在上、內容在下（小鹿 11/11） --}}
             @if ($p->intro)<div><dt>簡介</dt><dd class="prose">{!! nl2br(e($p->intro)) !!}</dd></div>@endif
@@ -43,11 +44,11 @@
                 @if (! empty($p->{$key}))<div><dt @class(['is-long' => mb_strlen($label) > 4])>{{ $label }}</dt><dd @class(['is-long' => mb_strlen($label) > 4])>{{ implode('｜', $p->{$key}) }}</dd></div>@endif
             @endforeach
             @if ($p->hope)<div><dt class="is-long">期待認識的人</dt><dd class="prose is-long">{!! nl2br(e($p->hope)) !!}</dd></div>@endif
-            @if ($p->verse_book !== '')
+            @if ($p->verse_book !== '' || $vt !== '')
                 {{-- 舊站搬來的只有書卷章節、沒有經文：當下從經文庫查（熊叔叔 11/6「最愛經句沒有顯示經句內容」） --}}
                 {{-- 書卷章節先組成一個字串：Blade 的 @endif@if 黏在一起時第二個 @if 不會被編譯（11/11 整頁 500） --}}
                 @php($verseRef = trim($p->verse_book . ' ' . $p->verse_chapter . ($p->verse_verse ? ':' . $p->verse_verse : '')))
-                <div><dt class="is-long">最愛的經句</dt><dd class="prose is-long">@if ($vt !== ''){!! nl2br(e($vt)) !!}（{{ $verseRef }}）@else{{ $verseRef }}@endif</dd></div>
+                <div><dt class="is-long">最愛的經句</dt><dd class="prose is-long">@if ($vt !== ''){!! nl2br(e($vt)) !!} @if ($verseRef !== '')（{{ $verseRef }}）@endif @else{{ $verseRef }}@endif</dd></div>
             @endif
         </dl>
     @endif

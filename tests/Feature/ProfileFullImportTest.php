@@ -110,4 +110,36 @@ class ProfileFullImportTest extends TestCase
         $this->assertSame('基督徒', $p->faith);
         $this->assertSame('單身中，尋找有緣人', $p->love_history['cvcurrent']);
     }
+
+    // 小布 11/22 審查：匯進來的值要過得了新版表單驗證（不然會員之後改資料會被擋），只有文字的金句也要看得到
+    public function test_imported_values_pass_profile_form_validation_and_verse_shows(): void
+    {
+        $this->export(1000804, $this->legacyProfile(['height' => '100', 'homephone' => '02-1234567 分機12', 'birthday' => '1990-02-30',
+            'bible' => '當將你的事交託耶和華']));
+        $this->artisan('legacy:import-export', ['dir' => $this->dir])->assertSuccessful();
+        $u = User::where('legacy_id', 1000804)->first();
+        $p = $u->profile;
+        $this->assertNull($p->height, '100 低於表單下限 120');
+        $this->assertSame('', $p->home_phone, '含「分機」不符表單 regex');
+        $this->assertNull($p->birth_month, '2 月 30 日 checkdate 不過');
+
+        // 用 ProfileController 自己的規則驗一次「會員原樣送出目前的資料」
+        $ctl = new \App\Http\Controllers\ProfileController;
+        $data = ['name' => $u->name];
+        foreach (array_keys((new \ReflectionClassConstant($ctl, 'PROFILE_FIELDS'))->getValue()) as $k) {
+            $v = $p->{$k};
+            if ($v !== null && $v !== '' && $v !== []) {
+                $data[$k] = $v;
+            }
+        }
+        $req = \Illuminate\Http\Request::create('/me', 'PUT', $data);
+        $req->setUserResolver(fn () => $u);
+        $m = new \ReflectionMethod($ctl, 'profileRules');
+        $m->setAccessible(true);
+        [$rules] = $m->invoke($ctl, $req);
+        $v = \Illuminate\Support\Facades\Validator::make($data, $rules);
+        $this->assertFalse($v->fails(), '匯入後原樣送出不能被擋：' . json_encode($v->errors()->toArray(), JSON_UNESCAPED_UNICODE));
+
+        $this->actingAs($u)->get(route('members.show', $u))->assertOk()->assertSee('當將你的事交託耶和華');
+    }
 }
