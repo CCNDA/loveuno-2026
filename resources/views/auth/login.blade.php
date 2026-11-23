@@ -21,6 +21,8 @@
             </nav>
         @endif
 
+        {{-- 瀏覽器關掉 cookie 就先提醒（Asana 1220224661011603，熊叔叔 11/5 選 C1；跟舊站 v1.3.5 同一句） --}}
+        <div class="error-summary" id="cookie-warn" role="alert" hidden>您的瀏覽器沒有開啟 cookie，所以登入狀態留不住。請到瀏覽器設定允許 cookie（不要用無痕分頁），再重新登入。</div>
         <form method="POST" action="{{ route('login.store') }}" novalidate>
             @csrf
 
@@ -68,4 +70,5 @@
     <p class="auth-serve">網站服務由 中華基督教網路發展協會 提供<br><span lang="en">Serve by Chinese Christian Network Development Association</span></p>
 </div>
 <script src="{{ asset('js/password-show.js') }}?v={{ $appVersion }}" defer></script>
+<script src="{{ asset('js/cookie-check.js') }}?v={{ $appVersion }}" defer></script>
 @endsection
