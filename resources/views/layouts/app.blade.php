@@ -33,7 +33,8 @@
     @auth @php($unreadNotes = \App\Models\Note::unreadCountFor(auth()->user())) @endauth
     <a class="skip-link" href="#main">跳到主要內容</a>
 
-    <p class="demo-banner" role="note">這是新版愛諾園的<strong>展示版</strong>，裡面的會員與日記都是示範資料。</p>
+    {{-- 公測橫幅（熊叔叔 11/23 10:0x TG 選甲；全站匯入後資料是真的，不能再說示範資料） --}}
+    <p class="demo-banner" role="note">這是新版愛諾園的<strong>公測站</strong>，資料跟舊站同步。有問題請按『<a href="{{ route('feedback.create', ['from' => request()->getRequestUri()]) }}" target="_blank" rel="noopener">回報問題<span class="visually-hidden">（開新分頁）</span></a>』告訴我們。</p>
 
     @sectionMissing('bare')
     <header class="site-header">
