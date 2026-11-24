@@ -343,6 +343,10 @@ class ImportLegacyExport extends Command
             $a = $num($p["hope_{$k}1"] ?? null, $lo, $hi);
             $b = $num($p["hope_{$k}2"] ?? null, $lo, $hi);
             [$out["pref_{$k}_min"], $out["pref_{$k}_max"]] = ($a !== null && $b !== null && $a > $b) ? [null, null] : [$a, $b];
+            // 剛好是舊站表單的上下限＝那一端不限 → 空白（跟回寫對稱；小布 11/24 審查 c）
+            [$oldLo, $oldHi] = \App\Console\Commands\PushLegacyOutbox::HOPE_RANGE[$k];
+            if ($out["pref_{$k}_min"] === $oldLo) $out["pref_{$k}_min"] = null;
+            if ($out["pref_{$k}_max"] === $oldHi) $out["pref_{$k}_max"] = null;
         }
         if (preg_match('/^\d{4}-(\d{2})-(\d{2})/', (string) ($p['birthday'] ?? ''), $d) && checkdate((int) $d[1], (int) $d[2], 2000)) {   // 跟表單一樣（小布 11/22）
             $out['birth_month'] = (int) $d[1];

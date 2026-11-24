@@ -93,6 +93,15 @@ class ProfileFullImportTest extends TestCase
         $this->assertNull($p->birth_month);
     }
 
+    // 小布 11/24 審查 c：舊站表單上下限＝不限 → 空白（跟回寫對稱）
+    public function test_range_at_old_form_bounds_means_no_limit(): void
+    {
+        $this->export(1000804, $this->legacyProfile(['hope_age1' => '18', 'hope_age2' => '99', 'hope_height1' => '160', 'hope_height2' => '220', 'hope_weight1' => '30', 'hope_weight2' => '200']));
+        $this->artisan('legacy:import-export', ['dir' => $this->dir])->assertSuccessful();
+        $p = User::where('legacy_id', 1000804)->first()->profile;
+        $this->assertSame([null, null, 160, null, null, null], [$p->pref_age_min, $p->pref_age_max, $p->pref_height_min === null ? null : (int) $p->pref_height_min, $p->pref_height_max, $p->pref_weight_min, $p->pref_weight_max]);
+    }
+
     public function test_update_from_legacy_fills_fields_for_already_migrated(): void
     {
         config(['loveuno.beta_audit' => true]);

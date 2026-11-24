@@ -19,7 +19,8 @@ use Throwable;
 // - 生日不回寫：新版只有出生年，寫回去會蓋掉舊站的月日
 // - 交友條件（熊叔叔 11/24「交友條件也要寫回」）→ profile.hope_*，只在這次真的改了（payload._changed）才寫，
 //   舊的 outbox 沒有 _changed 就不寫。文字欄空白 → 「不拘」（舊站表單的選項）；
-//   年齡／身高／體重兩端都空 → 0、0（舊站「沒填」，匯入時會再變回空白，兩邊不會來回打轉）；只填一端 → 另一端用舊站表單的上下限
+//   年齡／身高／體重空白的那一端 → 舊站表單的上下限（舊站配對是 hope_age1 <= 對方年齡 <= hope_age2，上下限＝不限；
+//   原本兩端都空寫 0、0，在舊站等於誰都配不到，小布 11/24 審查 c）。匯入時剛好等於上下限的那一端再變回空白（對稱，不來回打轉）
 // - 照順序：同一筆（model＋record_id）前面還有沒送成功的（pending／failed），後面的這一輪先不送，
 //   不然下一輪重送舊的那筆會把新內容蓋回去（小布 11/21 審查 🟠3）；failed 的要人處理後才會放行
 // - 日記新增重送時先找舊站有沒有一模一樣的一篇（上次 insert 成功、存回編號之前出錯），有就沿用（🟠4）
@@ -36,8 +37,8 @@ class PushLegacyOutbox extends Command
         return preg_replace('/[\x{10000}-\x{10FFFF}]/u', '□', (string) $s);
     }
 
-    // 舊站表單的範圍（member/profile2.php：年齡 18～99、身高 90～220、體重 30～200）
-    private const HOPE_RANGE = ['age' => [18, 99], 'height' => [90, 220], 'weight' => [30, 200]];
+    // 舊站表單的範圍（member/profile2.php：年齡 18～99、身高 90～220、體重 30～200）；ImportLegacyExport 也用
+    public const HOPE_RANGE = ['age' => [18, 99], 'height' => [90, 220], 'weight' => [30, 200]];
 
     // 新版交友條件 → 舊站 profile.hope_*；只回傳這次有改的那幾組
     public static function hopeFields(array $p): array
@@ -59,7 +60,7 @@ class PushLegacyOutbox extends Command
             }
             $a = is_numeric($p["pref_{$k}_min"] ?? null) ? (int) $p["pref_{$k}_min"] : null;
             $b = is_numeric($p["pref_{$k}_max"] ?? null) ? (int) $p["pref_{$k}_max"] : null;
-            [$set["hope_{$k}1"], $set["hope_{$k}2"]] = ($a === null && $b === null) ? [0, 0] : [$a ?? $lo, $b ?? $hi];
+            [$set["hope_{$k}1"], $set["hope_{$k}2"]] = [$a ?? $lo, $b ?? $hi];
         }
 
         return $set;

@@ -95,7 +95,7 @@ class PushLegacyOutboxTest extends TestCase
         $this->push();
         $p = DB::connection('legacy')->table('profile')->where('id', 1000511)->first();
         $this->assertSame(['男', '未婚', '慕道友', '台中市'], [$p->hope_sex, $p->hope_marriage, $p->hope_religion, $p->hope_live_place], '性別沒改（本來就是空白）不寫');
-        $this->assertSame([28, 35, 160, 220, 0, 0], array_map('intval', [$p->hope_age1, $p->hope_age2, $p->hope_height1, $p->hope_height2, $p->hope_weight1, $p->hope_weight2]));
+        $this->assertSame([28, 35, 160, 220, 0, 0], array_map('intval', [$p->hope_age1, $p->hope_age2, $p->hope_height1, $p->hope_height2, $p->hope_weight1, $p->hope_weight2]), '身高只填下限 → 上限用舊站 220；體重沒改（本來就空白）不寫');
         $this->assertSame(0, DB::table('legacy_outbox')->where('status', '!=', 'sent')->whereNot('status', 'skipped')->count());
 
         // 性別改成女，再改回不拘（空白）
@@ -113,7 +113,7 @@ class PushLegacyOutboxTest extends TestCase
         $this->assertSame([], $f(['pref_gender' => '女']), '舊的 outbox 沒有 _changed：不寫');
         $this->assertSame(['hope_sex' => '女'], $f(['pref_gender' => '女', '_changed' => ['pref_gender']]));
         $this->assertSame(['hope_weight1' => 30, 'hope_weight2' => 60], $f(['pref_weight_max' => 60, '_changed' => ['pref_weight_max']]));
-        $this->assertSame(['hope_age1' => 0, 'hope_age2' => 0], $f(['pref_age_min' => null, 'pref_age_max' => null, '_changed' => ['pref_age_min']]));
+        $this->assertSame(['hope_age1' => 18, 'hope_age2' => 99], $f(['pref_age_min' => null, 'pref_age_max' => null, '_changed' => ['pref_age_min']]), '兩端都空＝不限 → 舊站上下限（0、0 在舊站誰都配不到）');
         $this->assertSame(['hope_live_place' => '□台北'], $f(['pref_place' => '😀台北', '_changed' => ['pref_place']]));
     }
 
