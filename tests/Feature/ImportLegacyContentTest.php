@@ -194,10 +194,11 @@ class ImportLegacyContentTest extends TestCase
             ['legacy_id' => 503, 'item' => 4, 'from' => 1000003, 'to' => 1000001, 'message' => '嗨', 'on' => '2019-06-01', 'at' => '2019-06-01 11:00:00', 'open' => false, 'open_at' => null],
             ['legacy_id' => 504, 'item' => 25, 'from' => 1000003, 'to' => 1000002, 'message' => '', 'on' => '2019-06-01', 'at' => null, 'open' => false, 'open_at' => null],
             ['legacy_id' => 505, 'item' => 3, 'from' => 1999999, 'to' => 1000002, 'message' => '', 'on' => '2019-06-01', 'at' => null, 'open' => false, 'open_at' => null],
+            ['legacy_id' => 506, 'item' => 5, 'from' => 1000003, 'to' => 1000001, 'message' => '又一份', 'on' => '2019-06-01', 'at' => '2019-06-01 12:00:00', 'open' => false, 'open_at' => null], // 同一天重複
         ]);
         $this->artisan('legacy:import-content', ['dir' => $this->dir])
             ->expectsOutputToContain('aman：匯入 2、已經有 0、略過 6')
-            ->expectsOutputToContain('gift：匯入 3、已經有 0、略過 2')
+            ->expectsOutputToContain('gift：匯入 3、已經有 0、略過 3（禮物編號不對 1、有一方沒搬進來 1、舊站同一天重複 1）')
             ->assertSuccessful();
 
         $pairs = DB::table('diary_prayers')->orderBy('diary_id')->get(['diary_id', 'user_id'])->map(fn ($p) => [$p->diary_id, $p->user_id])->all();

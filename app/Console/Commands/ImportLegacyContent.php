@@ -575,6 +575,7 @@ class ImportLegacyContent extends Command
         $max = 2 * count(\App\Models\Gift::ITEMS);
         $batch = [];
         $opened = [];
+        $sameDay = []; // 新版一人一天只能送同一人一份（唯一索引）：舊站同一天重複的先在這裡擋、另外計數（小布 11/24 審查 c）
         foreach ($this->rows("{$dir}/gift.jsonl") as $r) {
             $id = (int) $r['legacy_id'];
             if (isset($have[$id])) {
@@ -594,6 +595,13 @@ class ImportLegacyContent extends Command
 
                 continue;
             }
+            $day = "{$from}-{$to}-" . $on->toDateString();
+            if (isset($sameDay[$day])) {
+                $this->skip('gift', '舊站同一天重複');
+
+                continue;
+            }
+            $sameDay[$day] = true;
             $at = $this->time($r['at'] ?? null) ?? $on;
             $batch[] = [
                 'legacy_id' => $id, 'sender_id' => $from, 'recipient_id' => $to, 'item' => self::giftItem($old),
@@ -622,6 +630,7 @@ class ImportLegacyContent extends Command
     }
 
     // 有唯一索引擋著的批次：撞到的（同時有人在新版按了／送了）略過，算進 $why
+    // --dry-run 不寫資料庫、整批算成可以匯入，所以正式跑的「匯入」可能比試跑少（小布 11/24 審查 c）
     private function flushIgnore(string $kind, string $table, array &$batch, string $why = '新版剛好也有'): void
     {
         if (! $batch) {
