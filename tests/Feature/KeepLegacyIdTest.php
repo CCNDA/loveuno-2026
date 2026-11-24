@@ -34,7 +34,7 @@ class KeepLegacyIdTest extends TestCase
         file_put_contents("{$this->dir}/export.json", json_encode(['members' => array_map(fn ($lid) => [
             'legacy_id' => $lid, 'status' => 2, 'email' => "m{$lid}@example.com", 'password_hash' => password_hash('x', PASSWORD_BCRYPT),
             'nickname' => '舊站會員', 'gender' => '女', 'birth_year' => 1990, 'live_place' => '台北市', 'church' => '', 'church_visible' => false,
-            'job' => '', 'intro' => '', 'photo' => null], $ids)], JSON_UNESCAPED_UNICODE));
+            'job' => '', 'intro' => '', 'photo' => null, 'join_date' => '2014-02-18 13:50:32'], $ids)], JSON_UNESCAPED_UNICODE));
     }
 
     public function test_imported_member_keeps_legacy_number(): void
@@ -44,6 +44,7 @@ class KeepLegacyIdTest extends TestCase
         $this->assertSame(1000014, (int) User::where('legacy_id', 1000014)->value('id'));
         $this->assertSame(1018068, (int) User::where('legacy_id', 1018068)->value('id'));
         $this->assertSame(1000014, (int) User::find(1000014)->profile->user_id, '個人資料接在同一個編號');
+        $this->assertSame('2014-02-18 13:50:32', User::find(1000014)->created_at->format('Y-m-d H:i:s'), '註冊日期沿用舊站（熊叔叔 11/24 甲）');
 
         // 之後新版自己建的帳號接在最大編號後面，不會撞到
         $new = User::factory()->create();

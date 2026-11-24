@@ -66,6 +66,7 @@ else
   log "full：好友對帳"
   run "匯出好友" php "$APP/tools/legacy_export_content.php" --cnf="$cnf" --db="$OLDDB" --out="$out/con" --web="$OLDWEB" --kind=friend
   run "好友對帳" bash -c "cd '$APP' && php artisan legacy:import-content '$out/con' --update-from-legacy"
+  run "註冊日期、認證" bash -c "cd '$APP' && php artisan legacy:backfill-extras"   # 熊叔叔 11/24 甲：舊站新通過的認證每天補上
 fi
 
 # 回寫：新版 → 舊站。出錯的那筆會自己重試（5 次後 failed）

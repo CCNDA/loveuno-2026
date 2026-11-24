@@ -112,6 +112,10 @@ class ImportLegacyExport extends Command
                 $user->email = $email;
                 $user->is_demo = false;
                 if (! $user->exists) {
+                    // 註冊日期沿用舊站（熊叔叔 11/24 TG 甲；舊站是台北時間字串，新版 app.timezone 也是台北）
+                    if (preg_match('/^(199\d|20\d\d)-\d\d-\d\d \d\d:\d\d:\d\d$/', (string) ($m['join_date'] ?? ''))) {
+                        $user->created_at = $m['join_date'];
+                    }
                     // 會員編號沿用舊站（熊叔叔 11/22 TG「會員編號應該要沿用吧」）：新版的編號已經被別人用掉才退回自動編號，並記下來
                     if (! User::whereKey($id)->exists()) {
                         $user->id = $id;
