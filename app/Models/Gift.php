@@ -66,7 +66,10 @@ class Gift extends Model
 
     public static function unopenedCountFor(User $user): int
     {
+        // 熊叔叔 11/24 TG 甲「照樣沒拆、不算進鈴鐺」：舊站搬來、送出超過 14 天的禮物，禮物頁照樣是沒拆，
+        // 但不算進鈴鐺、首頁、推播的數字（跟通知列表只看 14 天一致；舊站 29 萬多份沒打開，不然數字會一次跳幾百）
         return self::where('recipient_id', $user->id)->whereNull('opened_at')->whereNull('recipient_deleted_at')
+            ->where(fn ($q) => $q->whereNull('legacy_id')->orWhere('created_at', '>=', now()->subDays(\App\Support\Notifications::DAYS)))
             ->whereNotIn('sender_id', $user->blockRelatedIds())->count();
     }
 }

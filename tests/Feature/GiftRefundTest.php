@@ -31,6 +31,20 @@ class GiftRefundTest extends TestCase
         return $g;
     }
 
+    // 熊叔叔 11/24 甲：舊站搬來、超過 14 天沒拆的不算進鈴鐺；新版的、舊站 14 天內的照算
+    public function test_old_unopened_legacy_gifts_do_not_count_in_badge(): void
+    {
+        $me = $this->member('收禮的人');
+        $old = $this->gift($this->member('舊站老朋友'), $me);
+        $old->forceFill(['legacy_id' => 901, 'created_at' => now()->subDays(400)])->save();
+        $recentLegacy = $this->gift($this->member('舊站新朋友'), $me);
+        $recentLegacy->forceFill(['legacy_id' => 902, 'created_at' => now()->subDays(3)])->save();
+        $this->gift($this->member('新版朋友'), $me);
+
+        $this->assertSame(2, Gift::unopenedCountFor($me));
+        $this->assertNull($old->fresh()->opened_at); // 禮物頁照樣是沒拆
+    }
+
     // 舊站搬來的禮物：點數在舊站扣過，刪除不退（熊叔叔 11/24 搬禮物）
     public function test_deleting_a_gift_moved_from_old_site_does_not_refund(): void
     {
