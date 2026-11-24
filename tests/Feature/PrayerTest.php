@@ -68,6 +68,20 @@ class PrayerTest extends TestCase
         $this->assertSame(1, DB::table('diary_prayers')->count());
     }
 
+    // 熊叔叔 11/24 甲「心情日記也加回阿們」：心情日記按鈕是「阿們」；取消要留紀錄，每天搬阿們才不會加回來
+    public function test_mood_diary_amen_and_undo_is_recorded(): void
+    {
+        config(['loveuno.beta_audit' => true]);
+        $d = $this->diary($this->member('作者'), ['is_prayer' => false]);
+        $v = $this->member('讀者');
+        $this->actingAs($v)->get('/')->assertSee('阿們');
+        $this->actingAs($v)->post("/diaries/{$d->id}/pray")->assertSessionHas('status', '阿們！謝謝您的回應。');
+        $this->assertSame(1, DB::table('diary_prayers')->count());
+        $this->actingAs($v)->post("/diaries/{$d->id}/pray")->assertSessionHas('status', '已經取消阿們。');
+        $this->assertSame(0, DB::table('diary_prayers')->count());
+        $this->assertTrue(DB::table('beta_audits')->where('table_name', 'diary_prayers')->where('action', 'deleted')->where('actor', 'user:' . $v->id)->exists());
+    }
+
     public function test_comment_then_list_and_delete_rules(): void
     {
         $author = $this->member('作者');

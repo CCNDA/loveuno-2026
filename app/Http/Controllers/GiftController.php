@@ -38,7 +38,8 @@ class GiftController extends Controller
             // 回禮過＝我送過禮物給他，或已經是朋友；這兩種都不退
             $returned = $me->friendLevelWith($g->sender ?? $me) >= 1
                 || Gift::where('sender_id', $me->id)->where('recipient_id', $g->sender_id)->exists();
-            if (! $g->sender || $returned) {
+            // 舊站搬來的（legacy_id 有值）點數是在舊站扣的，新版不退（不然刪舊禮物就能憑空拿點數）
+            if (! $g->sender || $returned || $g->legacy_id !== null) {
                 continue;
             }
             $amount = Points::COSTS['gift'][0];

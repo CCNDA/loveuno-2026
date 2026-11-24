@@ -16,15 +16,17 @@ use Symfony\Component\HttpFoundation\Response;
 // 看不到的日記（不公開、或有封鎖關係）一律 404，跟日記內頁一樣。
 class DiaryInteractionController extends Controller
 {
-    // 按一次是「為你禱告」，再按一次取消
+    // 按一次是「為你禱告」（代禱事項）／「阿們」（心情日記），再按一次取消
+    // 熊叔叔 2026-11-24 TG 甲「心情日記也加回阿們，全部搬」：心情日記也能按（11/5 原本只有代禱事項）
     public function pray(Request $request, Diary $diary): RedirectResponse
     {
         $this->authorizeReach($request, $diary);
-        // 熊叔叔 2026-11-05：心情日記跟代禱事項分開，「為你禱告」只在代禱事項上（舊站心情日記也只有回應）
-        abort_unless($diary->is_prayer, 404);
         $me = $request->user();
 
-        $deleted = DiaryPrayer::where('diary_id', $diary->id)->where('user_id', $me->id)->delete();
+        // 用 model 刪：公測時留下「會員取消」的紀錄，每天從舊站搬阿們才不會又加回來
+        $mine = DiaryPrayer::where('diary_id', $diary->id)->where('user_id', $me->id)->first();
+        $mine?->delete();
+        $deleted = $mine !== null;
         if (! $deleted) {
             try {
                 DiaryPrayer::create(['diary_id' => $diary->id, 'user_id' => $me->id]);
@@ -33,7 +35,11 @@ class DiaryInteractionController extends Controller
             }
         }
 
-        return $this->backToDiary($request, $diary, $deleted ? '已經取消禱告。' : '謝謝您為這篇日記禱告。');
+        $msg = $diary->is_prayer
+            ? ($deleted ? '已經取消禱告。' : '謝謝您為這篇日記禱告。')
+            : ($deleted ? '已經取消阿們。' : '阿們！謝謝您的回應。');
+
+        return $this->backToDiary($request, $diary, $msg);
     }
 
     public function comment(Request $request, Diary $diary): RedirectResponse

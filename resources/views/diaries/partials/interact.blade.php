@@ -2,7 +2,7 @@
      $d 要先用 Diary::withInteractions() 查（prayers_count、comments_count、prayed_by_me）。
      $from：wall／list／show，按完回到哪一頁；$page：列表第幾頁。 --}}
 <div class="diary-actions">
-    @if ($d->is_prayer)
+    {{-- 代禱事項是「為你禱告」、心情日記是「阿們」（熊叔叔 11/24 甲：心情日記也加回阿們） --}}
     <form method="POST" action="{{ route('diaries.pray', $d) }}">
         @csrf
         <input type="hidden" name="from" value="{{ $from }}">
@@ -10,11 +10,10 @@
         @if (($page ?? 1) > 1)<input type="hidden" name="page" value="{{ $page }}">@endif
         <button type="submit" class="action-button{{ $d->prayed_by_me ? ' is-on' : '' }}" aria-pressed="{{ $d->prayed_by_me ? 'true' : 'false' }}">
             <img src="{{ asset('images/brand/pray.svg') }}" alt="" width="24" height="24">
-            <span>為你禱告</span>
-            <span class="action-count">{{ $d->prayers_count }}<span class="visually-hidden"> 人禱告</span></span>
+            <span>{{ $d->is_prayer ? '為你禱告' : '阿們' }}</span>
+            <span class="action-count">{{ $d->prayers_count }}<span class="visually-hidden">{{ $d->is_prayer ? ' 人禱告' : ' 人說阿們' }}</span></span>
         </button>
     </form>
-    @endif
     <a class="action-button" href="{{ route('diaries.show', $d) }}#comments-title">
         <img src="{{ asset('images/brand/comment.svg') }}" alt="" width="24" height="24">
         <span>留言</span>

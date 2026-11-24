@@ -32,6 +32,7 @@ class Gift extends Model
     protected function casts(): array
     {
         return [
+            'legacy_id' => 'integer',
             'sender_id' => 'integer',
             'recipient_id' => 'integer',
             'item' => 'integer',

@@ -160,6 +160,73 @@ class ImportLegacyContentTest extends TestCase
         $this->get('/love-stories/' . $story->id)->assertOk()->assertSee('感謝主');
     }
 
+    // 熊叔叔 11/24：阿們全部搬（心情日記也有）、禮物二換一
+    public function test_imports_amens_and_gifts(): void
+    {
+        $a = User::factory()->create(['legacy_id' => 1000001]);
+        $b = User::factory()->create(['legacy_id' => 1000002]);
+        $c = User::factory()->create(['legacy_id' => 1000003]);
+        $this->jsonl('diary', [['legacy_id' => 11, 'owner' => 1000001, 'title' => '心情', 'body' => '今天很好', 'date' => '2019-05-01', 'status' => 0, 'image' => null]]);
+        $this->jsonl('pray', [['legacy_id' => 21, 'owner' => 1000002, 'status' => 0, 'title' => '請代禱', 'body' => '面試', 'at' => '2020-01-02 09:00:00']]);
+        $this->artisan('legacy:import-content', ['dir' => $this->dir])->assertSuccessful();
+        $mood = Diary::where('legacy_source', 'diary')->where('legacy_id', 11)->sole();
+        $pray = Diary::where('legacy_source', 'pray')->where('legacy_id', 21)->sole();
+        // C 在新版取消過這篇的阿們（公測紀錄）→ 不再加回來
+        config(['loveuno.beta_audit' => true]);
+        DB::table('beta_audits')->insert(['actor' => 'user:' . $c->id, 'table_name' => 'diary_prayers', 'record_id' => '9', 'action' => 'deleted',
+            'before' => json_encode(['diary_id' => $mood->id, 'user_id' => $c->id]), 'after' => null, 'created_at' => now()]);
+        @unlink("{$this->dir}/diary.jsonl");
+        @unlink("{$this->dir}/pray.jsonl");
+
+        $this->jsonl('aman', [
+            ['legacy_id' => 1, 'owner' => 1000002, 'type' => 1, 'item' => 11],
+            ['legacy_id' => 2, 'owner' => 1000002, 'type' => 1, 'item' => 11],   // 舊站重複
+            ['legacy_id' => 3, 'owner' => 1000001, 'type' => 7, 'item' => 21],   // 彼此代禱
+            ['legacy_id' => 4, 'owner' => 1000001, 'type' => 1, 'item' => 999],  // 日記沒搬
+            ['legacy_id' => 5, 'owner' => 1999999, 'type' => 1, 'item' => 11],  // 人沒搬
+            ['legacy_id' => 6, 'owner' => 1000002, 'type' => 7, 'item' => 11],  // type 7 的 11 不是日記 11
+            ['legacy_id' => 7, 'owner' => 1000003, 'type' => 1, 'item' => 11],  // 新版取消過
+            ['legacy_id' => 8, 'owner' => 1000003, 'type' => 2, 'item' => 11],  // 投票不搬
+        ]);
+        $this->jsonl('gift', [
+            ['legacy_id' => 501, 'item' => 24, 'from' => 1000001, 'to' => 1000002, 'message' => str_repeat('愛', 45), 'on' => '2019-05-01', 'at' => '2019-05-01 10:00:00', 'open' => true, 'open_at' => '2019-05-02 08:00:00'],
+            ['legacy_id' => 502, 'item' => 1, 'from' => 1000002, 'to' => 1000001, 'message' => '', 'on' => '2019-05-01', 'at' => '2019-05-01 11:00:00', 'open' => false, 'open_at' => null],
+            ['legacy_id' => 503, 'item' => 4, 'from' => 1000003, 'to' => 1000001, 'message' => '嗨', 'on' => '2019-06-01', 'at' => '2019-06-01 11:00:00', 'open' => false, 'open_at' => null],
+            ['legacy_id' => 504, 'item' => 25, 'from' => 1000003, 'to' => 1000002, 'message' => '', 'on' => '2019-06-01', 'at' => null, 'open' => false, 'open_at' => null],
+            ['legacy_id' => 505, 'item' => 3, 'from' => 1999999, 'to' => 1000002, 'message' => '', 'on' => '2019-06-01', 'at' => null, 'open' => false, 'open_at' => null],
+        ]);
+        $this->artisan('legacy:import-content', ['dir' => $this->dir])
+            ->expectsOutputToContain('aman：匯入 2、已經有 0、略過 6')
+            ->expectsOutputToContain('gift：匯入 3、已經有 0、略過 2')
+            ->assertSuccessful();
+
+        $pairs = DB::table('diary_prayers')->orderBy('diary_id')->get(['diary_id', 'user_id'])->map(fn ($p) => [$p->diary_id, $p->user_id])->all();
+        $this->assertSame([[$mood->id, $b->id], [$pray->id, $a->id]], $pairs);
+
+        $g = fn (int $id) => DB::table('gifts')->where('legacy_id', $id)->first();
+        $this->assertSame([12, $a->id, $b->id, '2019-05-01', 45], [(int) $g(501)->item, (int) $g(501)->sender_id, (int) $g(501)->recipient_id, $g(501)->sent_on, mb_strlen($g(501)->message)]);
+        $this->assertSame('2019-05-02 08:00:00', $g(501)->opened_at);
+        $this->assertSame([1, null], [(int) $g(502)->item, $g(502)->opened_at]);
+        $this->assertSame(2, (int) $g(503)->item); // 舊 3、4 → 新 2
+        $this->assertNull($g(504));
+
+        // 再跑一次：不重複；舊站後來打開了 → 標已讀
+        $this->jsonl('gift', [['legacy_id' => 502, 'item' => 1, 'from' => 1000002, 'to' => 1000001, 'message' => '', 'on' => '2019-05-01', 'at' => '2019-05-01 11:00:00', 'open' => true, 'open_at' => '2019-05-03 09:00:00']]);
+        $this->artisan('legacy:import-content', ['dir' => $this->dir])
+            ->expectsOutputToContain('aman：匯入 0、已經有 3')
+            ->expectsOutputToContain('gift：匯入 0、已經有 1、略過 0（沒有）、用舊站更新 1')
+            ->assertSuccessful();
+        $this->assertSame(2, DB::table('diary_prayers')->count());
+        $this->assertSame(3, DB::table('gifts')->count());
+        $this->assertSame('2019-05-03 09:00:00', $g(502)->opened_at);
+    }
+
+    public function test_gift_item_two_to_one(): void
+    {
+        $f = fn (int $o) => \App\Console\Commands\ImportLegacyContent::giftItem($o);
+        $this->assertSame([1, 1, 2, 2, 6, 11, 12, 12], [$f(1), $f(2), $f(3), $f(4), $f(12), $f(22), $f(23), $f(24)]);
+    }
+
     public function test_time_and_activity_conversion(): void
     {
         $t = fn ($s) => \App\Console\Commands\ImportLegacyContent::time24($s);

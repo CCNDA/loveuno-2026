@@ -31,6 +31,21 @@ class GiftRefundTest extends TestCase
         return $g;
     }
 
+    // 舊站搬來的禮物：點數在舊站扣過，刪除不退（熊叔叔 11/24 搬禮物）
+    public function test_deleting_a_gift_moved_from_old_site_does_not_refund(): void
+    {
+        $sender = $this->member('舊站送禮的人', 10);
+        $me = $this->member('收禮的人');
+        $g = $this->gift($sender, $me);
+        $g->forceFill(['legacy_id' => 777])->save();
+
+        $this->actingAs($me)->post('/gifts/delete', ['ids' => [$g->id]])->assertRedirect();
+
+        $this->assertSame(10, (int) $sender->fresh()->points);
+        $this->assertNull($g->fresh()->refunded_at);
+        $this->assertNotNull($g->fresh()->recipient_deleted_at);
+    }
+
     public function test_deleting_an_unreturned_gift_refunds_the_sender_once(): void
     {
         $sender = $this->member('送禮的人', 10);

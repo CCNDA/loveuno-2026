@@ -144,7 +144,8 @@ class WallTest extends TestCase
         $this->actingAs($me)->get('/?scope=friends&kind=prayer')->assertSee('朋友們還沒有代禱事項');
     }
 
-    public function test_pray_button_only_on_prayer_requests(): void
+    // 11/5 原本只有代禱事項能按；熊叔叔 11/24 甲「心情日記也加回阿們」：心情日記是「阿們」、代禱事項是「為你禱告」
+    public function test_pray_button_on_prayer_requests_and_amen_on_mood_diaries(): void
     {
         $me = $this->member('我');
         $other = $this->member('別人');
@@ -153,10 +154,12 @@ class WallTest extends TestCase
 
         $page = $this->actingAs($me)->get('/')->getContent();
         $this->assertStringContainsString(route('diaries.pray', $prayer), $page);
-        $this->assertStringNotContainsString(route('diaries.pray', $diary), $page);
-        $this->actingAs($me)->post(route('diaries.pray', $diary), ['from' => 'wall'])->assertNotFound();
+        $this->assertStringContainsString(route('diaries.pray', $diary), $page);
+        $this->assertStringContainsString('<span>阿們</span>', $page);
+        $this->assertStringContainsString('<span>為你禱告</span>', $page);
+        $this->actingAs($me)->post(route('diaries.pray', $diary), ['from' => 'wall'])->assertRedirect();
         $this->actingAs($me)->post(route('diaries.pray', $prayer), ['from' => 'wall'])->assertRedirect();
-        $this->assertSame(1, $prayer->prayers()->count());
+        $this->assertSame([1, 1], [$diary->prayers()->count(), $prayer->prayers()->count()]);
     }
 
     public function test_only_friends_and_author_can_comment(): void

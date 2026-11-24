@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
-// 匯入 tools/legacy_export_content.php 的輸出（第二階段：日記、日記回覆、代禱、代禱回覆、好友、留言板、相簿、約會、愛的見證）。
+// 匯入 tools/legacy_export_content.php 的輸出（第二階段：日記、日記回覆、代禱、代禱回覆、好友、留言板、相簿、約會、愛的見證、阿們、禮物）。
 // 對照表在 docs/legacy-migration.md；熊叔叔 10/30「3都搬」。Asana 1215470856990770。
 // - 會員要先用 legacy:import-export 搬進來（用 users.legacy_id 對）；作者沒搬進來的那筆略過、印筆數
 // - 舊站 status -1（後台隱藏）→ 只有作者自己看得到（private，🟠 暫定，等熊叔叔確認）；回覆的 -1 不搬；回覆不截斷（欄位是 text）
@@ -24,11 +24,15 @@ use Throwable;
 // - 約會：舊站 result 0 等回覆、1／2 準備參加（日期過了新版自己算成「等確認」）、-1 婉拒、3 已參加；
 //   -2 有兩種：「超過約會時間未收到答覆」（data/check_if_expire.php 寫的）→ 等回覆（日期過了新版自己算成「超過約會時間」），其他 → 取消
 // - 愛的見證：1 公開、0 待審核、-1 不公開
+// - 阿們（熊叔叔 11/24「阿門和禮物也要搬」、甲「心情日記也加回阿們，全部搬」）：日記、彼此代禱上的 → diary_prayers；
+//   舊站同一人同一篇按兩次只算一次；會員在新版取消過的不再加回來
+// - 禮物（11/24「二換一，以此排序下去」）：舊站 24 種 → 新版 12 種，舊 1、2 → 新 1 … 舊 23、24 → 新 12；
+//   打開過的標已讀；舊站送的刪除時不退點（點數是在舊站扣的）
 class ImportLegacyContent extends Command
 {
     protected $signature = 'legacy:import-content {dir : legacy_export_content.php 的輸出目錄} {--dry-run : 只算筆數} {--update-from-legacy : 公測增量：已經搬過的日記／代禱用舊站新值更新、舊站刪掉的也刪（新版改過的不動）}';
 
-    protected $description = '匯入舊站的日記、回覆、代禱、好友、留言板（變紙條）、相簿、約會、愛的見證';
+    protected $description = '匯入舊站的日記、回覆、代禱、好友、留言板（變紙條）、相簿、約會、愛的見證、阿們、禮物';
 
     private array $users = [];
 
@@ -74,6 +78,7 @@ class ImportLegacyContent extends Command
             fn () => $this->replies($dir, 'diary_reply', 'diary'), fn () => $this->replies($dir, 'pray_reply', 'pray'),
             fn () => $this->friends($dir), fn () => $this->guestbook($dir), fn () => $this->album($dir),
             fn () => $this->dates($dir), fn () => $this->testimonies($dir),
+            fn () => $this->amens($dir), fn () => $this->gifts($dir),
         ] as $step) {
             DB::transaction($step);
         }
@@ -501,6 +506,133 @@ class ImportLegacyContent extends Command
             ], $path);
             $this->stats['testi']['new']++;
         }
+    }
+
+    private function amens(string $dir): void
+    {
+        if (! is_file("{$dir}/aman.jsonl")) {
+            return;
+        }
+        $this->start('aman');
+        $parents = [
+            1 => DB::table('diaries')->where('legacy_source', 'diary')->pluck('id', 'legacy_id')->all(),
+            7 => DB::table('diaries')->where('legacy_source', 'pray')->pluck('id', 'legacy_id')->all(),
+        ];
+        $have = [];
+        foreach (DB::table('diary_prayers')->select('diary_id', 'user_id')->cursor() as $p) {
+            $have["{$p->diary_id}-{$p->user_id}"] = true;
+        }
+        $undone = $this->deletedInNewSite('diary_prayers', fn (array $b) => isset($b['diary_id'], $b['user_id']) ? "{$b['diary_id']}-{$b['user_id']}" : null);
+        $fresh = [];
+        $batch = [];
+        $now = now();
+        foreach ($this->rows("{$dir}/aman.jsonl") as $r) {
+            $type = (int) ($r['type'] ?? 0);
+            if (! isset($parents[$type])) {
+                $this->skip('aman', '不是日記或代禱');
+
+                continue;
+            }
+            $diary = $parents[$type][(int) ($r['item'] ?? 0)] ?? null;
+            $user = $this->users[(int) ($r['owner'] ?? 0)] ?? null;
+            if (! $diary || ! $user) {
+                $this->skip('aman', ! $diary ? '日記沒搬進來' : '按的人沒搬進來');
+
+                continue;
+            }
+            $k = "{$diary}-{$user}";
+            if (isset($have[$k])) {
+                $this->stats['aman']['exists']++;
+
+                continue;
+            }
+            if (isset($fresh[$k])) {
+                $this->skip('aman', '舊站重複');
+
+                continue;
+            }
+            if (isset($undone[$k])) {
+                $this->skip('aman', '會員在新版取消了');
+
+                continue;
+            }
+            $fresh[$k] = true;
+            $batch[] = ['diary_id' => $diary, 'user_id' => $user, 'created_at' => $now, 'updated_at' => $now];
+            if (count($batch) >= 1000) {
+                $this->flushIgnore('aman', 'diary_prayers', $batch);
+            }
+        }
+        $this->flushIgnore('aman', 'diary_prayers', $batch);
+    }
+
+    private function gifts(string $dir): void
+    {
+        if (! is_file("{$dir}/gift.jsonl")) {
+            return;
+        }
+        $this->start('gift');
+        $have = DB::table('gifts')->whereNotNull('legacy_id')->pluck('opened_at', 'legacy_id')->map(fn ($v) => $v !== null)->all();
+        $max = 2 * count(\App\Models\Gift::ITEMS);
+        $batch = [];
+        $opened = [];
+        foreach ($this->rows("{$dir}/gift.jsonl") as $r) {
+            $id = (int) $r['legacy_id'];
+            if (isset($have[$id])) {
+                $this->stats['gift']['exists']++;
+                if (! empty($r['open']) && ! $have[$id]) {
+                    $opened[$id] = $this->time($r['open_at'] ?? null) ?? now(); // 舊站後來打開了 → 新版也標已讀
+                }
+
+                continue;
+            }
+            $from = $this->users[(int) ($r['from'] ?? 0)] ?? null;
+            $to = $this->users[(int) ($r['to'] ?? 0)] ?? null;
+            $old = (int) ($r['item'] ?? 0);
+            $on = $this->time($r['on'] ?? null) ?? $this->time($r['at'] ?? null);
+            if (! $from || ! $to || $from === $to || $old < 1 || $old > $max || ! $on) {
+                $this->skip('gift', ! $from || ! $to ? '有一方沒搬進來' : ($from === $to ? '送給自己' : ($on ? '禮物編號不對' : '沒有送出日期')));
+
+                continue;
+            }
+            $at = $this->time($r['at'] ?? null) ?? $on;
+            $batch[] = [
+                'legacy_id' => $id, 'sender_id' => $from, 'recipient_id' => $to, 'item' => self::giftItem($old),
+                'message' => mb_substr(trim((string) ($r['message'] ?? '')), 0, 60), 'sent_on' => $on->toDateString(),
+                'opened_at' => ! empty($r['open']) ? ($this->time($r['open_at'] ?? null) ?? $at) : null,
+                'created_at' => $at, 'updated_at' => $at,
+            ];
+            if (count($batch) >= 1000) {
+                $this->flushIgnore('gift', 'gifts', $batch, '同一天新版已經送過');
+            }
+        }
+        $this->flushIgnore('gift', 'gifts', $batch, '同一天新版已經送過');
+        if ($opened && ! $this->option('dry-run')) {
+            $n = 0;
+            foreach ($opened as $id => $t) {
+                $n += DB::table('gifts')->where('legacy_id', $id)->whereNull('opened_at')->update(['opened_at' => $t]);
+            }
+            $this->stats['gift']['updated'] = $n;
+        }
+    }
+
+    // 舊站 24 種禮物 → 新版 12 種：二換一，舊 1、2 → 新 1，舊 3、4 → 新 2 … 舊 23、24 → 新 12（熊叔叔 11/24）
+    public static function giftItem(int $old): int
+    {
+        return intdiv($old + 1, 2);
+    }
+
+    // 有唯一索引擋著的批次：撞到的（同時有人在新版按了／送了）略過，算進 $why
+    private function flushIgnore(string $kind, string $table, array &$batch, string $why = '新版剛好也有'): void
+    {
+        if (! $batch) {
+            return;
+        }
+        $n = $this->option('dry-run') ? count($batch) : DB::table($table)->insertOrIgnore($batch);
+        $this->stats[$kind]['new'] += $n;
+        if (count($batch) > $n) {
+            $this->stats[$kind]['skip'][$why] = ($this->stats[$kind]['skip'][$why] ?? 0) + count($batch) - $n;
+        }
+        $batch = [];
     }
 
     // 舊站時間「9:30 AM」→「09:30」（新版每 30 分鐘一格，不是整點／半點的取前一格）

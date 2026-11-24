@@ -58,13 +58,13 @@ if [ "$MODE" = inc ]; then
   since=$(TZ=Asia/Taipei date -d "$last 5 minutes ago" '+%F %T') || { log "🔴 inc：算不出 since"; exit 1; }
   log "inc：since $since"
   run "匯出帳號" php "$APP/tools/legacy_export.php" --cnf="$cnf" --db="$OLDDB" --out="$out/acc" --web="$OLDWEB" --since="$since"
-  run "匯出內容" php "$APP/tools/legacy_export_content.php" --cnf="$cnf" --db="$OLDDB" --out="$out/con" --web="$OLDWEB" --kind=diary,pray,guestbook,date,testi --since="$since"
+  run "匯出內容" php "$APP/tools/legacy_export_content.php" --cnf="$cnf" --db="$OLDDB" --out="$out/con" --web="$OLDWEB" --kind=diary,pray,guestbook,date,testi,gift --since="$since"
   run "匯入帳號" bash -c "cd '$APP' && php artisan legacy:import-export '$out/acc' --update-from-legacy"
   run "匯入內容" bash -c "cd '$APP' && php artisan legacy:import-content '$out/con' --update-from-legacy"
   echo "$now" > "$STATE/last_inc.tmp" && mv "$STATE/last_inc.tmp" "$STATE/last_inc"
 else
-  log "full：好友對帳"
-  run "匯出好友" php "$APP/tools/legacy_export_content.php" --cnf="$cnf" --db="$OLDDB" --out="$out/con" --web="$OLDWEB" --kind=friend
+  log "full：好友對帳、阿們"
+  run "匯出好友" php "$APP/tools/legacy_export_content.php" --cnf="$cnf" --db="$OLDDB" --out="$out/con" --web="$OLDWEB" --kind=friend,aman   # 阿們沒有時間欄，每天全量（熊叔叔 11/24）
   run "好友對帳" bash -c "cd '$APP' && php artisan legacy:import-content '$out/con' --update-from-legacy"
   run "註冊日期、認證" bash -c "cd '$APP' && php artisan legacy:backfill-extras"   # 熊叔叔 11/24 甲：舊站新通過的認證每天補上
 fi

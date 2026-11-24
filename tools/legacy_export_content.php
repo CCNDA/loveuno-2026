@@ -3,9 +3,11 @@
 // 熊叔叔 2026-10-30 TG「3都搬」。對照表在 docs/legacy-migration.md。Asana 1215470856990770。
 //
 // 用法（ubuntu 身分）：
-//   php legacy_export_content.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_content --kind=diary,pray,friend,guestbook,album,date,testi [--images]
+//   php legacy_export_content.php --cnf=<cora_ro 的設定檔，host=127.0.0.1> --out=/tmp/lu2026_content --kind=diary,pray,friend,guestbook,album,date,testi,aman,gift [--images]
 //
-// 每一種寫一個 JSONL（一行一筆）：diary／diary_reply／pray／pray_reply／friend／guestbook／album／date／testi.jsonl
+// 每一種寫一個 JSONL（一行一筆）：diary／diary_reply／pray／pray_reply／friend／guestbook／album／date／testi／aman／gift.jsonl
+// - aman：日記（type 1）、彼此代禱（type 7）上的「阿們」；沒有時間欄，不能用 --since（熊叔叔 11/24「阿門和禮物也要搬」）
+// - gift：禮物，giftid 照舊站原值（1～24），匯入端「二換一」對到新版 12 種
 // - 文字照舊站存法還原：emoji_decode（用舊站自己的 h2019/emoji_lib.php）、<br> → 換行、&lt; &gt; 等還原、‵ → '
 //   新版畫面一律 escape，所以還原成純文字是安全的
 // - status -1（後台隱藏）的也匯出，帶 status，匯入端決定怎麼處理
@@ -25,7 +27,7 @@ declare(strict_types=1);
 
 $opts = getopt('', ['cnf:', 'out:', 'kind:', 'images', 'images-after::', 'images-upto::', 'web::', 'r2::', 'db::', 'since::', 'min-free-gb::', 'photo-ref']);
 $kinds = array_filter(explode(',', (string) ($opts['kind'] ?? '')));
-$known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi'];
+$known = ['diary', 'pray', 'friend', 'guestbook', 'album', 'date', 'testi', 'aman', 'gift'];
 if (empty($opts['cnf']) || empty($opts['out']) || ! $kinds || array_diff($kinds, $known)) {
     fwrite(STDERR, "用法：php legacy_export_content.php --cnf=<唯讀設定檔> --out=<輸出目錄> --kind=" . implode(',', $known) . " [--images]\n");
     exit(2);
@@ -35,8 +37,8 @@ if ($since !== null && ! preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $
     fwrite(STDERR, "--since 要是 YYYY-MM-DD HH:MM:SS（舊站時間）\n");
     exit(2);
 }
-if ($since !== null && array_intersect($kinds, ['friend', 'album'])) {
-    fwrite(STDERR, "好友、相簿沒有時間欄，不能用 --since（用全量對帳）\n");
+if ($since !== null && array_intersect($kinds, ['friend', 'album', 'aman'])) {
+    fwrite(STDERR, "好友、相簿、阿們沒有時間欄，不能用 --since（用全量對帳）\n");
     exit(2);
 }
 $db = preg_match('/^[A-Za-z0-9_]+$/', (string) ($opts['db'] ?? '')) ? $opts['db'] : 'austwoon_unomember'; // 只有測試時才指定別的庫
@@ -252,6 +254,20 @@ if (in_array('testi', $kinds, true)) {
         fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'], 'male' => (int) $r['boyid'], 'female' => (int) $r['girlid'],
             'status' => (int) $r['status'], 'title' => legacy_text($r['subject']), 'body' => legacy_text($r['content']), 'at' => legacy_time($r['timestamp']),
             'image' => legacy_image('member_photo/testi_pic', (string) $r['pic'], (int) $r['is_r2'] === 1, "testi_{$r['id']}")]);
+}
+
+if (in_array('aman', $kinds, true)) {
+    // 舊站 aman：ownerid 是按「阿們」的人，itemid 是那一篇；1＝日記、7＝彼此代禱（8 代禱回覆、5／6 論壇、2 投票新版沒有，不搬）
+    $write('aman', $pdo->query('SELECT id, ownerid, type, itemid FROM aman WHERE type IN (1, 7) ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'owner' => (int) $r['ownerid'], 'type' => (int) $r['type'], 'item' => (int) $r['itemid']]);
+}
+
+if (in_array('gift', $kinds, true)) {
+    // 禮物：open 1＝收禮的人看過；--since 用送出或打開的時間（打開了要跟著標已讀）
+    $write('gift', $q('SELECT id, giftid, sender, sendee, message, send_date, send_timestamp, open, open_timestamp FROM gift', 'send_timestamp >= ? OR open_timestamp >= ?', ' ORDER BY id'),
+        fn (array $r) => ['legacy_id' => (int) $r['id'], 'item' => (int) $r['giftid'], 'from' => (int) $r['sender'], 'to' => (int) $r['sendee'],
+            'message' => legacy_text($r['message']), 'on' => legacy_time($r['send_date']), 'at' => legacy_time($r['send_timestamp']),
+            'open' => (int) $r['open'] === 1, 'open_at' => legacy_time($r['open_timestamp'])]);
 }
 
 file_put_contents("{$out}/content_manifest.json", json_encode(['exported_at' => date('c'), 'since' => $since, 'diary_owners' => $diaryOwners, 'kinds' => $kinds, 'counts' => $counts], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
