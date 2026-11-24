@@ -27,7 +27,9 @@ class PushLegacyOutboxTest extends TestCase
         $l = DB::connection('legacy');
         foreach (['basic', 'profile', 'diary', 'relationship'] as $t) $l->statement("DROP TABLE IF EXISTS `{$t}`");
         $l->statement('CREATE TABLE basic (id INT PRIMARY KEY, email VARCHAR(50), password VARCHAR(50), nickname VARCHAR(20), status INT, modify_date TIMESTAMP NULL) CHARSET utf8mb3');
-        $l->statement('CREATE TABLE profile (id INT PRIMARY KEY, sex VARCHAR(2), birthday DATE NULL, live_place VARCHAR(20), church VARCHAR(100), church_show TINYINT, job VARCHAR(20), intro TEXT) CHARSET utf8mb3');
+        $l->statement('CREATE TABLE profile (id INT PRIMARY KEY, sex VARCHAR(2), birthday DATE NULL, live_place VARCHAR(20), church VARCHAR(100), church_show TINYINT, job VARCHAR(20), intro TEXT, '
+            . "hope_sex CHAR(20) NOT NULL DEFAULT '', hope_marriage CHAR(20) NOT NULL DEFAULT '', hope_religion CHAR(20) NOT NULL DEFAULT '', hope_live_place CHAR(20) NOT NULL DEFAULT '', "
+            . 'hope_age1 INT NOT NULL DEFAULT 0, hope_age2 INT NOT NULL DEFAULT 0, hope_height1 INT NOT NULL DEFAULT 0, hope_height2 INT NOT NULL DEFAULT 0, hope_weight1 INT NOT NULL DEFAULT 0, hope_weight2 INT NOT NULL DEFAULT 0) CHARSET utf8mb3');
         $l->statement('CREATE TABLE diary (id INT AUTO_INCREMENT PRIMARY KEY, ownerid INT, subject VARCHAR(100), content TEXT, date DATE, status INT, pic VARCHAR(100), is_r2 TINYINT) CHARSET utf8mb3');
         $l->statement('CREATE TABLE relationship (id INT AUTO_INCREMENT PRIMARY KEY, sender INT, sendee INT, relationship INT) CHARSET utf8mb3');
     }
@@ -73,6 +75,46 @@ class PushLegacyOutboxTest extends TestCase
         $this->assertSame(1, (int) $p->church_show);
         $this->assertSame('1990-05-06', $p->birthday, '生日不回寫');
         $this->assertSame(0, DB::table('legacy_outbox')->where('status', 'pending')->count());
+    }
+
+    // 熊叔叔 11/24「交友條件也要寫回」
+    public function test_preferences_written_back_only_when_changed(): void
+    {
+        $u = $this->legacyMember(1000511);
+        DB::connection('legacy')->table('profile')->where('id', 1000511)->update(['hope_sex' => '男', 'hope_age1' => 25, 'hope_age2' => 40, 'hope_religion' => '基督徒']);
+
+        // 只改職業：舊站交友條件不動
+        $u->profile->update(['job' => '護理師']);
+        $this->push();
+        $p = DB::connection('legacy')->table('profile')->where('id', 1000511)->first();
+        $this->assertSame(['護理師', '男', 25, 40, '基督徒'], [$p->job, $p->hope_sex, (int) $p->hope_age1, (int) $p->hope_age2, $p->hope_religion]);
+
+        // 改交友條件
+        $u->profile->forceFill(['pref_gender' => '', 'pref_marital' => '未婚', 'pref_faith' => '慕道友', 'pref_place' => '台中市',
+            'pref_age_min' => 28, 'pref_age_max' => 35, 'pref_height_min' => 160, 'pref_height_max' => null, 'pref_weight_min' => null, 'pref_weight_max' => null])->save();
+        $this->push();
+        $p = DB::connection('legacy')->table('profile')->where('id', 1000511)->first();
+        $this->assertSame(['男', '未婚', '慕道友', '台中市'], [$p->hope_sex, $p->hope_marriage, $p->hope_religion, $p->hope_live_place], '性別沒改（本來就是空白）不寫');
+        $this->assertSame([28, 35, 160, 220, 0, 0], array_map('intval', [$p->hope_age1, $p->hope_age2, $p->hope_height1, $p->hope_height2, $p->hope_weight1, $p->hope_weight2]));
+        $this->assertSame(0, DB::table('legacy_outbox')->where('status', '!=', 'sent')->whereNot('status', 'skipped')->count());
+
+        // 性別改成女，再改回不拘（空白）
+        $u->profile->forceFill(['pref_gender' => '女'])->save();
+        $this->push();
+        $this->assertSame('女', DB::connection('legacy')->table('profile')->where('id', 1000511)->value('hope_sex'));
+        $u->profile->forceFill(['pref_gender' => ''])->save();
+        $this->push();
+        $this->assertSame('不拘', DB::connection('legacy')->table('profile')->where('id', 1000511)->value('hope_sex'));
+    }
+
+    public function test_hope_fields_mapping(): void
+    {
+        $f = fn (array $p) => \App\Console\Commands\PushLegacyOutbox::hopeFields($p);
+        $this->assertSame([], $f(['pref_gender' => '女']), '舊的 outbox 沒有 _changed：不寫');
+        $this->assertSame(['hope_sex' => '女'], $f(['pref_gender' => '女', '_changed' => ['pref_gender']]));
+        $this->assertSame(['hope_weight1' => 30, 'hope_weight2' => 60], $f(['pref_weight_max' => 60, '_changed' => ['pref_weight_max']]));
+        $this->assertSame(['hope_age1' => 0, 'hope_age2' => 0], $f(['pref_age_min' => null, 'pref_age_max' => null, '_changed' => ['pref_age_min']]));
+        $this->assertSame(['hope_live_place' => '□台北'], $f(['pref_place' => '😀台北', '_changed' => ['pref_place']]));
     }
 
     public function test_emoji_replaced_for_utf8mb3(): void

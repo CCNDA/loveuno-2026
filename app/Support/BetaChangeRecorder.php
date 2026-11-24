@@ -73,7 +73,8 @@ class BetaChangeRecorder
             'model' => class_basename($m),
             'record_id' => (string) $m->getKey(),
             'action' => $action,
-            'payload' => json_encode($action === 'deleted' ? $before : $clean($m->getAttributes()), JSON_UNESCAPED_UNICODE),
+            // updated 多帶 _changed（這次真的改了哪些欄位）：交友條件只在改了才回寫，不然只改職業也會把舊站的交友條件蓋掉（11/24）
+            'payload' => json_encode($action === 'deleted' ? $before : $clean($m->getAttributes()) + ($action === 'updated' ? ['_changed' => array_values(array_diff(array_keys($m->getChanges()), $hide))] : []), JSON_UNESCAPED_UNICODE),
             'status' => 'pending',
             'attempts' => 0,
             'created_at' => now(),
