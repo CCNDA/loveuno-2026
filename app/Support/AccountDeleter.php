@@ -47,6 +47,7 @@ class AccountDeleter
             DB::table('point_transactions')->where('user_id', $user->id)->delete();
             Feedback::where('user_id', $user->id)->delete(); // 回報問題／建議（user_id 是 nullOnDelete，帳號列沒刪所以要自己刪）
             $user->profile()->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete(); // 2026-11-26 小芯（小布審查）：所有裝置的登入一起失效
             $user->forceFill([
                 'name' => '已註銷會員',
                 'email' => 'deleted-' . $user->id . '@deleted.invalid',

@@ -349,13 +349,35 @@ class AdminMemberTest extends TestCase
         $this->actingAs($super)->get("/admin/members/{$m->id}")->assertSee('delete-confirm-id');
     }
 
+    // 2026-11-26 小芯（小布審查）：被代為註銷的人，開著的瀏覽器下一個請求就被登出；sessions 表裡他的列也清掉
+    public function test_deleted_member_existing_session_is_logged_out(): void
+    {
+        $super = $this->superAdmin();
+        $a = $this->member('會被註銷的人');
+        $this->actingAs($a)->get(route('center.account'))->assertOk(); // 先確認是登入狀態
+        DB::table('sessions')->insert(['id' => 'other-device-a', 'user_id' => $a->id, 'payload' => '', 'last_activity' => time()]);
+
+        $this->actingAs($super)->post("/admin/members/{$a->id}/delete", ['reason' => '會員來信要求刪除帳號', 'confirm_id' => (string) $a->id]);
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $a->id)->count());
+
+        // 公開頁（首頁）沒有 auth.session，換密碼擋不到：要靠 LogoutSuspended 登出，不然每日登入積點、回饋會記回這個帳號
+        $this->actingAs($a->fresh())->get('/')->assertRedirect(route('login'));
+        $this->assertGuest();
+        $this->assertSame(0, DB::table('point_transactions')->where('user_id', $a->id)->count());
+        $this->actingAs($a->fresh())->get(route('center.account'))->assertRedirect(route('login'));
+        $this->assertGuest();
+        $this->followRedirects($this->actingAs($a->fresh())->get(route('center.account')))->assertSee('這個帳號已經註銷了');
+    }
+
     public function test_self_delete_records_self_as_deleted_by(): void
     {
         $m = $this->member('自己註銷的會員');
+        DB::table('sessions')->insert(['id' => 'other-device-m', 'user_id' => $m->id, 'payload' => '', 'last_activity' => time()]);
         $this->actingAs($m)->delete(route('settings.destroy'), ['current_password' => 'password', 'reason' => '找到對象了，謝謝愛諾園', 'confirm' => '1'])
             ->assertRedirect(route('home'));
         $this->assertNotNull($m->fresh()->deleted_at);
         $this->assertDatabaseHas('account_deletions', ['user_id' => $m->id, 'deleted_by' => $m->id]);
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $m->id)->count()); // 手機、別台電腦的登入也失效
         $this->assertGuest();
         $this->actingAs($this->superAdmin())->get("/admin/members/{$m->id}")->assertSee('本人註銷');
     }
