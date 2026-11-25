@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminAction;
 use App\Models\Diary;
 use App\Models\User;
+use App\Support\AccountDeleter;
 use App\Support\NotEnoughPoints;
 use App\Support\Points;
 use App\Support\ProfileOptions;
@@ -80,6 +81,9 @@ class MemberAdminController extends Controller
             ],
             'points' => DB::table('point_transactions')->where('user_id', $user->id)->orderByDesc('id')->limit(10)->get(),
             'actions' => AdminAction::with('admin')->where('user_id', $user->id)->orderByDesc('id')->get(),
+            // 註銷紀錄：什麼時候、誰做的（本人或管理員）
+            'deletion' => DB::table('account_deletions as d')->leftJoin('users as a', 'a.id', '=', 'd.deleted_by')
+                ->where('d.user_id', $user->id)->orderByDesc('d.id')->first(['d.created_at', 'd.deleted_by', 'a.name as by_name']),
             'suspendReasons' => self::SUSPEND_REASONS,
             'maritalOptions' => array_merge(ProfileOptions::MARITAL, ProfileOptions::MARITAL_ADMIN),
         ]);
@@ -250,6 +254,32 @@ class MemberAdminController extends Controller
         });
 
         return $this->back($user, $msg);
+    }
+
+    // 代為註銷（2026-11-26 小芯（Asana 1220690700083353）；熊叔叔 11/19 TG：舊站刪除帳號要刪資料、保留會員 ID、記刪除時間，新版也要）
+    // 跟會員自己註銷同一套清除（AccountDeleter）；不能恢復，所以：只有最高管理員、要填原因、要再輸入一次會員編號；
+    // 管理員帳號要先取消權限；不能註銷自己（請用帳號設定，要輸入密碼）。只是暫時不讓他登入請用停權。
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        $me = $request->user();
+        abort_unless($me->is_super_admin, 403, '只有最高管理員可以代為註銷會員。');
+        abort_if($user->is($me), 422, '不能在這裡註銷自己，請到「帳號設定」自己註銷。');
+        abort_if($user->is_admin, 422, '管理員的帳號要先取消管理員權限，才能註銷。');
+        if ($user->deleted_at !== null) {
+            return $this->back($user, '這個帳號已經註銷了。');
+        }
+        $data = $request->validateWithBag('delete', [
+            'reason' => ['required', 'string', 'min:4', 'max:1000'],
+            'confirm_id' => ['required', 'in:' . $user->id],
+        ], ['confirm_id.in' => '會員編號不對，請照上面寫的編號輸入。'], ['reason' => '註銷原因', 'confirm_id' => '會員編號']);
+        $reason = trim($data['reason']);
+
+        $done = AccountDeleter::delete($user, $reason, $me, fn () => AdminAction::record($me, $user, 'delete', ['reason' => $reason]));
+        if (! $done) {
+            return $this->back($user, '這個帳號已經註銷了。');
+        }
+
+        return $this->back($user, '已經代為註銷 #' . $user->id . '：個資、照片、日記已清掉，會員編號和紙條、禮物、檢舉紀錄留著。');
     }
 
     // 最高管理員的資料只有最高管理員能改（熊叔叔 11/2 TG 選「甲 不行」）

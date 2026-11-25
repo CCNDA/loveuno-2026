@@ -17,6 +17,7 @@ class AdminAction extends Model
         'points' => '加減積點',
         'rename' => '改暱稱',
         'role' => '改管理員權限',
+        'delete' => '代為註銷',
     ];
 
     public const ROLE_CHANGES = [

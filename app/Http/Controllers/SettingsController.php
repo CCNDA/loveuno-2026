@@ -6,6 +6,7 @@ use App\Models\AlbumPhoto;
 use App\Models\Diary;
 use App\Models\Feedback;
 use App\Models\Verification;
+use App\Support\AccountDeleter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -114,42 +115,8 @@ class SettingsController extends Controller
         ], ['current_password' => '密碼', 'reason' => '原因', 'confirm' => '確認']);
 
         $user = $request->user();
-        $files = array_filter(array_merge(
-            [$user->profile?->photo_path, $user->profile?->cover_path],
-            AlbumPhoto::where('user_id', $user->id)->pluck('path')->all(),
-            Diary::where('user_id', $user->id)->pluck('image_path')->all(),
-            Verification::where('user_id', $user->id)->pluck('file_path')->all(),
-            Feedback::where('user_id', $user->id)->pluck('screenshot_path')->all(), // 回報的截圖可能有別人的資料
-        ));
-
-        DB::transaction(function () use ($user, $data) {
-            DB::table('account_deletions')->insert(['user_id' => $user->id, 'reason' => trim($data['reason']), 'created_at' => now(), 'updated_at' => now()]);
-            Diary::where('user_id', $user->id)->delete();         // 留言、禱告跟著刪
-            DB::table('diary_comments')->where('user_id', $user->id)->delete(); // 在別人日記下的留言
-            DB::table('diary_prayers')->where('user_id', $user->id)->delete();
-            AlbumPhoto::where('user_id', $user->id)->delete();
-            Verification::where('user_id', $user->id)->delete();
-            DB::table('friendships')->where('user_id', $user->id)->orWhere('friend_id', $user->id)->delete();
-            DB::table('meetups')->where('sender_id', $user->id)->orWhere('recipient_id', $user->id)->delete(); // 舊站 delete_profile_final.php 也刪
-            DB::table('point_transactions')->where('user_id', $user->id)->delete();
-            Feedback::where('user_id', $user->id)->delete(); // 回報問題／建議（user_id 是 nullOnDelete，帳號列沒刪所以要自己刪）
-            $user->profile()->delete();
-            $user->forceFill([
-                'name' => '已註銷會員',
-                'email' => 'deleted-' . $user->id . '@deleted.invalid',
-                'email_pending' => null,
-                'password' => Str::random(64),
-                'remember_token' => Str::random(60),
-                'phone' => null, 'phone_pending' => null, 'phone_code_hash' => null,
-                'is_active' => false, 'notify_email' => false, 'points' => 0, 'is_admin' => false, 'is_super_admin' => false,
-                'deleted_at' => now(),
-            ])->save();
-        });
-        foreach ($files as $path) {
-            VerificationController::deleteQuietly((string) $path);
-        }
-        // 讓管理員知道（舊站會寄信給管理員）
-        Notification::route('mail', config('loveuno.contact_email'))->notify(new \App\Notifications\AccountDeleted($user->id, trim($data['reason'])));
+        // 2026-11-26 小芯（Asana 1220690700083353）：清除邏輯搬到 AccountDeleter，後台「代為註銷」共用同一套
+        AccountDeleter::delete($user, trim($data['reason']), $user);
 
         Auth::logout(); // 資料都處理好了才登出
         $request->session()->invalidate();

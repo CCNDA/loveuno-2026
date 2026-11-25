@@ -281,6 +281,85 @@ class AdminMemberTest extends TestCase
         $this->actingAs($admin)->get("/admin/members/{$admin->id}")->assertSee('不能幫自己加減點');
     }
 
+    // 2026-11-26 小芯（Asana 1220690700083353）：代為註銷
+    private function superAdmin(): User
+    {
+        return $this->member('最高管理員', ['is_admin' => true, 'is_super_admin' => true]);
+    }
+
+    public function test_super_admin_deletes_member_keeps_id_and_records_who(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $super = $this->superAdmin();
+        $m = $this->member('要刪除的會員', ['email' => 'gone@example.com', 'phone' => '0911222333']);
+        $m->diaries()->create(['title' => '日記', 'body' => 'b', 'visibility' => 'public', 'published_on' => now()->toDateString()]);
+
+        $this->actingAs($super)->post("/admin/members/{$m->id}/delete", ['reason' => '會員來信要求刪除帳號', 'confirm_id' => (string) $m->id])
+            ->assertRedirect(route('admin.members.show', $m));
+
+        $m->refresh();
+        $this->assertNotNull($m->deleted_at);
+        $this->assertSame('已註銷會員', $m->name);
+        $this->assertSame('deleted-' . $m->id . '@deleted.invalid', $m->email);
+        $this->assertNull($m->phone);
+        $this->assertFalse($m->is_active);
+        $this->assertNull($m->profile()->first());
+        $this->assertSame(0, \App\Models\Diary::where('user_id', $m->id)->count());
+        $this->assertDatabaseHas('users', ['id' => $m->id]); // 會員編號留著
+        $this->assertDatabaseHas('account_deletions', ['user_id' => $m->id, 'deleted_by' => $super->id, 'reason' => '會員來信要求刪除帳號']);
+        $this->assertDatabaseHas('admin_actions', ['admin_id' => $super->id, 'user_id' => $m->id, 'action' => 'delete']);
+        \Illuminate\Support\Facades\Notification::assertSentOnDemand(\App\Notifications\AccountDeleted::class);
+
+        // 後台會員頁：註銷時間、誰做的、管理紀錄
+        $this->actingAs($super)->get("/admin/members/{$m->id}")->assertOk()
+            ->assertSee('註銷時間')->assertSee('最高管理員（#' . $super->id . '）代為註銷', false)
+            ->assertSee('會員來信要求刪除帳號')->assertDontSee('delete-confirm-id');
+
+        // 再送一次：不會清第二次、不會多一筆
+        $this->actingAs($super)->post("/admin/members/{$m->id}/delete", ['reason' => '再按一次', 'confirm_id' => (string) $m->id])
+            ->assertSessionHas('status', '這個帳號已經註銷了。');
+        $this->assertSame(1, DB::table('account_deletions')->where('user_id', $m->id)->count());
+        $this->assertSame(1, AdminAction::where('user_id', $m->id)->where('action', 'delete')->count());
+    }
+
+    public function test_delete_member_guards(): void
+    {
+        $super = $this->superAdmin();
+        $admin = $this->admin();
+        $m = $this->member('一般會員');
+        $ok = ['reason' => '會員來信要求刪除帳號', 'confirm_id' => (string) $m->id];
+
+        // 一般管理員不行、頁面也看不到表單
+        $this->actingAs($admin)->post("/admin/members/{$m->id}/delete", $ok)->assertForbidden();
+        $this->actingAs($admin)->get("/admin/members/{$m->id}")->assertDontSee('delete-confirm-id');
+        // 自己、管理員帳號不行
+        $this->actingAs($super)->post("/admin/members/{$super->id}/delete", ['reason' => '測試測試', 'confirm_id' => (string) $super->id])->assertStatus(422);
+        $this->actingAs($super)->post("/admin/members/{$admin->id}/delete", ['reason' => '測試測試', 'confirm_id' => (string) $admin->id])->assertStatus(422);
+        // 原因沒填、編號打錯
+        $this->actingAs($super)->post("/admin/members/{$m->id}/delete", ['reason' => '', 'confirm_id' => (string) $m->id])
+            ->assertSessionHasErrors('reason', null, 'delete');
+        $this->actingAs($super)->post("/admin/members/{$m->id}/delete", ['reason' => '會員來信要求刪除帳號', 'confirm_id' => (string) ($m->id + 1)])
+            ->assertSessionHasErrors('confirm_id', null, 'delete');
+
+        foreach ([$m, $super, $admin] as $u) {
+            $this->assertNull($u->fresh()->deleted_at);
+        }
+        $this->assertSame(0, DB::table('account_deletions')->count());
+        // 最高管理員看得到表單
+        $this->actingAs($super)->get("/admin/members/{$m->id}")->assertSee('delete-confirm-id');
+    }
+
+    public function test_self_delete_records_self_as_deleted_by(): void
+    {
+        $m = $this->member('自己註銷的會員');
+        $this->actingAs($m)->delete(route('settings.destroy'), ['current_password' => 'password', 'reason' => '找到對象了，謝謝愛諾園', 'confirm' => '1'])
+            ->assertRedirect(route('home'));
+        $this->assertNotNull($m->fresh()->deleted_at);
+        $this->assertDatabaseHas('account_deletions', ['user_id' => $m->id, 'deleted_by' => $m->id]);
+        $this->assertGuest();
+        $this->actingAs($this->superAdmin())->get("/admin/members/{$m->id}")->assertSee('本人註銷');
+    }
+
     public function test_deleted_super_admin_loses_super(): void
     {
         $super = $this->member('要註銷的最高管理員', ['is_admin' => true, 'is_super_admin' => true]);

@@ -243,6 +243,7 @@ Route::middleware(['auth', 'auth.session', 'verified', 'phone.verified'])->group
         Route::post('/members/{user}/points', [\App\Http\Controllers\Admin\MemberAdminController::class, 'points'])->whereNumber('user')->name('admin.members.points');
         Route::post('/members/{user}/rename', [\App\Http\Controllers\Admin\MemberAdminController::class, 'rename'])->whereNumber('user')->name('admin.members.rename');
         Route::post('/members/{user}/role', [\App\Http\Controllers\Admin\MemberAdminController::class, 'role'])->whereNumber('user')->name('admin.members.role');
+        Route::post('/members/{user}/delete', [\App\Http\Controllers\Admin\MemberAdminController::class, 'destroy'])->whereNumber('user')->name('admin.members.delete');
         Route::get('/feedback', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'index'])->name('admin.feedback');
         Route::get('/feedback/export', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'export'])->name('admin.feedback.export');
         Route::post('/feedback/{feedback}/status', [\App\Http\Controllers\Admin\FeedbackAdminController::class, 'status'])->whereNumber('feedback')->name('admin.feedback.status');

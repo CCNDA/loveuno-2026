@@ -12,6 +12,7 @@
     <dl class="report-meta">
         <dt>狀態</dt><dd>@include('admin.members.status', ['m' => $member])</dd>
         @if ($member->suspended_at)<dt>停權時間</dt><dd>{{ $member->suspended_at->shown()->format('Y/n/j H:i') }}</dd>@endif
+        @if ($member->deleted_at)<dt>註銷時間</dt><dd>{{ $member->deleted_at->shown()->format('Y/n/j H:i') }}@if ($deletion)（@if ((int) $deletion->deleted_by === $member->id)本人註銷@elseif ($deletion->deleted_by)管理員 {{ $deletion->by_name }}（#{{ $deletion->deleted_by }}）代為註銷@endif）@endif</dd>@endif
         <dt>Email</dt><dd>{{ $member->email }}@if ($member->email_verified_at)（{{ $member->email_verified_at->shown()->format('Y/n/j') }} 驗證）@endif
             @if ($member->email_bounced_at)<br><strong>信箱無效</strong>（{{ $member->email_bounced_at->shown()->format('Y/n/j H:i') }} 退信：{{ $member->email_bounce_reason }}；停寄通知，等他重新驗證或改信箱）@endif</dd>
         <dt>手機</dt><dd>{{ $member->phone ?: '—' }}@if ($member->phone_verified_at)（{{ $member->phone_verified_at->shown()->format('Y/n/j') }} 驗證）@endif</dd>
@@ -194,6 +195,32 @@
     @endif
 </section>
 
+{{-- 2026-11-26 小芯（Asana 1220690700083353）：代為註銷（只有最高管理員；管理員、自己、已註銷的不顯示） --}}
+@if (auth()->user()->is_super_admin && ! $member->deleted_at && ! $member->is_admin && ! $member->is(auth()->user()))
+<section aria-labelledby="delete-title">
+    <h2 id="delete-title">代為註銷</h2>
+    <p>會員要求刪除帳號時用。會清掉個資、照片、日記、相簿、認證、好友、積點；<strong>會員編號、紙條、禮物、檢舉紀錄留著</strong>。<strong>註銷後不能恢復</strong>。只是暫時不讓他登入，請用上面的「停權」。</p>
+    @php($dbag = $errors->getBag('delete'))
+    <form method="POST" action="{{ route('admin.members.delete', $member) }}" class="form" novalidate onsubmit="return confirm('確定要註銷 #{{ $member->id }} 嗎？註銷後不能恢復。')">
+        @csrf
+        <div class="field">
+            <label for="delete-reason">註銷原因</label>
+            <p id="delete-reason-hint" class="hint">會留在紀錄裡，也會寄到協會信箱。例如「會員來信要求刪除帳號」。</p>
+            <textarea id="delete-reason" name="reason" rows="2" maxlength="1000" required
+                      aria-describedby="delete-reason-hint{{ $dbag->has('reason') ? ' delete-reason-error' : '' }}" @if ($dbag->has('reason')) aria-invalid="true" @endif>{{ old('reason') }}</textarea>
+            @if ($dbag->has('reason'))<p id="delete-reason-error" class="field-error" role="alert">{{ $dbag->first('reason') }}</p>@endif
+        </div>
+        <div class="field">
+            <label for="delete-confirm-id">再輸入一次會員編號 {{ $member->id }}</label>
+            <input id="delete-confirm-id" name="confirm_id" type="text" inputmode="numeric" autocomplete="off" required
+                   @if ($dbag->has('confirm_id')) aria-invalid="true" aria-describedby="delete-confirm-id-error" @endif>
+            @if ($dbag->has('confirm_id'))<p id="delete-confirm-id-error" class="field-error" role="alert">{{ $dbag->first('confirm_id') }}</p>@endif
+        </div>
+        <button type="submit" class="button button-secondary">代為註銷</button>
+    </form>
+</section>
+@endif
+
 <section aria-labelledby="log-title">
     <h2 id="log-title">管理紀錄</h2>
     @if ($actions->isEmpty())
@@ -208,6 +235,7 @@
                         @case('points')：{{ ($a->detail['amount'] ?? 0) > 0 ? '+' : '' }}{{ $a->detail['amount'] ?? '' }}（{{ $a->detail['reason'] ?? '' }}）@break
                         @case('rename')：{{ $a->detail['from'] ?? '' }} → {{ $a->detail['to'] ?? '' }}@break
                         @case('role')：{{ \App\Models\AdminAction::ROLE_CHANGES[$a->detail['change'] ?? ''] ?? '' }}@break
+                        @case('delete')：{{ $a->detail['reason'] ?? '' }}@break
                     @endswitch
                 </li>
             @endforeach
