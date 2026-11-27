@@ -36,6 +36,22 @@ class ReportTest extends TestCase
         $this->actingAs($me)->get("/members/{$me->id}/report")->assertNotFound();
     }
 
+    public function test_diary_page_has_report_link_for_others_only(): void
+    {
+        // 熊叔叔 11/17 乙：日記頁加檢舉入口（檢測表 1-34）
+        $me = $this->member('我');
+        $author = $this->member('作者');
+        $d = \App\Models\Diary::factory()->for($author)->create(['title' => '一篇日記']);
+        $link = route('reports.create', ['user' => $author, 'diary' => $d->id]);
+
+        $this->actingAs($me)->get("/diaries/{$d->id}")->assertOk()->assertSee('檢舉這篇日記…')->assertSee(e($link), false);
+        $this->actingAs($author)->get("/diaries/{$d->id}")->assertOk()->assertDontSee('檢舉這篇日記…');
+
+        // 表單先帶好日記網址；亂帶的 diary 參數只會變成網址文字，不會出錯
+        $this->actingAs($me)->get($link)->assertOk()->assertSee('日記網址：' . route('diaries.show', $d->id));
+        $this->actingAs($me)->get(route('reports.create', ['user' => $author, 'diary' => 'abc']))->assertOk()->assertDontSee('日記網址：');
+    }
+
     public function test_submit_report_with_screenshot(): void
     {
         Storage::fake('avatars');

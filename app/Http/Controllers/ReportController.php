@@ -21,7 +21,11 @@ class ReportController extends Controller
     {
         $this->authorizeTarget($request, $user);
 
-        return view('reports.create', ['member' => $user, 'reasons' => Report::REASONS]);
+        // 從日記頁的「檢舉這篇日記…」進來：內容描述先帶好那篇日記的網址（只帶網址、不查標題）
+        $diaryId = (int) $request->query('diary', 0);
+        $prefill = $diaryId > 0 ? '日記網址：' . route('diaries.show', $diaryId) . "\n" : '';
+
+        return view('reports.create', ['member' => $user, 'reasons' => Report::REASONS, 'prefill' => $prefill]);
     }
 
     public function store(Request $request, User $user): RedirectResponse

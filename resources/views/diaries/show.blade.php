@@ -21,6 +21,9 @@
 
 @if ($diary->isOwnedBy(auth()->user()))
     <p><a href="{{ route('diaries.edit', $diary) }}">修改這篇</a></p>
+@elseauth
+    {{-- 2026-11-28 小芯：日記頁加檢舉入口（熊叔叔 11/17 乙；檢測表 1-34）。檢舉的對象是作者，表單會先帶好這篇日記的網址 --}}
+    <ul class="danger-links"><li><a href="{{ route('reports.create', ['user' => $diary->user, 'diary' => $diary->id]) }}">檢舉這篇日記…</a></li></ul>
 @endif
 
 <section aria-labelledby="comments-title" class="comments">

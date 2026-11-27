@@ -17,7 +17,7 @@
         <p id="description-hint" class="hint">發生了什麼事、在哪裡看到的（例如哪一篇日記、哪一天的紙條），500 字以內。</p>
         <textarea id="description" name="description" rows="6" maxlength="500" required
                   aria-describedby="description-hint @error('description') description-error @enderror"
-                  @error('description') aria-invalid="true" @enderror>{{ old('description') }}</textarea>
+                  @error('description') aria-invalid="true" @enderror>{{ old('description', $prefill ?? '') }}</textarea>
         @error('description')<p id="description-error" class="field-error">{{ $message }}</p>@enderror
     </div>
 
