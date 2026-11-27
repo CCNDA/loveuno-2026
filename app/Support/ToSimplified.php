@@ -72,7 +72,48 @@ class ToSimplified
         }
 
         $html = self::text($html);
+        $html = self::uiTerms($html);
 
         return strtr($html, $keep);
+    }
+
+    // ── 介面用詞對照（2026-11-27 小芯；熊叔叔 11/19 TG「甲 大陸為主，加用詞對照」「甲 照這份做」，Asana 1220543504229658）
+    // 只換「介面」：按鈕、表單標籤、導覽列、表格標題、下拉選項，以及 placeholder／title／aria-label／alt 屬性，
+    // 另外任何標了 data-ui-terms 的元素也換。會員寫的內容（日記、自我介紹、暱稱、留言…）不在這些元素裡，不會被改詞
+    // （字還是會轉簡體，只是「登入」不會變「登录」）。
+    // 對照表的 key 用繁體寫，執行時先轉成簡體字形（例：積點→积点），因為這一步在整頁轉簡體之後。
+    public const UI_TERMS = [
+        '登入' => '登录', '登出' => '退出登录', '積點' => '积分', '封鎖' => '屏蔽', '檢舉' => '举报',
+        '網路' => '网络', '相簿' => '相册', '回報' => '反馈', '信箱' => '邮箱', '連結' => '链接',
+        '設定' => '设置', '簡訊' => '短信', '個人檔案' => '个人资料', '選單' => '菜单', '使用者' => '用户',
+        '儲存' => '保存', '伺服器' => '服务器', '訊息' => '消息', '搜尋' => '搜索', '預設' => '默认',
+    ];
+
+    private static ?array $uiMap = null;
+
+    public static function uiMap(): array
+    {
+        if (self::$uiMap !== null) {
+            return self::$uiMap;
+        }
+        $m = [];
+        foreach (self::UI_TERMS as $hant => $hans) {
+            $m[self::text($hant)] = $hans;
+        }
+
+        return self::$uiMap = $m;
+    }
+
+    public static function uiTerms(string $html): string
+    {
+        $map = self::uiMap();
+        $swap = fn (array $x): string => strtr($x[0], $map);
+        $out = preg_replace_callback('#<(button|label|nav|th|option)\b[^>]*>.*?</\1>#is', $swap, $html);
+        $out = $out === null ? $html : $out;
+        $out2 = preg_replace_callback('#<(\w+)\b[^>]*\bdata-ui-terms\b[^>]*>.*?</\1>#is', $swap, $out);
+        $out = $out2 === null ? $out : $out2;
+        $out3 = preg_replace_callback('#\s(placeholder|title|aria-label|alt)\s*=\s*"[^"]*"#i', $swap, $out);
+
+        return $out3 === null ? $out : $out3;
     }
 }

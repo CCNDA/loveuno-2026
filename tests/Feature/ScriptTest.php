@@ -47,6 +47,34 @@ class ScriptTest extends TestCase
         $this->withHeader('Referer', 'https://evil.example/')->get('/script/hans')->assertRedirect('/');
     }
 
+    public function test_ui_terms_only_in_interface_elements(): void
+    {
+        // 介面元素：換成大陸用詞
+        $out = ToSimplified::html('<nav><a href="/login">登入</a><a href="/logout">登出</a></nav><button>儲存設定</button>'
+            . '<label>電子信箱</label><input placeholder="搜尋會員"><table><tr><th>積點</th></tr></table><span data-ui-terms>我的相簿</span>');
+        $this->assertStringContainsString('>登录</a>', $out);
+        $this->assertStringContainsString('>退出登录</a>', $out); // 登出→退出登录，不會再被「登入」那條改一次
+        $this->assertStringContainsString('<button>保存设置</button>', $out);
+        $this->assertStringContainsString('<label>电子邮箱</label>', $out);
+        $this->assertStringContainsString('placeholder="搜索会员"', $out);
+        $this->assertStringContainsString('<th>积分</th>', $out);
+        $this->assertStringContainsString('>我的相册</span>', $out);
+
+        // 會員內容：只轉字、不改詞
+        $out = ToSimplified::html('<p class="diary">今天登入網路，看到相簿裡的照片，想封鎖那個人。</p><h2>我的個人檔案</h2>');
+        $this->assertStringContainsString('今天登入网路，看到相簿里的照片，想封锁那个人。', $out);
+        $this->assertStringContainsString('<h2>我的个人档案</h2>', $out);
+    }
+
+    public function test_ui_terms_keep_form_values(): void
+    {
+        // 按鈕裡的 value、textarea 照舊不動（保護區比用詞對照先處理）
+        $out = ToSimplified::html('<button name="a" value="登入">登入</button><textarea>登入網路</textarea>');
+        $this->assertStringContainsString('value="登入"', $out);
+        $this->assertStringContainsString('>登录</button>', $out);
+        $this->assertStringContainsString('<textarea>登入網路</textarea>', $out);
+    }
+
     public function test_more_protection_cases(): void
     {
         // 私用區字元要用雙引號字串才會變成真的字元
