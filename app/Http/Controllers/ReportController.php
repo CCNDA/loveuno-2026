@@ -23,7 +23,9 @@ class ReportController extends Controller
 
         // 從日記頁的「檢舉這篇日記…」進來：內容描述先帶好那篇日記的網址（只帶網址、不查標題）
         $diaryId = (int) $request->query('diary', 0);
-        $prefill = $diaryId > 0 ? '日記網址：' . route('diaries.show', $diaryId) . "\n" : '';
+        // 只帶被檢舉人自己的日記（小布 11/28 審查附註：拼別人的 id 不帶）
+        $own = $diaryId > 0 && \App\Models\Diary::whereKey($diaryId)->where('user_id', $user->id)->exists();
+        $prefill = $own ? '日記網址：' . route('diaries.show', $diaryId) . "\n" : '';
 
         return view('reports.create', ['member' => $user, 'reasons' => Report::REASONS, 'prefill' => $prefill]);
     }

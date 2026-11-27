@@ -50,6 +50,9 @@ class ReportTest extends TestCase
         // 表單先帶好日記網址；亂帶的 diary 參數只會變成網址文字，不會出錯
         $this->actingAs($me)->get($link)->assertOk()->assertSee('日記網址：' . route('diaries.show', $d->id));
         $this->actingAs($me)->get(route('reports.create', ['user' => $author, 'diary' => 'abc']))->assertOk()->assertDontSee('日記網址：');
+        // 拼別人的日記 id → 不帶（小布 11/28 附註）
+        $other = \App\Models\Diary::factory()->for($me)->create();
+        $this->actingAs($me)->get(route('reports.create', ['user' => $author, 'diary' => $other->id]))->assertOk()->assertDontSee('日記網址：');
     }
 
     public function test_submit_report_with_screenshot(): void
